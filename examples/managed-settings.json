@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "defaultMode": "default",
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./credentials/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(nc *)",
+      "Bash(base64 *)",
+      "Bash(rm -rf *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(cat *.env*)",
+      "WebSearch",
+      "WebFetch",
+      "Agent(general-purpose)"
+    ],
+    "ask": [
+      "Bash",
+      "Bash(git push *)",
+      "Bash(docker *)",
+      "Bash(kubectl *)",
+      "Agent"
+    ],
+    "allow": [
+      "Read",
+      "Edit",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(npm run *)",
+      "Bash(npm test)",
+      "Agent(Explore)",
+      "Agent(Plan)"
+    ]
+  },
+  "allowManagedPermissionRulesOnly": true,
+  "allowManagedHooksOnly": true,
+  "allowManagedMcpServersOnly": true,
+  "enableAllProjectMcpServers": false,
+  "strictKnownMarketplaces": [
+    { "source": "github", "repo": "YOUR-ORG/approved-claude-plugins" }
+  ],
+  "blockedMarketplaces": [],
+  "pluginTrustMessage": "Only plugins approved by the security team are permitted. Request via #ai-tooling-approvals.",
+  "allowedHttpHookUrls": ["https://hooks.YOUR-DOMAIN/*"],
+  "httpHookAllowedEnvVars": ["HOOK_AUTH_TOKEN"],
+  "forceLoginMethod": "claudeai",
+  "forceLoginOrgUUID": "REPLACE-WITH-ORG-UUID",
+  "channelsEnabled": false,
+  "allowedChannelPlugins": [],
+  "disableAutoMode": "disable",
+  "useAutoModeDuringPlan": false,
+  "disableDeepLinkRegistration": "disable",
+  "cleanupPeriodDays": 7,
+  "availableModels": ["sonnet", "haiku"],
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [],
+    "filesystem": {
+      "denyRead": [
+        "~/.aws/",
+        "~/.ssh/",
+        "~/.gnupg/",
+        "~/.config/gcloud/",
+        "~/.kube/",
+        "~/.docker/config.json",
+        "~/.npmrc"
+      ],
+      "denyWrite": ["/etc", "/usr/local/bin", "~/.claude/"],
+      "allowWrite": ["/tmp/build"]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "*.githubusercontent.com",
+        "*.npmjs.org",
+        "registry.yarnpkg.com",
+        "pypi.org",
+        "files.pythonhosted.org"
+      ],
+      "allowManagedDomainsOnly": true,
+      "allowUnixSockets": [],
+      "allowAllUnixSockets": false,
+      "allowLocalBinding": false,
+      "httpProxyPort": null,
+      "socksProxyPort": null
+    },
+    "enableWeakerNestedSandbox": false
+  },
+  "companyAnnouncements": [
+    "Claude Code sessions are subject to organizational security policy. Report suspicious behavior with /feedback."
+  ]
+}
