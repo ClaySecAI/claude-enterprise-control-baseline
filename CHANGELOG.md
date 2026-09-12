@@ -34,7 +34,11 @@ All 32 Claude Code setting keys exist in the published schema with correct nesti
 **Added**
 
 - `managedSourcesBehavior: "merge"` warning — without it, a server-managed + MDM deployment silently applies only one source.
-- Six sandbox weakening keys the baseline never pinned (`filesystem.disabled`, `ignoreViolations`, `enableWeakerNetworkIsolation`, `credentials.allowPlaintextInject`, `network.deniedDomains`, `network.strictAllowlist`).
+- Six sandbox weakening keys the baseline never pinned (`filesystem.disabled`, `ignoreViolations`, `enableWeakerNetworkIsolation`, `credentials.allowPlaintextInject`, `network.deniedDomains`, `network.strictAllowlist`), each described from the schema's own `description` field, with the `enableWeakerNetworkIsolation` / TLS-inspection conflict against 1.7 called out.
+
+**Self-corrections within this pass**
+
+The first draft of the weakening-keys table inferred three descriptions from key names — the same failure mode this pass exists to catch. Corrected against the schema: `ignoreViolations` is an object (a map of command patterns to exempted paths), not a boolean, so "pin to `false`" was a type error and the hardened state is to omit it; `enableWeakerNetworkIsolation` is macOS-only and specifically governs access to the system TLS trust service, not network isolation generally; `strictAllowlist` is marked UNDOCUMENTED in the schema and is now flagged as such. The 22 CSF 2.0 subcategories, initially checked from recall, were re-checked against NIST's CPRT export. `IA-2(2)` no longer silently replaces the removed `IA-8` without noting that both MFA enhancements depend on the IdP. The 1.17 gating table was updated to the corrected capability names.
 
 ## 2026-09-11
 

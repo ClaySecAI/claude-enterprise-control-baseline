@@ -8,9 +8,11 @@ Drafted 2026-09-11 from Anthropic's public admin documentation and third-party h
 
 Every control setting, framework identifier, and reference link in this document was re-checked against primary sources on 2026-09-12. What that pass established, and what it did not:
 
-**Verified mechanically, high confidence.** All 32 Claude Code setting keys in section 4 exist in the published [settings schema](https://www.schemastore.org/claude-code-settings.json), with the nesting and enum values as written (the `"disable"` string values for `disableBypassPermissionsMode`, `disableAutoMode`, and `disableDeepLinkRegistration` are correct, not a pattern-matching error). All 396 SP 800-53 Rev 5 citations resolve against NIST's [OSCAL Rev 5 catalog](https://github.com/usnistgov/oscal-content) except one notation error, now fixed. All 22 CSF 2.0 subcategories are real. The "1,196 control statements across 20 families" figure in 9.1 was counted from the OSCAL catalog and is exact (324 base + 872 enhancements). Section 8's reference policy and `examples/managed-settings.json` are identical. The managed-settings file paths, macOS MDM domain, and Windows registry key are all correct. Both CVEs in 3.17 are real and accurately described.
+**Verified mechanically, high confidence.** All 32 Claude Code setting keys in section 4 exist in the published [settings schema](https://www.schemastore.org/claude-code-settings.json), with the nesting and enum values as written (the `"disable"` string values for `disableBypassPermissionsMode`, `disableAutoMode`, and `disableDeepLinkRegistration` are correct, not a pattern-matching error). All 396 SP 800-53 Rev 5 citations resolve against NIST's [OSCAL Rev 5 catalog](https://github.com/usnistgov/oscal-content) except one notation error, now fixed. All 22 CSF 2.0 subcategories were checked against NIST's CPRT export of the CSF 2.0 core (185 subcategories) and all 22 are valid. The "1,196 control statements across 20 families" figure in 9.1 was counted from the OSCAL catalog and is exact (324 base + 872 enhancements). Section 8's reference policy and `examples/managed-settings.json` are identical. The managed-settings file paths, macOS MDM domain, and Windows registry key are all correct. Both CVEs in 3.17 are real and accurately described.
 
 **Corrected in this pass.** Console panel locations in sections 1–3 were substantially wrong; the RBAC capability list was incomplete (14 claimed, 19 documented, plus seven admin permission areas omitted entirely); the Claude in Chrome default flipped to on as of 2026-09-10; the Cowork telemetry claim was inverted; `managed-mcp.json` was attributed to the wrong surface; "global instructions" is per-user, not an org control; and five reference links were dead. Each correction is called out inline.
+
+**Method, so you can weigh the corrections.** The schema, OSCAL, CSF, link, and CVE checks were run directly against primary sources and are reproducible. The admin-console panel names and locations in sections 1 to 3 came from delegated documentation research; the two corrections with the largest security consequence, the Claude in Chrome default and the Cowork telemetry default, were then re-verified by hand against Anthropic's own pages. The remaining panel corrections are name-for-name swaps carrying the support-article number they came from, and every one of those article URLs resolves, but they have not each been individually re-confirmed. Treat them as better than what they replaced rather than as gospel, and correct anything your own tenant contradicts.
 
 **Not verified, treat as open.** Whether Claude in Slack interactions surface in OTel. The `caffeinate`/Keep Awake behavior in 3.4. The Outlook-specific Graph consent step. The server-managed settings version floor. Section 6.1's Cowork audit-coverage question remains open and still needs a test in your own tenant.
 
@@ -46,7 +48,7 @@ These apply across all three surfaces. Nothing below them holds without them.
 
 | # | Setting | Location / how to implement | Baseline value | Level | NIST 800-53 / CSF 2.0 | Reference |
 |---|---|---|---|---|---|---|
-| 1.1 | SAML 2.0 / OIDC SSO | claude.ai, Organization settings, Organization and access. Verify the domain via a DNS TXT record (`anthropic-domain-verification-` prefix), configure the IdP, map attributes, pilot, then enable **Require SSO for Claude**. **Require SSO for Console** is a separate toggle covering the Console org; enabling one does not enable the other. | Enabled, enforced for all members, domains DNS-verified | L1 | IA-2, IA-2(1), IA-2(2), AC-17 / PR.AA-01, PR.AA-03 | [Set up SSO](https://support.claude.com/en/articles/13132885-set-up-single-sign-on-sso) |
+| 1.1 | SAML 2.0 / OIDC SSO | claude.ai, Organization settings, Organization and access. Verify the domain via a DNS TXT record (`anthropic-domain-verification-` prefix), configure the IdP, map attributes, pilot, then enable **Require SSO for Claude**. **Require SSO for Console** is a separate toggle covering the Console org; enabling one does not enable the other. | Enabled, enforced for all members, domains DNS-verified | L1 | IA-2, IA-2(1), IA-2(2) (both MFA enhancements depend on your IdP actually enforcing MFA; SSO enforcement alone does not satisfy them), AC-17 / PR.AA-01, PR.AA-03 | [Set up SSO](https://support.claude.com/en/articles/13132885-set-up-single-sign-on-sso) |
 | 1.2 | Provisioning mode | Same panel, User provisioning. Three options, not two: **Invite only** (default), **Just-in-time (JIT)**, and **SCIM directory sync**. Choose SCIM directory sync, complete the setup flow, then enable group mappings. | SCIM, not JIT. JIT has no deprovisioning half. | L1 | AC-2, AC-2(1), AC-2(3) / PR.AA-01 | [Set up JIT or SCIM provisioning](https://support.claude.com/en/articles/13133195-set-up-jit-or-scim-provisioning) |
 | 1.3 | Primary owners | Organization settings, Members | Exactly one | L1 | AC-6, AC-6(5) / PR.AA-05 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) |
 | 1.4 | Owner / membership_admin count | Organization settings, Members. Audit programmatically via `GET /v1/organizations/users` and count the elevated tier. | 2 to 3 total, each with documented justification | L1 | AC-6, AC-6(1), AC-6(5) / PR.AA-05 | [User management API](https://platform.claude.com/docs/en/manage-claude/user-management) |
@@ -81,14 +83,16 @@ Recommended gating:
 
 | Capability | Baseline | Level | NIST 800-53 / CSF 2.0 |
 |---|---|---|---|
-| Cowork | Approved groups only | L2 | AC-3, CM-7 / PR.PS-01 |
+| Claude Cowork | Approved groups only | L2 | AC-3, CM-7 / PR.PS-01 |
 | Claude Code | Engineering groups only | L2 | AC-3, CM-7 / PR.PS-01 |
 | Create skills | Designated skills-publisher group only | L2 | CM-11, SR-3 / GV.SC-06 |
-| Share skills with organization | Skills-publisher group only | L2 | AC-21, CM-11 / GV.SC-06 |
+| Share skills with the full organization | Skills-publisher group only | L2 | AC-21, CM-11 / GV.SC-06 |
 | Public projects | Disabled for standard users | L2 | AC-3, AC-21 / PR.DS-01 |
 | Claude for Chrome | Disabled, or approved groups only | L2 | CM-7, SC-18 / PR.PS-01 |
 | Code execution and file creation | Enabled where needed; note skills depend on it | L1 | CM-7, SC-39 / PR.PS-01 |
-| Web search, memory | Enabled by default, gate for L3 | L3 | CM-7, SI-12 / PR.PS-01 |
+| Web search, Memory | Enabled by default, gate for L3 | L3 | CM-7, SI-12 / PR.PS-01 |
+| Cowork in the cloud (beta) | Denied to all groups, matching the org toggle in 3.2 | L2 | AC-20, SC-7 / PR.IR-01 |
+| Skill and plugin security scanning | Enabled | L2 | SI-3, SR-11 / GV.SC-06 |
 
 Implementation: [Set up role-based permissions on Enterprise plans](https://support.claude.com/en/articles/13930458-set-up-role-based-permissions-on-enterprise-plans), [Manage custom roles](https://support.claude.com/en/articles/13930452-manage-custom-roles-on-enterprise-plans), [Manage groups and group spend limits](https://support.claude.com/en/articles/13799932-manage-groups-and-group-spend-limits-on-enterprise-plans).
 
@@ -242,16 +246,18 @@ Implementation reference: [Claude Code settings and managed policy](https://code
 
 Two keys appear in the section 8 reference policy without a row above: `pluginTrustMessage` (the text shown when a plugin is blocked, no security effect on its own) and `allowedChannelPlugins` (`[]` alongside `channelsEnabled: false`, CM-7).
 
-**Weakening keys worth pinning explicitly.** Every key below exists in the published settings schema and each one loosens the sandbox if a lower layer sets it. A managed policy that omits them leaves them available; pin them:
+**Weakening keys worth pinning explicitly.** Each key below exists in the published settings schema and loosens the sandbox if a lower layer sets it. Descriptions are quoted or paraphrased from the schema's own `description` field, not inferred from the key name. These are **not** in the section 8 reference policy below; add them deliberately after reading the interaction notes.
 
-| Key | Pin to | Why |
-|---|---|---|
-| `sandbox.filesystem.disabled` | `false` | Turns off filesystem sandboxing wholesale |
-| `sandbox.ignoreViolations` | `false` | Sandbox violations stop being enforcement and become log lines |
-| `sandbox.enableWeakerNetworkIsolation` | `false` | Network-side counterpart to `enableWeakerNestedSandbox` (4.27), which this baseline already pins |
-| `sandbox.credentials.allowPlaintextInject` | `false` | Governs plaintext credential injection into the sandbox |
-| `sandbox.network.deniedDomains` | your blocklist | Explicit deny alongside the 4.24 allowlist |
-| `sandbox.network.strictAllowlist` | `true` | Tightens allowlist matching |
+| Key | Type | Pin to | What it actually does |
+|---|---|---|---|
+| `sandbox.filesystem.disabled` | boolean, default `false` | `false` | "Skip filesystem isolation while keeping network isolation: sandboxed commands get unrestricted read and write access to the host filesystem." Only honored from user, managed, or CLI settings. v2.1.216+ |
+| `sandbox.ignoreViolations` | **object**, not boolean | omit entirely | A map of command patterns to filesystem paths whose violations are ignored, with `"*"` matching all commands. It is an exemption list, so the hardened state is an absent or empty map, not `false`. |
+| `sandbox.credentials.allowPlaintextInject` | boolean, default `false` | `false` | "Allow mask substitution on plain HTTP requests as well as TLS-terminated HTTPS. On plain HTTP the upstream identity is unverified and the credential travels in cleartext." v2.1.199+ |
+| `sandbox.network.deniedDomains` | array | your blocklist | "Blocks specific domains even when a broader `allowedDomains` wildcard would otherwise permit them." Supports wildcards. Complements 4.24 rather than duplicating it. |
+| `sandbox.network.strictAllowlist` | boolean | `true`, with testing | "Deny non-allowlisted hosts for sandboxed commands without prompting" (v2.1.219+). The schema marks this key **UNDOCUMENTED**, so pin it only after validating behavior in your own fleet. |
+| `sandbox.enableWeakerNetworkIsolation` | boolean, default `false` | `false` — but read the conflict | **macOS only.** Allows sandbox access to the system TLS trust service. Not a general "weaker network" switch. |
+
+That last one conflicts directly with 1.7. Its schema note says it is "required for Go-based tools like `gh`, `gcloud`, and `terraform` to verify TLS certificates when using `httpProxyPort` with a MITM proxy and custom CA," and it "reduces security by opening a potential data exfiltration path." Tenant restrictions (1.7) require TLS inspection, which is exactly that configuration. So on macOS fleets running both, you are choosing between working `gh`/`terraform` inside the sandbox and closing that path. Decide it consciously and write down which way you went; do not let it be settled by whoever files the first broken-tooling ticket.
 
 Sandbox platform support: macOS uses Seatbelt and is built in. Linux and WSL2 need `bubblewrap` and `socat` installed. Windows is not supported, which means Windows developers get permission rules but no kernel-level enforcement. Plan around that.
 
@@ -509,7 +515,7 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 
 | Baseline control | SP 800-53 Rev 5 | CSF 2.0 | AI RMF |
 |---|---|---|---|
-| 1.1 SSO enforcement | IA-2, IA-2(1), IA-2(2), AC-17 | PR.AA-01, PR.AA-03 | GOVERN 2 |
+| 1.1 SSO enforcement | IA-2, IA-2(1), IA-2(2) (MFA enhancements IdP-dependent), AC-17 | PR.AA-01, PR.AA-03 | GOVERN 2 |
 | 1.2 SCIM provisioning | AC-2, AC-2(1), AC-2(3) | PR.AA-01 | GOVERN 2 |
 | 1.3, 1.4 Owner minimization | AC-6, AC-6(1), AC-6(5) | PR.AA-05 | GOVERN 2 |
 | 1.5 `managed` member role | AC-2(7), AC-3, AC-6 | PR.AA-05 | GOVERN 2 |
