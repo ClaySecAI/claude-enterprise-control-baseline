@@ -20,6 +20,8 @@ This fills the gap in the meantime: an assessable control layer built on SP 800-
 |---|---|
 | [`docs/claude-enterprise-control-baseline.md`](docs/claude-enterprise-control-baseline.md) | The baseline. Control tables per surface, NIST crosswalk, threat mapping, known gaps, operating cadence. |
 | [`examples/managed-settings.json`](examples/managed-settings.json) | L2 Claude Code managed settings policy, ready for MDM deployment |
+| [`CHANGELOG.md`](CHANGELOG.md) | What's changed in the baseline itself, and when |
+| [`automation/`](automation/README.md) | Weekly watcher that flags upstream Anthropic changes worth reviewing against this baseline |
 
 ## Profile levels
 
@@ -54,6 +56,8 @@ Anthropic ships admin console changes roughly monthly, and reorganized its docum
 The NIST draft statuses cited (IR 8596 preliminary draft, COSAiS NISTIR 8605 series in development) were verified 2026-09-11 and will change.
 
 Validate every setting against your own tenant before adopting. Issues and PRs welcome, particularly corrections where a setting has moved or a value is wrong.
+
+A [weekly watcher](automation/README.md) checks Anthropic's own release notes and changelogs and opens an issue when something changed. It flags candidates for review — it does not decide relevance and does not edit the baseline itself.
 
 ## Disclaimer
 

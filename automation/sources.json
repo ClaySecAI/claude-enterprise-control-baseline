@@ -1,0 +1,23 @@
+[
+  {
+    "id": "platform-release-notes",
+    "label": "Claude Platform release notes (Console / API / org settings)",
+    "url": "https://platform.claude.com/docs/en/release-notes/overview",
+    "type": "html",
+    "baseline_surface": "Web"
+  },
+  {
+    "id": "claude-apps-release-notes",
+    "label": "Claude Apps release notes (web / desktop / Claude in Chrome)",
+    "url": "https://support.claude.com/en/articles/12138966-release-notes",
+    "type": "html",
+    "baseline_surface": "Web/Desktop"
+  },
+  {
+    "id": "claude-code-changelog",
+    "label": "Claude Code CHANGELOG (CLI / managed settings)",
+    "url": "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md",
+    "type": "raw",
+    "baseline_surface": "CLI"
+  }
+]

@@ -4,3 +4,7 @@ Thumbs.db
 .claude/
 .env
 .env.*
+
+# Regenerated each run by automation/check_updates.py; the state/ snapshots
+# it's diffed against are committed, this scratch summary is not.
+automation/last-diff.md

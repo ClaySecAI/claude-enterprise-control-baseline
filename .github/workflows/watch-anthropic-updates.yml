@@ -1,0 +1,57 @@
+name: Watch Anthropic updates
+
+on:
+  schedule:
+    - cron: "17 9 * * 1" # every Monday, 09:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Check tracked sources for changes
+        id: check
+        run: python3 automation/check_updates.py
+
+      - name: Commit updated snapshots
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add automation/state
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(automation): update tracked source snapshots
+
+          Detected by the Anthropic-update watcher. See the linked issue
+          for what changed and whether the baseline needs an update."
+          git push
+
+      - name: Ensure tracking label exists
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create anthropic-update \
+            --color FBCA04 \
+            --description "Possible upstream Anthropic change worth reviewing against the baseline" \
+            --force
+
+      - name: Open issue with the diff
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Anthropic update check: $(date -u +%Y-%m-%d)" \
+            --label anthropic-update \
+            --body-file automation/last-diff.md
