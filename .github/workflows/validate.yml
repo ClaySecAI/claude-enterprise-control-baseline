@@ -1,0 +1,30 @@
+name: Validate control tables
+
+# Stage 2 edits the control tables unattended, so this runs on every PR and
+# push that touches the baseline. Catches broken table structure and missing
+# or malformed Drafted dates before they reach main.
+
+on:
+  pull_request:
+    paths:
+      - "docs/claude-enterprise-control-baseline.md"
+      - "automation/check_tables.py"
+  push:
+    branches: [main]
+    paths:
+      - "docs/claude-enterprise-control-baseline.md"
+      - "automation/check_tables.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  tables:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python3 automation/check_tables.py

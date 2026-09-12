@@ -6,6 +6,17 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-12 — `Drafted` column added
+
+Every control row now carries a `Drafted` date: the date that row's substance was last authored against upstream documentation. It is not a "verified on" date and makes no claim about current accuracy.
+
+Its purpose is triage for the automation. When the watcher surfaces an upstream change dated *D*, rows drafted before *D* were written without knowledge of it and are the revision candidates, and a capability with no row at all is a coverage gap wanting a new control. Without the dates, every run would have to re-reason about the whole document to work out what is new.
+
+- 64 rows at 2026-09-11 (original drafting), 27 at 2026-09-12 (substance rewritten in the verification pass below). Rows where only a reference URL changed kept their original date.
+- Rule going forward: bump a row's date only when its substance changes. Link, typo, and NIST-identifier fixes do not bump it. New rows are stamped with the day they are added.
+- [`automation/check_tables.py`](automation/check_tables.py) enforces table structure and date format; [`validate.yml`](.github/workflows/validate.yml) runs it on every PR, since Stage 2 edits these tables unattended.
+- Stage 2's prompt now uses the dates for triage and is told never to backfill dates onto rows it did not edit.
+
 ## 2026-09-12 — first verification pass
 
 Every control setting, framework identifier, and link re-checked against primary sources. The document had never been verified row by row before this.

@@ -62,21 +62,34 @@ jobs:
                managed settings, audit logging, DLP, Claude in Chrome permissions,
                scheduled tasks, etc). Pricing, rate limits, SDK-only changes, plain bug
                fixes, and end-user feature announcements are NOT relevant -- skip them.
+
+               Use the `Drafted` column to triage. Every control row carries the date
+               its substance was last authored against upstream docs. For an upstream
+               change dated D:
+                 - Rows in the affected surface with `Drafted` EARLIER than D were
+                   written without knowledge of this change. Those are your candidates
+                   for revision -- check each one for whether the change contradicts it.
+                 - If no row in that surface covers the capability at all, regardless of
+                   date, that is a COVERAGE GAP and wants a new control row, not an edit
+                   to an existing one. Say so explicitly in the PR body; a new capability
+                   with no control is the single most valuable thing this job can find.
+                 - A row already dated on or after D has likely accounted for the change.
+                   Say why you are skipping it rather than silently leaving it.
             4. For each relevant change:
                - If it updates an existing control row (match by Reference link or
-                 Setting name), update that row's content and add a "Verified" date
-                 to it. If that row's table has no "Verified" column yet, add one to
-                 that specific table only, and set every OTHER existing row in that
-                 same table to "—" -- do not backfill today's date onto rows you
-                 have not actually rechecked, that misrepresents them as freshly
-                 verified when they are not.
+                 Setting name), update that row's content and set that row's `Drafted`
+                 date to today. Bump the date ONLY when the substance changes: fixing
+                 a link, a typo, or a NIST identifier does not bump it, because the
+                 control itself did not change. Never touch the `Drafted` date on a
+                 row you did not edit -- those dates are the triage signal for every
+                 future run, and backfilling them destroys it.
                - If it's a genuinely new setting with no existing row, add one in the
-                 right section, matching that table's exact column format, with
-                 today's date in "Verified". Propose a NIST SP 800-53 / CSF 2.0
-                 crosswalk in the same style as neighboring rows; if you're not
-                 confident in the mapping, still write your best attempt but append
-                 " (proposed -- verify)" to that cell rather than presenting a guess
-                 as settled fact.
+                 right section, matching that table's exact column format including
+                 the trailing `Drafted` column, stamped with today's date. Propose a
+                 NIST SP 800-53 / CSF 2.0 crosswalk in the same style as neighboring
+                 rows; if you're not confident in the mapping, still write your best
+                 attempt but append " (proposed -- verify)" to that cell rather than
+                 presenting a guess as settled fact.
                - Add one dated entry per relevant change under a new heading (today's
                  date) in `CHANGELOG.md`, naming the section/row touched and linking
                  the source URL from the issue.
@@ -84,7 +97,11 @@ jobs:
                Instead, comment on the issue explaining what you reviewed and why none
                of it warranted a change, close the issue with `gh issue close`, and
                stop there -- do not open a PR for a no-op.
-            6. If there ARE relevant changes: create branch
+            6. Before committing anything, run `python3 automation/check_tables.py`
+               and fix whatever it reports. It verifies every control table's
+               column counts still line up and every control row carries a
+               valid `Drafted` date. Do not open a PR while it exits non-zero.
+            7. If there ARE relevant changes: create branch
                `claude/anthropic-update-${{ env.ISSUE_NUMBER }}`, commit the doc
                changes there, push it, and `gh pr create` against `main`. The PR body
                must summarize what changed, list anything you deliberately skipped and

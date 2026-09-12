@@ -1,6 +1,6 @@
 # Staleness watcher
 
-Two stages. Only the first exists yet.
+Two stages, both built. Stage 1 detects upstream change; Stage 2 drafts the baseline update for review.
 
 **Stage 1 (this one, automated, no judgment involved).** [`watch-anthropic-updates.yml`](../.github/workflows/watch-anthropic-updates.yml) runs weekly, or on demand via `workflow_dispatch`. It calls [`check_updates.py`](check_updates.py), which fetches the sources in [`sources.json`](sources.json), diffs each against the snapshot committed under `state/`, and:
 
@@ -22,10 +22,12 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 
 **Also known:** the Claude Apps release-notes page is a Zendesk Help Center article with the full site sidebar nav on it, so a new unrelated help article elsewhere on the site can trigger a false-positive diff. Cheaper to tolerate a false positive you dismiss than to write brittle selector-scraping that silently breaks when the site's markup changes.
 
+**The `Drafted` column.** Every control row in the baseline carries the date its substance was last authored against upstream docs. It is not a "verified on" date. It exists so Stage 2 can triage an upstream change dated *D*: rows drafted before *D* were written without knowledge of it and are revision candidates, while a capability with no row at all is a coverage gap wanting a new control. Bump a row's date only when its substance changes — a link or typo fix does not count — and never backfill dates onto rows you did not edit, because that erases the signal. [`check_tables.py`](check_tables.py) enforces the structure and runs on every PR via [`validate.yml`](../.github/workflows/validate.yml).
+
 **Stage 2.** [`draft-baseline-update.yml`](../.github/workflows/draft-baseline-update.yml) triggers off the same `anthropic-update` issue (on `opened` or `labeled`, or manually via `workflow_dispatch` with an `issue_number`). It runs the [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) with a fixed prompt: read the issue's diff, read the current baseline, judge whether each change is admin/security-relevant, and:
 
 - if nothing is relevant: comment on the issue explaining why, close it, and stop — no PR for a no-op.
-- if something is relevant: update or add the affected control row (adding a "Verified" column to that table if it doesn't have one yet, defaulting *other* rows in that table to `—` rather than backfilling a date on rows nobody actually rechecked), add a dated `CHANGELOG.md` entry, and open a PR against `main` that closes the tracking issue on merge.
+- if something is relevant: update or add the affected control row, bump only that row's `Drafted` date, add a dated `CHANGELOG.md` entry, and open a PR against `main` that closes the tracking issue on merge. It runs `check_tables.py` before committing.
 
 It never merges its own PR, never pushes to `main`, and is instructed to mark any NIST crosswalk it isn't confident about as `(proposed — verify)` rather than presenting a guess as settled. You are still the reviewer of record for every PR it opens.
 
@@ -44,8 +46,9 @@ Until that secret exists, the workflow will trigger and fail visibly at the Clau
 ## Running it locally
 
 ```bash
-python3 automation/check_updates.py
-cat automation/last-diff.md   # only exists if something changed
+python3 automation/check_updates.py   # diff the tracked sources
+cat automation/last-diff.md           # only exists if something changed
+python3 automation/check_tables.py    # validate control tables and Drafted dates
 ```
 
 No dependencies beyond the standard library.
