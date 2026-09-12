@@ -6673,4 +6673,3 @@
 ## 0.2.21
 
 - Fuzzy matching for /commands
-TEST: forcing a diff to validate the changed=true path
