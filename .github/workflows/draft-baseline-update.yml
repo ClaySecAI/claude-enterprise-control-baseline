@@ -1,0 +1,95 @@
+name: Draft baseline update from Anthropic change
+
+# Triggered by the anthropic-update issue that watch-anthropic-updates.yml opens.
+# Reads the diff in that issue, decides whether it's baseline-relevant, and if so
+# opens a PR for a human to review. Never merges anything itself.
+
+on:
+  issues:
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "anthropic-update issue number to (re-)run against"
+        required: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  draft-update:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'anthropic-update')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git identity
+        run: |
+          git config user.name "claude[bot]"
+          git config user.email "claude-baseline-bot@users.noreply.github.com"
+
+      - name: Draft a baseline update PR
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --allowedTools "Bash(git:*),Bash(gh:*),Read,Edit,Write,Grep,Glob"
+            --max-turns 40
+          prompt: |
+            An automated watcher opened issue #${{ env.ISSUE_NUMBER }} in this repository
+            because it detected a change on one of three Anthropic sources it tracks
+            (Claude Platform release notes, Claude Apps release notes, or the Claude Code
+            CHANGELOG). The issue body holds the raw diff.
+
+            Do this:
+
+            1. Read the issue: `gh issue view ${{ env.ISSUE_NUMBER }} --json body,title -q .body`
+            2. Read `docs/claude-enterprise-control-baseline.md`, `README.md`, and
+               `CHANGELOG.md` to learn the current control-table format, section
+               structure, and NIST crosswalk style already in use.
+            3. For each distinct change in the diff, judge whether it touches an org
+               admin, security, or governance setting the baseline covers (SSO/SCIM,
+               permission/role settings, connectors, MCP or plugin trust, sandboxing,
+               managed settings, audit logging, DLP, Claude in Chrome permissions,
+               scheduled tasks, etc). Pricing, rate limits, SDK-only changes, plain bug
+               fixes, and end-user feature announcements are NOT relevant -- skip them.
+            4. For each relevant change:
+               - If it updates an existing control row (match by Reference link or
+                 Setting name), update that row's content and add a "Verified" date
+                 to it. If that row's table has no "Verified" column yet, add one to
+                 that specific table only, and set every OTHER existing row in that
+                 same table to "—" -- do not backfill today's date onto rows you
+                 have not actually rechecked, that misrepresents them as freshly
+                 verified when they are not.
+               - If it's a genuinely new setting with no existing row, add one in the
+                 right section, matching that table's exact column format, with
+                 today's date in "Verified". Propose a NIST SP 800-53 / CSF 2.0
+                 crosswalk in the same style as neighboring rows; if you're not
+                 confident in the mapping, still write your best attempt but append
+                 " (proposed -- verify)" to that cell rather than presenting a guess
+                 as settled fact.
+               - Add one dated entry per relevant change under a new heading (today's
+                 date) in `CHANGELOG.md`, naming the section/row touched and linking
+                 the source URL from the issue.
+            5. If NOTHING in the diff is baseline-relevant: make no doc changes.
+               Instead, comment on the issue explaining what you reviewed and why none
+               of it warranted a change, close the issue with `gh issue close`, and
+               stop there -- do not open a PR for a no-op.
+            6. If there ARE relevant changes: create branch
+               `claude/anthropic-update-${{ env.ISSUE_NUMBER }}`, commit the doc
+               changes there, push it, and `gh pr create` against `main`. The PR body
+               must summarize what changed, list anything you deliberately skipped and
+               why, and end with `Closes #${{ env.ISSUE_NUMBER }}` so merging it closes
+               the tracking issue.
+
+            Hard constraints: never merge the PR yourself, never push directly to
+            `main`, never touch a section of the baseline the diff doesn't justify
+            touching, and never present a guessed NIST mapping as verified.

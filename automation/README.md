@@ -22,7 +22,20 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 
 **Also known:** the Claude Apps release-notes page is a Zendesk Help Center article with the full site sidebar nav on it, so a new unrelated help article elsewhere on the site can trigger a false-positive diff. Cheaper to tolerate a false positive you dismiss than to write brittle selector-scraping that silently breaks when the site's markup changes.
 
-**Stage 2 (not built yet).** Something — you, or a Claude Code Action triggered off the `anthropic-update` label — reads the diff in the issue, decides whether it's baseline-relevant, and if so opens a PR that: adds/updates the relevant control row with today's date, and adds an entry to [`CHANGELOG.md`](../CHANGELOG.md). Deliberately never auto-merges; a security baseline shouldn't rewrite itself unreviewed.
+**Stage 2.** [`draft-baseline-update.yml`](../.github/workflows/draft-baseline-update.yml) triggers off the same `anthropic-update` issue (on `opened` or `labeled`, or manually via `workflow_dispatch` with an `issue_number`). It runs the [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) with a fixed prompt: read the issue's diff, read the current baseline, judge whether each change is admin/security-relevant, and:
+
+- if nothing is relevant: comment on the issue explaining why, close it, and stop — no PR for a no-op.
+- if something is relevant: update or add the affected control row (adding a "Verified" column to that table if it doesn't have one yet, defaulting *other* rows in that table to `—` rather than backfilling a date on rows nobody actually rechecked), add a dated `CHANGELOG.md` entry, and open a PR against `main` that closes the tracking issue on merge.
+
+It never merges its own PR, never pushes to `main`, and is instructed to mark any NIST crosswalk it isn't confident about as `(proposed — verify)` rather than presenting a guess as settled. You are still the reviewer of record for every PR it opens.
+
+**Setup required before Stage 2 can run:** it needs an `ANTHROPIC_API_KEY` repo secret. Add it yourself — this is not something to hand to any automation:
+
+```bash
+gh secret set ANTHROPIC_API_KEY --repo ClaySecAI/claude-enterprise-control-baseline
+```
+
+Until that secret exists, the workflow will trigger and fail visibly at the Claude Code Action step rather than silently doing nothing.
 
 ## Running it locally
 
