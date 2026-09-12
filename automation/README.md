@@ -29,6 +29,10 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 
 It never merges its own PR, never pushes to `main`, and is instructed to mark any NIST crosswalk it isn't confident about as `(proposed — verify)` rather than presenting a guess as settled. You are still the reviewer of record for every PR it opens.
 
+Runs on Claude Haiku 4.5 (`--model claude-haiku-4-5-20251001` in `claude_args`), not Sonnet — this is a triage/drafting task gated by human review either way, so the cheaper model is the right tradeoff. Bump it back to a Sonnet model in the workflow if the PRs it drafts turn out to need better judgment than Haiku gives.
+
+We looked at routing this through Nous Portal instead of the direct Anthropic API to cut cost further, but its `inference-api.nousresearch.com` endpoint speaks an OpenAI-chat-completions-style schema, while Claude Code's `ANTHROPIC_BASE_URL` only speaks Anthropic's native Messages API — incompatible wire formats, not just a config toggle. Bridging that would mean adding an unofficial translation proxy into this repo's own CI, which is more attack surface and trust exposure than it's worth for a hardening reference. Model choice was the actual lever for cost; we used it directly instead.
+
 **Setup required before Stage 2 can run:** it needs an `ANTHROPIC_API_KEY` repo secret. Add it yourself — this is not something to hand to any automation:
 
 ```bash
