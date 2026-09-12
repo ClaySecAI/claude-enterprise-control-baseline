@@ -55,6 +55,8 @@ Anthropic ships admin console changes roughly monthly, and reorganized its docum
 
 The NIST draft statuses cited (IR 8596 preliminary draft, COSAiS NISTIR 8605 series in development) were verified 2026-09-11 and will change.
 
+**Verified 2026-09-12.** Every control setting, framework identifier, and link was re-checked against primary sources — the settings JSON schema, NIST's OSCAL Rev 5 catalog, and Anthropic's current admin documentation. That pass found and fixed real errors, including a Claude in Chrome default that flipped to *on* on 2026-09-10, an inverted claim about Cowork telemetry defaults, an incomplete RBAC capability list, and five dead links. See [CHANGELOG.md](CHANGELOG.md) for the full list and the verification section at the top of the baseline for what was confirmed correct and what remains unverified.
+
 Validate every setting against your own tenant before adopting. Issues and PRs welcome, particularly corrections where a setting has moved or a value is wrong.
 
 A [weekly watcher](automation/README.md) checks Anthropic's own release notes and changelogs and opens an issue when something changed. It flags candidates for review — it does not decide relevance and does not edit the baseline itself.
