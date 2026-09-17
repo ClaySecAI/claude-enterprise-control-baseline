@@ -6,6 +6,20 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-17 — NIST identifiers validated in CI
+
+The verification pass on 2026-09-12 checked every NIST citation by hand and then made no arrangement to keep checking. Stage 2 proposes crosswalk mappings unattended on a small model, and `check_tables.py` validates structure only — it passes a row citing a control that does not exist. That is the one failure mode this repository's central claim cannot survive, so it is now checked by machine on every change.
+
+- Added [`automation/check_nist.py`](automation/check_nist.py). Validates every SP 800-53 Rev 5 and CSF 2.0 identifier under `docs/` against an ID inventory generated from NIST's own OSCAL catalogs. Runs offline against the committed [`automation/state/nist-ids.json`](automation/state/nist-ids.json); `--refresh` regenerates that inventory when NIST publishes a new catalog release.
+- Wired into [`validate.yml`](.github/workflows/validate.yml) alongside `check_tables.py`, and added to Stage 2's pre-commit gate. Stage 2 is told not to run `--refresh`, since rewriting the inventory is not what a failing check means.
+- **Fixed a bug that made Stage 2's existing validation step unreachable.** Its `--allowedTools` list had no `Bash(python3:*)` entry, so the instruction to run `check_tables.py` before opening a PR could never have executed. Both validators are now runnable there.
+- Current counts, produced by the validator rather than asserted: 401 SP 800-53 citations across 72 distinct written references, 149 CSF 2.0 citations across 22 distinct subcategories, all resolving. The prior hand count of "396" in the verification section was stale; the figure is now generated.
+- Corrected the CSF 2.0 sourcing claim. That count was attributed to NIST's CPRT export, but CPRT sits on `csrc.nist.gov`, which returns 403 to automated clients and cannot be used from CI. NIST's `usnistgov/oscal-content` repository carries CSF 2.0 alongside SP 800-53 and is reachable, so both catalogs now come from there. The 185-subcategory figure is confirmed correct against it.
+- `AC-2j` is now recognised as a statement-part reference rather than treated as a control ID, and reported separately so it stays deliberate.
+- Bumped `actions/checkout` from v4 to v5 across all three workflows; v4 pins Node 20, which GitHub has deprecated.
+
+Known limits, documented in [`automation/README.md`](automation/README.md): the validator cannot detect a real-but-wrong mapping (`IA-8`, `IA-5(1)` and `SI-10` all exist and are all wrong for the things they get cited for), and an identifier whose family letters are not a real 800-53 family is skipped rather than flagged.
+
 ## 2026-09-12 — `Drafted` column added
 
 Every control row now carries a `Drafted` date: the date that row's substance was last authored against upstream documentation. It is not a "verified on" date and makes no claim about current accuracy.

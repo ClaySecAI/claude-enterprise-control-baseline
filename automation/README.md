@@ -24,6 +24,26 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 
 **The `Drafted` column.** Every control row in the baseline carries the date its substance was last authored against upstream docs. It is not a "verified on" date. It exists so Stage 2 can triage an upstream change dated *D*: rows drafted before *D* were written without knowledge of it and are revision candidates, while a capability with no row at all is a coverage gap wanting a new control. Bump a row's date only when its substance changes — a link or typo fix does not count — and never backfill dates onto rows you did not edit, because that erases the signal. [`check_tables.py`](check_tables.py) enforces the structure and runs on every PR via [`validate.yml`](../.github/workflows/validate.yml).
 
+## Validators
+
+Two, both wired to [`validate.yml`](../.github/workflows/validate.yml) and both required by Stage 2 before it may open a PR.
+
+[`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date.
+
+[`check_nist.py`](check_nist.py) checks that every SP 800-53 Rev 5 and CSF 2.0 identifier in `docs/` actually exists. This matters because Stage 2 proposes NIST crosswalks unattended on a small model, and structure validation will happily pass a row citing a control that was never written. For a document whose central claim is that its citations were verified, that was the gap worth closing.
+
+It validates against [`state/nist-ids.json`](state/nist-ids.json), an ID inventory generated from NIST's own OSCAL catalogs, so CI needs no network and the result is deterministic. Regenerate it when NIST publishes a new release of either catalog:
+
+```bash
+python3 automation/check_nist.py --refresh
+```
+
+Both catalogs come from [`usnistgov/oscal-content`](https://github.com/usnistgov/oscal-content), which carries CSF 2.0 as well as SP 800-53 — worth knowing, because `csrc.nist.gov` returns 403 to automated clients and cannot be used from CI.
+
+Two limits to be honest about. **A real ID can still be the wrong mapping**, and no catalog check detects that: `IA-8` exists but is non-organizational users and is wrong for employee SSO, `IA-5(1)` exists but is password-based authenticators and is wrong for API key rotation, and `SI-10` exists but does not reach prompt injection. Semantic fit stays a human job, which is why Stage 2 is told to mark uncertain mappings `(proposed — verify)`. Second, an identifier whose *family* letters are not a real 800-53 family is skipped rather than flagged, so `ZZ-1` passes silently; this keeps unrelated identifiers elsewhere in the document from being misread as citations, at the cost of not catching a typo in the family itself.
+
+One parsing detail worth preserving if this is ever rewritten: a naive `[A-Z]{2}-\d+` pattern matches the tail of every CSF subcategory — `PR.PS-01` yields `PS-01`, `DE.CM-09` yields `CM-09` — and because `PS`, `CM`, `IR`, `RA` and `SC` are all real 800-53 families, those phantoms survive the family filter and report as eleven failures that are not real. The negative lookbehind in `SP_REF` is what prevents that.
+
 **Stage 2.** [`draft-baseline-update.yml`](../.github/workflows/draft-baseline-update.yml) triggers off the same `anthropic-update` issue (on `opened` or `labeled`, or manually via `workflow_dispatch` with an `issue_number`). It runs the [Claude Code GitHub Action](https://github.com/anthropics/claude-code-action) with a fixed prompt: read the issue's diff, read the current baseline, judge whether each change is admin/security-relevant, and:
 
 - if nothing is relevant: comment on the issue explaining why, close it, and stop — no PR for a no-op.
@@ -46,9 +66,11 @@ Until that secret exists, the workflow will trigger and fail visibly at the Clau
 ## Running it locally
 
 ```bash
-python3 automation/check_updates.py   # diff the tracked sources
-cat automation/last-diff.md           # only exists if something changed
-python3 automation/check_tables.py    # validate control tables and Drafted dates
+python3 automation/check_updates.py           # diff the tracked sources
+cat automation/last-diff.md                   # only exists if something changed
+python3 automation/check_tables.py            # control tables and Drafted dates
+python3 automation/check_nist.py              # NIST identifiers resolve
+python3 automation/check_nist.py --refresh    # rebuild the NIST ID inventory
 ```
 
 No dependencies beyond the standard library.

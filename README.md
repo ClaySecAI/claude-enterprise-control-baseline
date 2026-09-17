@@ -21,7 +21,7 @@ This fills the gap in the meantime: an assessable control layer built on SP 800-
 | [`docs/claude-enterprise-control-baseline.md`](docs/claude-enterprise-control-baseline.md) | The baseline. Control tables per surface, NIST crosswalk, threat mapping, known gaps, operating cadence. |
 | [`examples/managed-settings.json`](examples/managed-settings.json) | L2 Claude Code managed settings policy, ready for MDM deployment |
 | [`CHANGELOG.md`](CHANGELOG.md) | What's changed in the baseline itself, and when |
-| [`automation/`](automation/README.md) | Weekly watcher that flags upstream Anthropic changes worth reviewing against this baseline |
+| [`automation/`](automation/README.md) | Weekly watcher that flags upstream Anthropic changes worth reviewing against this baseline, plus the two validators CI runs on every change |
 
 ## Profile levels
 
@@ -56,6 +56,8 @@ Anthropic ships admin console changes roughly monthly, and reorganized its docum
 The NIST draft statuses cited (IR 8596 preliminary draft, COSAiS NISTIR 8605 series in development) were verified 2026-09-11 and will change.
 
 **Verified 2026-09-12.** Every control setting, framework identifier, and link was re-checked against primary sources — the settings JSON schema, NIST's OSCAL Rev 5 catalog, and Anthropic's current admin documentation. That pass found and fixed real errors, including a Claude in Chrome default that flipped to *on* on 2026-09-10, an inverted claim about Cowork telemetry defaults, an incomplete RBAC capability list, and five dead links. See [CHANGELOG.md](CHANGELOG.md) for the full list and the verification section at the top of the baseline for what was confirmed correct and what remains unverified.
+
+Since 2026-09-17 the NIST half of that no longer depends on anyone remembering to re-check it: [`automation/check_nist.py`](automation/check_nist.py) validates every SP 800-53 and CSF 2.0 identifier against NIST's own OSCAL catalogs on every change, and CI fails if one does not resolve. It cannot tell you a mapping is *wrong* — only that the control exists. Semantic fit is still a human job.
 
 Validate every setting against your own tenant before adopting. Issues and PRs welcome, particularly corrections where a setting has moved or a value is wrong.
 

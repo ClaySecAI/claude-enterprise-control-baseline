@@ -25,7 +25,7 @@ jobs:
       contains(github.event.issue.labels.*.name, 'anthropic-update')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure git identity
         run: |
@@ -42,7 +42,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
             --model claude-haiku-4-5-20251001
-            --allowedTools "Bash(git:*),Bash(gh:*),Read,Edit,Write,Grep,Glob"
+            --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3:*),Read,Edit,Write,Grep,Glob"
             --max-turns 40
           prompt: |
             An automated watcher opened issue #${{ env.ISSUE_NUMBER }} in this repository
@@ -97,10 +97,28 @@ jobs:
                Instead, comment on the issue explaining what you reviewed and why none
                of it warranted a change, close the issue with `gh issue close`, and
                stop there -- do not open a PR for a no-op.
-            6. Before committing anything, run `python3 automation/check_tables.py`
-               and fix whatever it reports. It verifies every control table's
-               column counts still line up and every control row carries a
-               valid `Drafted` date. Do not open a PR while it exits non-zero.
+            6. Before committing anything, run BOTH validators and fix whatever
+               they report. Do not open a PR while either exits non-zero.
+               - `python3 automation/check_tables.py` verifies every control
+                 table's column counts still line up and every control row
+                 carries a valid `Drafted` date.
+               - `python3 automation/check_nist.py` verifies every SP 800-53 and
+                 CSF 2.0 identifier in the document resolves against NIST's own
+                 OSCAL catalogs. Any crosswalk you propose in step 4 must pass
+                 this. If an identifier you wanted does not resolve, that means
+                 it does not exist -- find the real one or drop the mapping. Do
+                 not run it with `--refresh`: that rewrites the committed NIST
+                 inventory, which is not yours to change and is not what a
+                 failure here is telling you to do.
+
+               Note that a control ID existing is not the same as it being the
+               right mapping. `IA-8` is non-organizational users and is wrong
+               for employee SSO; `IA-5(1)` is password-based authenticators and
+               is wrong for API key rotation; `SI-10` is input validation
+               against a defined specification and does not cover prompt
+               injection. The validator cannot catch a wrong-but-real mapping,
+               which is why step 4 tells you to mark anything you are unsure of
+               `(proposed -- verify)`.
             7. If there ARE relevant changes: create branch
                `claude/anthropic-update-${{ env.ISSUE_NUMBER }}`, commit the doc
                changes there, push it, and `gh pr create` against `main`. The PR body
