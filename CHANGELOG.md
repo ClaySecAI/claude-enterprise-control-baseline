@@ -6,6 +6,20 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-18 — watcher reaches `main` only through review
+
+The two watcher stages were separate workflows joined by an issue, and that handoff had never once worked. Stage 1 fired on schedule on 2026-09-14, detected a real change and opened an issue; Stage 2 produced no run at all — not a skipped one, none. GitHub does not fire workflow triggers for events raised with the repository's own `GITHUB_TOKEN`, so the issue was inert, and both halves looked healthy from the Actions tab. The contrast that identified it: twelve issues created the same week through the API with a user token each produced a Stage 2 run, correctly skipped by the label guard.
+
+- Merged both stages into `watch-anthropic-updates.yml` as dependent jobs of one run. A job dependency involves no event, so the restriction does not apply. `workflow_dispatch` and `repository_dispatch` are suppressed the same way and would not have helped.
+- **The watcher no longer pushes to `main`.** Snapshots go to a `watch/upstream-<date>-<run>` branch and reach `main` only through a reviewed pull request. This is what lets `main` carry a protection ruleset, and it makes "a security baseline must not rewrite itself unreviewed" structural rather than aspirational — previously the snapshot half of that promise was a direct push.
+- The snapshot PR is opened by the `check` job, before any model runs. It has to advance even when nothing is baseline-relevant, or the same diff re-reports weekly forever; opening it early means that still happens when the `draft` job fails or `ANTHROPIC_API_KEY` is unset. An unconfigured repository degrades to "you get told what changed", not to silence.
+- The `draft` job now adds its changes to that same branch and updates the PR body, rather than opening a second PR. On a no-op it comments and leaves the PR open, since the snapshot still wants merging.
+- Added a post-action re-validation step running both validators, so a push that does not pass fails the job rather than resting on the prompt having been obeyed.
+- Removed `draft-baseline-update.yml`.
+- Dropped the path filters from `validate.yml`. A required status check that only runs for some paths never reports on the others, and a check that never reports blocks a pull request forever. Both validators take under a second, so this makes `tables` safe to mark required in a ruleset.
+
+One consequence of the same token restriction remains and is documented rather than worked around: because the `check` job opens the PR with `GITHUB_TOKEN`, `validate.yml` will not auto-run on it. The content is still validated inside the `draft` job, but the PR's own check sits unreported until someone pushes to the branch or closes and reopens it.
+
 ## 2026-09-17 — NIST identifiers validated in CI
 
 The verification pass on 2026-09-12 checked every NIST citation by hand and then made no arrangement to keep checking. Stage 2 proposes crosswalk mappings unattended on a small model, and `check_tables.py` validates structure only — it passes a row citing a control that does not exist. That is the one failure mode this repository's central claim cannot survive, so it is now checked by machine on every change.

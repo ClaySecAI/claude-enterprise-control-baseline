@@ -1,24 +1,19 @@
 name: Validate control tables
 
-# Stage 2 edits the control tables unattended, so this runs on every PR and
-# push that touches the baseline. Catches broken table structure, missing or
-# malformed Drafted dates, and NIST identifiers that do not exist, before any
-# of them reach main.
+# The drafting job edits the control tables unattended, so this guards every
+# PR: broken table structure, missing or malformed Drafted dates, and NIST
+# identifiers that do not exist.
+#
+# Deliberately unfiltered by path. A required status check that only runs for
+# some paths never reports on the others, and a required check that never
+# reports blocks the pull request forever. Both validators take under a second,
+# so running them on every PR costs nothing and makes this check safe to mark
+# required in a branch ruleset.
 
 on:
-  pull_request:
-    paths:
-      - "docs/**"
-      - "automation/check_tables.py"
-      - "automation/check_nist.py"
-      - "automation/state/nist-ids.json"
+  pull_request: {}
   push:
     branches: [main]
-    paths:
-      - "docs/**"
-      - "automation/check_tables.py"
-      - "automation/check_nist.py"
-      - "automation/state/nist-ids.json"
   workflow_dispatch: {}
 
 permissions:

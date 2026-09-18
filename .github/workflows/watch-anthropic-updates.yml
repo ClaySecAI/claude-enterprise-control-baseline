@@ -1,17 +1,40 @@
 name: Watch Anthropic updates
 
+# Both stages of the staleness watcher, in one workflow and one run.
+#
+# They used to be two workflows joined by an issue: Stage 1 opened an issue,
+# Stage 2 triggered on it. That handoff never once worked. GitHub does not
+# fire workflow triggers for events raised with the repository's own
+# GITHUB_TOKEN, so the issue Stage 1 opened was inert -- no run was created,
+# not even a skipped one, and both halves looked healthy from the Actions tab.
+# workflow_dispatch and repository_dispatch are suppressed the same way, so
+# dispatching across workflows is not a way around it. Job dependencies within
+# a single run are, because no event is involved.
+#
+# Nothing here pushes to main. Snapshots and any drafted baseline edit land on
+# a branch and reach main only through a reviewed pull request, which is what
+# lets main carry a protection ruleset and what makes "a security baseline must
+# not rewrite itself unreviewed" structural rather than aspirational.
+
 on:
   schedule:
-    - cron: "17 9 * * 1" # every Monday, 09:17 UTC
+    - cron: "17 9 * * 1" # every Monday, 09:17 UTC (GitHub's scheduler is
+      # best-effort and routinely runs hours late; do not read a late run as a
+      # broken one)
   workflow_dispatch: {}
 
 permissions:
   contents: write
+  pull-requests: write
   issues: write
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      branch: ${{ steps.propose.outputs.branch }}
+      pr: ${{ steps.propose.outputs.pr }}
     steps:
       - uses: actions/checkout@v5
 
@@ -23,35 +46,191 @@ jobs:
         id: check
         run: python3 automation/check_updates.py
 
-      - name: Commit updated snapshots
+      - name: Preserve the diff for the drafting job
         if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-diff
+          path: automation/last-diff.md
+          retention-days: 30
+
+      # The snapshot has to advance even when nothing turns out to be
+      # baseline-relevant, or the same diff re-reports every week forever.
+      # Opening the PR here rather than in the drafting job means that still
+      # happens if the drafting job fails or is unconfigured -- you get a
+      # one-line snapshot PR instead of silence.
+      - name: Open a pull request carrying the snapshot
+        id: propose
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+          branch="watch/upstream-$(date -u +%Y-%m-%d)-${GITHUB_RUN_NUMBER}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
           git add automation/state
-          git diff --cached --quiet && exit 0
           git commit -m "chore(automation): update tracked source snapshots
 
-          Detected by the Anthropic-update watcher. See the linked issue
-          for what changed and whether the baseline needs an update."
-          git push
+          Detected by the Anthropic-update watcher. The diff is in the pull
+          request body; whether it warrants a baseline change is decided in
+          the drafting job on this same branch."
+          git push -u origin "$branch"
 
-      - name: Ensure tracking label exists
-        if: steps.check.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh label create anthropic-update \
-            --color FBCA04 \
-            --description "Possible upstream Anthropic change worth reviewing against the baseline" \
-            --force
+          {
+            echo "An upstream source the baseline tracks has changed."
+            echo
+            echo "This pull request carries the updated snapshots so the watcher"
+            echo "does not re-report the same diff every week. The drafting job"
+            echo "runs next on this branch and will either push a baseline change"
+            echo "or comment explaining why none was warranted."
+            echo
+            cat automation/last-diff.md
+          } > /tmp/pr-body.md
 
-      - name: Open issue with the diff
-        if: steps.check.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue create \
-            --title "Anthropic update check: $(date -u +%Y-%m-%d)" \
+          url=$(gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Upstream change detected: $(date -u +%Y-%m-%d)" \
             --label anthropic-update \
-            --body-file automation/last-diff.md
+            --body-file /tmp/pr-body.md)
+
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "pr=${url##*/}" >> "$GITHUB_OUTPUT"
+          echo "Opened $url"
+
+  draft:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.check.outputs.branch }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: upstream-diff
+          path: /tmp/diff
+
+      - name: Configure git identity
+        run: |
+          git config user.name "claude[bot]"
+          git config user.email "claude-baseline-bot@users.noreply.github.com"
+
+      - name: Draft the baseline update
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.check.outputs.pr }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --model claude-haiku-4-5-20251001
+            --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3:*),Read,Edit,Write,Grep,Glob"
+            --max-turns 40
+          prompt: |
+            The watcher detected a change in one of the Anthropic sources this
+            repository tracks (Claude Platform release notes, Claude Apps release
+            notes, or the Claude Code CHANGELOG). The raw diff is at
+            `/tmp/diff/last-diff.md`.
+
+            You are already checked out on branch
+            `${{ needs.check.outputs.branch }}`, which is the head of pull
+            request #${{ env.PR_NUMBER }}. That PR already carries the updated
+            source snapshots. Your job is to decide whether the baseline itself
+            needs to change, and to add that change to this same branch.
+
+            Do this:
+
+            1. Read `/tmp/diff/last-diff.md`.
+            2. Read `docs/claude-enterprise-control-baseline.md`, `README.md`, and
+               `CHANGELOG.md` to learn the current control-table format, section
+               structure, and NIST crosswalk style already in use.
+            3. For each distinct change in the diff, judge whether it touches an org
+               admin, security, or governance setting the baseline covers (SSO/SCIM,
+               permission/role settings, connectors, MCP or plugin trust, sandboxing,
+               managed settings, audit logging, DLP, Claude in Chrome permissions,
+               scheduled tasks, etc). Pricing, rate limits, SDK-only changes, plain bug
+               fixes, and end-user feature announcements are NOT relevant -- skip them.
+
+               Use the `Drafted` column to triage. Every control row carries the date
+               its substance was last authored against upstream docs. For an upstream
+               change dated D:
+                 - Rows in the affected surface with `Drafted` EARLIER than D were
+                   written without knowledge of this change. Those are your candidates
+                   for revision -- check each one for whether the change contradicts it.
+                 - If no row in that surface covers the capability at all, regardless of
+                   date, that is a COVERAGE GAP and wants a new control row, not an edit
+                   to an existing one. Say so explicitly; a new capability with no
+                   control is the single most valuable thing this job can find.
+                 - A row already dated on or after D has likely accounted for the change.
+                   Say why you are skipping it rather than silently leaving it.
+            4. For each relevant change:
+               - If it updates an existing control row (match by Reference link or
+                 Setting name), update that row's content and set that row's `Drafted`
+                 date to today. Bump the date ONLY when the substance changes: fixing
+                 a link, a typo, or a NIST identifier does not bump it, because the
+                 control itself did not change. Never touch the `Drafted` date on a
+                 row you did not edit -- those dates are the triage signal for every
+                 future run, and backfilling them destroys it.
+               - If it's a genuinely new setting with no existing row, add one in the
+                 right section, matching that table's exact column format including
+                 the trailing `Drafted` column, stamped with today's date. Propose a
+                 NIST SP 800-53 / CSF 2.0 crosswalk in the same style as neighboring
+                 rows; if you're not confident in the mapping, still write your best
+                 attempt but append " (proposed -- verify)" to that cell rather than
+                 presenting a guess as settled fact.
+               - Add one dated entry per relevant change under a new heading (today's
+                 date) in `CHANGELOG.md`, naming the section/row touched and linking
+                 the source URL from the diff.
+            5. If NOTHING in the diff is baseline-relevant: make no doc changes.
+               Comment on PR #${{ env.PR_NUMBER }} with
+               `gh pr comment ${{ env.PR_NUMBER }} --body "..."` explaining what you
+               reviewed and why none of it warranted a change, and stop. Do not close
+               the PR -- it still carries the snapshot update, which a human should
+               merge. Do not push an empty commit.
+            6. If there ARE relevant changes, run BOTH validators before committing and
+               fix whatever they report. Do not push while either exits non-zero.
+               - `python3 automation/check_tables.py` verifies every control
+                 table's column counts still line up and every control row
+                 carries a valid `Drafted` date.
+               - `python3 automation/check_nist.py` verifies every SP 800-53 and
+                 CSF 2.0 identifier in the document resolves against NIST's own
+                 OSCAL catalogs. Any crosswalk you propose in step 4 must pass
+                 this. If an identifier you wanted does not resolve, that means
+                 it does not exist -- find the real one or drop the mapping. Do
+                 not run it with `--refresh`: that rewrites the committed NIST
+                 inventory, which is not yours to change and is not what a
+                 failure here is telling you to do.
+
+               Note that a control ID existing is not the same as it being the
+               right mapping. `IA-8` is non-organizational users and is wrong
+               for employee SSO; `IA-5(1)` is password-based authenticators and
+               is wrong for API key rotation; `SI-10` is input validation
+               against a defined specification and does not cover prompt
+               injection. The validator cannot catch a wrong-but-real mapping,
+               which is why step 4 tells you to mark anything you are unsure of
+               `(proposed -- verify)`.
+            7. Commit your doc changes to the current branch, push, and then update
+               the PR body with `gh pr edit ${{ env.PR_NUMBER }} --body-file` to
+               summarize what changed and list anything you deliberately skipped and
+               why. Keep the original diff in the body.
+
+            Hard constraints: never merge the PR yourself, never push to `main`,
+            never touch a section of the baseline the diff doesn't justify touching,
+            and never present a guessed NIST mapping as verified.
+
+      # Backstop. Step 6 tells the model to run these; this makes the job fail
+      # loudly if it pushed anything that does not pass, rather than trusting
+      # the instruction to have been followed.
+      - name: Re-validate whatever was committed
+        run: |
+          python3 automation/check_tables.py
+          python3 automation/check_nist.py
