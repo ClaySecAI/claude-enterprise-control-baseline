@@ -31,6 +31,12 @@ This fills the gap in the meantime: an assessable control layer built on SP 800-
 | L2 | Security-sensitive environments. Default target for most enterprises. |
 | L3 | Regulated workloads. Accepts functionality loss. |
 
+## Who implements what
+
+Every control row carries an `Owner` naming the system the setting lives in — `Anthropic`, `IdP`, `MDM`, `Network`, `Endpoint`, `Browser fleet`, `SIEM`, `CI/CD`, `DNS`, `Process`, or a combination meaning all parts are required.
+
+**21 of the 59 levelled rows are not configured in an Anthropic panel at all.** Adopting only what the admin console offers leaves roughly a third of this baseline unimplemented, including the controls the rest depends on. See "The `Owner` column" in the baseline for what each value means.
+
 ## How to use it
 
 1. Read section 9.1 first. It explains which NIST publication does what, and why SP 800-53 is the spine rather than the AI RMF.

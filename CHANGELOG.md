@@ -6,6 +6,19 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-19 — `Owner` column: who implements each control
+
+The document is organised by Anthropic product surface, which quietly implied every control is an Anthropic setting. Many are not. Those were present but scattered as implementation notes — the egress proxy in 1.7, MDM in 3.11 and 3.15 and 3.17, EDR in 3.16, the IdP dependency in 1.1, SIEM throughout section 5 — so they read as incidental rather than as a layer with its own owners.
+
+- Added an `Owner` column to every control table except section 4's setting baseline, whose ownership is uniform (MDM managed preferences, Windows registry, or server-managed settings) and is stated in prose instead. The CI/CD rows at the end of section 4 do carry it.
+- 59 rows classified against a controlled vocabulary: `Anthropic`, `IdP`, `MDM`, `Network`, `Endpoint`, `Browser fleet`, `SIEM`, `CI/CD`, `DNS`, `Process`, with `X + Y` meaning both halves are required and the control is incomplete with either alone.
+- **21 of 59 levelled rows are not configured in an Anthropic panel at all.** That number is the substance of the change: a reader who adopts only what the admin console offers has implemented about two thirds of this baseline, and none of what 6.2 identifies as holding the rest up.
+- Noted in the new section that several families in the 9.3 crosswalk — SI-3 and SI-4 for EDR, SC-7 for egress, SC-28 for encryption at rest, AU-6 for log review — are satisfied by customer infrastructure rather than by any Anthropic setting, which the control identifiers alone do not reveal.
+
+No control's substance changed, so no `Drafted` date moved. This records who configures each control, not what it should be set to.
+
+First half of #19. The controls that are missing entirely rather than merely scattered — DLP, browser extension install blocklisting, CASB, shadow-AI discovery — still have no home and are the second half.
+
 ## 2026-09-18 — watcher reaches `main` only through review
 
 The two watcher stages were separate workflows joined by an issue, and that handoff had never once worked. Stage 1 fired on schedule on 2026-09-14, detected a real change and opened an issue; Stage 2 produced no run at all — not a skipped one, none. GitHub does not fire workflow triggers for events raised with the repository's own `GITHUB_TOKEN`, so the issue was inert, and both halves looked healthy from the Actions tab. The contrast that identified it: twelve issues created the same week through the API with a user token each produced a Stage 2 run, correctly skipped by the label guard.
