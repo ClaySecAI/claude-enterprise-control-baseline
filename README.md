@@ -39,10 +39,10 @@ Every control row carries an `Owner` naming the system the setting lives in — 
 
 ## How to use it
 
-1. Read section 9.1 first. It explains which NIST publication does what, and why SP 800-53 is the spine rather than the AI RMF.
+1. Read section 10.1 first. It explains which NIST publication does what, and why SP 800-53 is the spine rather than the AI RMF.
 2. Work section 1 before anything else. Nothing in sections 2 through 4 holds without SSO, SCIM, tenant restrictions, and the Compliance API.
 3. Pick a profile level per surface. They do not have to match.
-4. Read section 6 before you present this to anyone. The known gaps are the part that changes decisions.
+4. Read section 7 before you present this to anyone. The known gaps are the part that changes decisions.
 5. Deploy `examples/managed-settings.json` via MDM or server-managed settings after replacing the placeholders listed below.
 
 ## Placeholders to replace
