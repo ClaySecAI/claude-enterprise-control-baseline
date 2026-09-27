@@ -6,6 +6,26 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-27 — triage of watcher issues #2 and #20
+
+First real triage of watcher output, done by hand because the `draft` job still cannot run (#3). Every claim below was verified against Anthropic's own current documentation on `platform.claude.com`, not taken from the release-notes diff.
+
+**Corrected — the scope name in 1.9 was wrong.** The baseline recommended `read:org_audit` for SIEM consumers. That is not a selectable scope: the four offered at key creation are `read:compliance_activities`, `read:compliance_user_data`, `read:compliance_org_data` and `delete:compliance_user_data`. `read:org_audit` appears only inside an example error message in Anthropic's docs. Anyone who followed this row would have failed to create the key. Also added the warning that `read:compliance_user_data` is much broader than its name suggests — it reads every chat, file, project and session transcript in every linked organization.
+
+**Updated — 5.2 understated session coverage badly.** The row claimed Cowork and Claude Code. The endpoints cover **Cowork, Claude Code, Claude Science, Claude for Microsoft 365, and Claude in Chrome**, local and remote, stable for the first three and beta for the last two.
+
+**Resolved — 7.1.** The contested Cowork audit-coverage question is answered: coverage is stable and documented, and the practitioner guide that claimed exclusion was describing a state that no longer holds. The SOX/HIPAA/PCI-DSS/SOC 2 scoping caveat is withdrawn. Two narrower items replace it: beta status for Claude Science and Claude in Chrome, and the fact that the 1.8 toggle silently and unrecoverably destroys local-session evidence while off.
+
+**New control — 1.17, Inference hooks (beta).** Anthropic POSTs each governed prompt to an AI security server the organization operates and waits for an allow/deny verdict before inference. This is the only inline prompt control Anthropic offers; everything else in this baseline is preventive configuration or after-the-fact audit. RBAC capability gating renumbered 1.17 → 1.18.
+
+**Corrected — 6.3 and 6.4, which this repository added eight days ago.** Both said nothing in the Anthropic console inspects prompt content. Inference hooks does. The rows now state where the two genuinely do not overlap: hooks do not cover Bedrock or Vertex, never receive raw file or image bytes (so a screenshot of a document is not inspected), and can only allow or deny, never redact.
+
+**Added — marketplace policy version floor.** Claude Code 2.1.277 fixed one malformed `strictKnownMarketplaces` or `blockedMarketplaces` entry silently disabling the entire enterprise marketplace policy. Below that version a single typo in 4.5 or 4.6 turns marketplace curation off with no error and no UI indication.
+
+**Reviewed and skipped:** the 2.1.278 auto-mode server-side classifier default (`CLAUDE_CODE_AUTO_MODE_SERVER`) is a billing and overhead change, not a security control; AGENTS.md support in 2.1.277 is already covered by the existing rules-file scanning guidance, which lists it; Salesforce in Claude and Claude Docs are new plugins governed by the existing 2.1 connector catalog and 3.7 plugin-state controls; #2's entire diff was a single bug fix to git permission prompts.
+
+Counts regenerated: 439 SP 800-53 citations, 162 CSF 2.0 citations across 23 subcategories, 98 control rows.
+
 ## 2026-09-19 — section 6, supporting security layers (customer-owned)
 
 The `Owner` column showed that 21 of 59 levelled rows are configured outside any Anthropic panel. This adds the controls that have no Anthropic half at all, and so had nowhere to live and were simply absent. Verified by search against the previous revision: `DLP`, `CASB`, `SSPM`, `ExtensionInstall`, `Chrome Enterprise` and `force-install` each returned zero matches; `shadow-AI` returned one, in passing.
