@@ -6,6 +6,29 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-27 — Anthropic first-party security documentation
+
+Four Anthropic security documents were reviewed: *Identity & Access Controls* and *Anthropic's Enterprise Security Posture* (both 2026-05-15, Trust Center resources), the *C4G FedRAMP Secure Configuration Guide* v2.1 (2026-07-16, marked intended for public release), and *Best Practice Guide: Claude Code for Public Sector* (January 2026). They are the first primary sources this baseline has had that were written by Anthropic for security reviewers rather than for administrators.
+
+**Two controls were missing entirely.**
+
+- **1.18 Session lifetime.** Administrators can set a maximum organization session lifetime, after which users re-authenticate through the IdP. SCIM deprovisioning or admin removal revokes OAuth tokens and ends active web sessions. There is no per-user concurrent-session limit, which is worth knowing rather than assuming.
+- **1.19 Workload identity federation.** Non-interactive Claude Platform access can authenticate through OIDC federation — AWS IAM roles, GCP service accounts, Azure/Entra workload identities, Kubernetes service accounts, GitHub Actions — instead of a static API key. GA, and nowhere in this document until now.
+
+**Corrections and sharpening.**
+
+- **6.2 was incomplete in a way that mattered.** Conditional Access signals are not passed through to Claude: CA evaluates at authentication and there is no continuous signal, so a device falling out of compliance mid-session is not re-evaluated until 1.18 forces re-authentication. Setting a session lifetime is what bounds the blast radius of a CA policy. Also recorded: no ABAC, no per-conversation ACLs, no native JIT elevation.
+- **2.10.** Per-resource sharing for Projects and Skills targets Claude accounts, not IdP groups, so a share does not track group membership and will not follow a mover or leaver the way SCIM does. Access reviews must cover shares separately from roles.
+- **1.6.** A domain is owned by exactly one parent organization. Multiple organizations on one domain — an information barrier between business units, for example — must be linked under that parent.
+- **10.5 narrowed rather than repeated.** Workload identity federation genuinely closes the *service* half of the non-human identity gap, so IA-9 now applies there. What remains is the *agent* half: an agent inside a user's session still inherits that identity wholesale, with no accountability boundary between what the human asked for and what the agent did.
+- **Section 6 is no longer an outside reading.** Anthropic's own documentation states that content policy is enforced in the customer's DLP, SASE or CASB layer, and its public-sector guidance draws the same boundary as a shared-responsibility table. The section now cites that rather than arguing for it.
+
+**10.6, the FedRAMP question, is answered.** There is a separate authorized path — Claude for Government, a distinct offering with its own authorization package, role model, and materially different behaviour — and the commercial tenant is not it. For Claude Code the federal pattern is the local CLI routed to Bedrock GovCloud or Vertex AI in FedRAMP High regions. This baseline does not cover C4G and now says so explicitly, pointing readers to Anthropic's own C4G guide instead of attempting to absorb a second product.
+
+**Deliberately excluded.** A fifth document reviewed in the same batch carried no distribution marking and read as internal architecture material. Nothing from it was used, and it is not named here. The four cited above are referenced by title and date rather than URL, because they are distributed as documents rather than published at stable web addresses.
+
+Counts regenerated: 450 SP 800-53 citations across 74 distinct written references, 168 CSF 2.0 citations across 23 subcategories, 100 control rows.
+
 ## 2026-09-27 — track the Anthropic Trust Center as a watcher source
 
 Added `https://trust.anthropic.com/resources` to `automation/sources.json` as a fourth tracked source, mapped to all surfaces.
