@@ -6,6 +6,18 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-27 — setting keys validated against the published schema
+
+The companion to the NIST validator, and the half with sharper consequences. A wrong NIST identifier embarrasses the document in an assessment; a wrong setting key silently fails to harden a fleet, because an unrecognised key in managed settings is simply not applied and nothing warns you. The 2026-09-12 pass checked the 32 section 4 keys by hand once and then made no arrangement to keep checking, while Anthropic ships Claude Code changes continuously.
+
+- Added [`automation/check_settings.py`](automation/check_settings.py). Validates every cited setting key against [`automation/state/settings-keys.json`](automation/state/settings-keys.json), generated from the published schema: 142 top-level properties, 591 total key paths, 187 carrying an enum. Runs offline in CI; `--refresh` regenerates it, preferring the canonical SchemaStore URL and falling back to SchemaStore's GitHub copy when the canonical host is unreachable.
+- **The nesting check is the point.** `allowManagedHooksOnly` at the top level and `permissions.allowManagedHooksOnly` are different settings and only one exists. A wrong path reports the right one — `sandbox.denyRead` fails with "schema has `sandbox.filesystem.denyRead`".
+- Also validates every value in `examples/managed-settings.json` against its key's enum, and enforces that section 9's reference policy and that file are still identical — an equivalence the document asserts and nothing previously checked.
+- Wired into `validate.yml` alongside the other two, added to the `draft` job's pre-commit gate and its post-action backstop, and `examples/**` now triggers validation.
+- Current state: 79 cited keys and example values checked, zero problems. That independently confirms the hand-checked claim from 2026-09-12 rather than restating it.
+
+Two limits, documented in [`automation/README.md`](automation/README.md) and the same shape as the NIST validator's: it cannot tell whether a pinned value is the right hardening choice, only that the schema permits it; and a bare key whose first segment is not a real top-level property is skipped rather than flagged, which keeps ordinary backticked prose from being misread as a settings key at the cost of missing that form of error.
+
 ## 2026-09-27 — Anthropic first-party security documentation
 
 Four Anthropic security documents were reviewed: *Identity & Access Controls* and *Anthropic's Enterprise Security Posture* (both 2026-05-15, Trust Center resources), the *C4G FedRAMP Secure Configuration Guide* v2.1 (2026-07-16, marked intended for public release), and *Best Practice Guide: Claude Code for Public Sector* (January 2026). They are the first primary sources this baseline has had that were written by Anthropic for security reviewers rather than for administrators.

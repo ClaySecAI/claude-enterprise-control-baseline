@@ -31,7 +31,10 @@ jobs:
       - name: Control table structure and Drafted dates
         run: python3 automation/check_tables.py
 
-      # Runs against the committed ID inventory, so no network and no
+      # Both run against committed inventories, so no network and no
       # dependency on csrc.nist.gov, which 403s automated clients.
       - name: NIST identifiers resolve against NIST's OSCAL catalogs
         run: python3 automation/check_nist.py
+
+      - name: Setting keys, nesting and values match the published schema
+        run: python3 automation/check_settings.py

@@ -209,6 +209,13 @@ jobs:
                  not run it with `--refresh`: that rewrites the committed NIST
                  inventory, which is not yours to change and is not what a
                  failure here is telling you to do.
+               - `python3 automation/check_settings.py` verifies every Claude Code
+                 setting key the baseline cites exists in the published settings
+                 schema, at the nesting the document places it at, with any pinned
+                 value in that key's enum. It also checks the reference policy in
+                 the document still matches `examples/managed-settings.json`. If the
+                 upstream change adds or renames a setting, update both together.
+                 Do not run `--refresh` here either.
 
                Note that a control ID existing is not the same as it being the
                right mapping. `IA-8` is non-organizational users and is wrong
@@ -234,3 +241,4 @@ jobs:
         run: |
           python3 automation/check_tables.py
           python3 automation/check_nist.py
+          python3 automation/check_settings.py

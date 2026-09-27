@@ -54,7 +54,7 @@ Until that secret exists, the `draft` job fails visibly at the Claude Code Actio
 
 ## Validators
 
-Two, both wired to [`validate.yml`](../.github/workflows/validate.yml), both run by the `draft` job before it commits, and both re-run by that job afterwards as a backstop.
+Three, all wired to [`validate.yml`](../.github/workflows/validate.yml), all run by the `draft` job before it commits, and all re-run by that job afterwards as a backstop.
 
 [`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date.
 
@@ -70,6 +70,20 @@ Both catalogs come from [`usnistgov/oscal-content`](https://github.com/usnistgov
 
 Two limits to be honest about. **A real ID can still be the wrong mapping**, and no catalog check detects that: `IA-8` exists but is non-organizational users and is wrong for employee SSO, `IA-5(1)` exists but is password-based authenticators and is wrong for API key rotation, and `SI-10` exists but does not reach prompt injection. Semantic fit stays a human job, which is why the `draft` job is told to mark uncertain mappings `(proposed — verify)`. Second, an identifier whose *family* letters are not a real 800-53 family is skipped rather than flagged, so `ZZ-1` passes silently; this keeps unrelated identifiers elsewhere in the document from being misread as citations, at the cost of not catching a typo in the family itself.
 
+[`check_settings.py`](check_settings.py) checks that every Claude Code setting key the baseline cites exists in the published settings schema, **at the nesting the document places it at**, with any pinned value in that key's enum. It also verifies the reference policy in section 9 still matches [`examples/managed-settings.json`](../examples/managed-settings.json), which the document asserts are identical and which nothing previously enforced.
+
+This is the validator with the sharper consequences of the two. A wrong NIST identifier embarrasses the document in an assessment; a wrong setting key silently fails to harden a fleet, because an unrecognised key in managed settings is simply not applied and nothing warns you. The nesting check is the part that earns its keep: `allowManagedHooksOnly` at the top level and `permissions.allowManagedHooksOnly` are different settings, and only one of them exists. When a path is wrong the failure names the correct one, so `sandbox.denyRead` reports that the schema has `sandbox.filesystem.denyRead`.
+
+It validates against [`state/settings-keys.json`](state/settings-keys.json), generated from the schema — 142 top-level properties, 591 total key paths, 187 carrying an enum. Regenerate when Anthropic ships settings changes:
+
+```bash
+python3 automation/check_settings.py --refresh
+```
+
+The canonical source is `https://www.schemastore.org/claude-code-settings.json`, with SchemaStore's GitHub copy as a fallback because the canonical host is unreachable from some networks; the refresh says which it used.
+
+Two limits, the same shape as the NIST validator's. **It does not know whether a pinned value is the right hardening choice** — the schema says `defaultMode` accepts eight strings, not which one a security baseline should pick. And a bare key whose first segment is not a real top-level property is skipped rather than flagged, so a key cited as `denyRead` instead of `sandbox.filesystem.denyRead` passes silently; this keeps ordinary backticked prose in the section 4 tables from being misread as settings keys, at the cost of missing that particular form of error.
+
 One parsing detail worth preserving if this is ever rewritten: a naive `[A-Z]{2}-\d+` pattern matches the tail of every CSF subcategory — `PR.PS-01` yields `PS-01`, `DE.CM-09` yields `CM-09` — and because `PS`, `CM`, `IR`, `RA` and `SC` are all real 800-53 families, those phantoms survive the family filter and report as eleven failures that are not real. The negative lookbehind in `SP_REF` is what prevents that.
 
 ## Running it locally
@@ -80,6 +94,8 @@ cat automation/last-diff.md                   # only exists if something changed
 python3 automation/check_tables.py            # control tables and Drafted dates
 python3 automation/check_nist.py              # NIST identifiers resolve
 python3 automation/check_nist.py --refresh    # rebuild the NIST ID inventory
+python3 automation/check_settings.py          # setting keys, nesting, values
+python3 automation/check_settings.py --refresh # rebuild the settings inventory
 ```
 
 No dependencies beyond the standard library.
