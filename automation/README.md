@@ -16,6 +16,9 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 | [Claude Platform release notes](https://platform.claude.com/docs/en/release-notes/overview) | Web / Console / org settings | Covers Console, API, SDKs |
 | [Claude Apps release notes](https://support.claude.com/en/articles/12138966-release-notes) | Web / Desktop / Claude in Chrome | Covers claude.ai and Claude Desktop |
 | [claude-code CHANGELOG.md](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md) | CLI / managed settings | Raw markdown, dated by version |
+| [Anthropic Trust Center resources](https://trust.anthropic.com/resources) | All | Security configuration guidance and published security documentation. Added 2026-09-27. Not a changelog, so it will not diff on a predictable cadence; tracked because its content bears on controls across every surface. |
+
+**On the Trust Center source.** It is a SafeBase-style portal rather than a dated changelog, so expect two things. Its first run takes the "New source tracked" path and lands a content preview in the issue body rather than a diff, which is the point — that preview is how the content first becomes readable to a reviewer who cannot reach the host. And because portals of this kind render client-side, the text extractor may recover little; an empty or near-empty snapshot is itself a finding worth recording rather than a failure to retry.
 
 **Known gap:** this only catches what Anthropic changelogs. It won't catch a console setting that changed silently, or a genuinely new admin page nobody's written release notes for yet. Two ways to close that, not yet built:
 

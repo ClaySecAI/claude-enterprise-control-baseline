@@ -6,6 +6,14 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-27 — track the Anthropic Trust Center as a watcher source
+
+Added `https://trust.anthropic.com/resources` to `automation/sources.json` as a fourth tracked source, mapped to all surfaces.
+
+It is not a changelog, so it will not diff on a predictable cadence. It is tracked because its published security documentation bears on controls across every surface, and because the baseline currently cites the Trust Center root as the reference for 1.13 (model training) — a portal root standing in for a specific setting, which is a weak citation that better source material may let us replace.
+
+The first run takes the watcher's "New source tracked" path, which lands a content preview in the issue body rather than a diff. That preview is the mechanism that matters here: the Trust Center is unreachable from some networks, and routing it through the watcher is how its content becomes readable to a reviewer who cannot fetch it directly. Expect the extractor to recover little if the portal renders client-side; a near-empty snapshot is a finding to record, not a failure to retry.
+
 ## 2026-09-27 — triage of watcher issues #2 and #20
 
 First real triage of watcher output, done by hand because the `draft` job still cannot run (#3). Every claim below was verified against Anthropic's own current documentation on `platform.claude.com`, not taken from the release-notes diff.
