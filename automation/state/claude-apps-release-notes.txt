@@ -30,15 +30,19 @@ Claude 4 Invite Contest
 Conversation management
 Delete or rename a conversation
 Share and unshare chats
-Use incognito chats
-Use Claude’s chat search and memory to build on previous context
-Why Claude switched models in your conversation with Fable 5 or Fable 5.1
-Why Claude switched models in your conversation with Opus 5
-Public links for shared chats
 Share a chat with specific people
+Public links for shared chats
+Use Claude’s chat search and memory to build on previous context
+Import and export your memory from Claude
+Use incognito chats
+Why Claude switched models in your conversation with Fable 5 or Fable 5.1
+Why Claude switched models in your conversation with Opus 5 or Opus 5.5
 Features and capabilities
 What are artifacts and how do I use them?
-Publish and share artifacts
+Share artifacts
+Get started with Claude Docs
+Get started with Claude Design
+Set up your design system in Claude Design
 When should I use web search, extended thinking, and research?
 Enable and use web search
 Use research on Claude
@@ -51,23 +55,18 @@ Retrieval augmented generation (RAG) for projects
 What are skills?
 Use skills in Claude
 How to create custom skills
+Use plugins in Claude
 Browse skills, connectors, and plugins in one directory
 Use Claude in Xcode
 Use Claude in Microsoft Foundry
 Visual and interactive content
-Import and export your memory from Claude
 Custom visuals in chat and Cowork
 Available beta and research preview features
 Use Claude Security
-Get started with Claude Design
-Set up your design system in Claude Design
-Use plugins in Claude
 See your monthly recap
 Get started with Claude Science
 Use Salesforce in Claude
 Set up Salesforce in Claude for your organization
-Get started with Claude Docs
-Invite people outside your organization to an artifact
 Personalization and settings
 Understanding Claude's personalization features
 Customizing your appearance settings
@@ -85,6 +84,7 @@ How do usage and length limits work?
 Buy usage bundles
 Use the Claude Agent SDK with your Claude plan
 Claude Fable models on your plan
+What is a limit reset?
 Pro and Max plans
 General
 How large is the context window on paid Claude plans?
@@ -134,7 +134,7 @@ Manage members on Team and Enterprise plans
 Claude Enterprise consumption guide
 Manage usage credits for Team and seat-based Enterprise plans
 Manage user feedback settings on Team and Enterprise plans
-Disable public projects for your organization
+Control project sharing for your organization
 Manage plugins for your organization
 Account management FAQs
 Manage groups and group spend limits on Enterprise plans
@@ -150,6 +150,7 @@ Set a default model for your organization
 Restrict verified-domain connectors to your Enterprise
 Manage model access for your organization
 Create surveys for your organization
+Manage pooled group budgets on Enterprise plans
 Analytics and usage
 View usage analytics for Team and Enterprise plans
 Configure a custom OpenTelemetry collector for Office agents
@@ -163,6 +164,7 @@ Use visual and interactive content on Team and Enterprise plans
 Provision and manage skills for your organization
 What is Claude Tag?
 Get started with skill and plugin scanning
+Artifacts admin guide for Team and Enterprise plans
 Security and compliance
 Does Anthropic Act as a Data Processor or Controller?
 Can you delete data that I sent via Team and Enterprise plans?
@@ -206,7 +208,7 @@ Use Claude Cowork on web, desktop, and mobile
 Use Claude Cowork on Team and Enterprise plans
 Use the built-in browser in Claude Cowork
 Set up browser use in Claude Cowork for Team and Enterprise plans
-Use artifacts in Claude Cowork
+Use live artifacts in Claude Cowork
 Schedule recurring tasks in Claude Cowork
 Assign tasks from anywhere in Claude Cowork
 Organize your tasks with projects in Claude Cowork
@@ -408,6 +410,29 @@ MCP: Web Search
 Model availability in Claude for Government
 Classification banner in Claude for Government
 September 2026
+September 25, 2026
+Build plugins for Claude
+You can now submit plugins to the Claude directory through a new developer portal, track them through review, and see usage analytics once they’re live. For more information, see our blog post:
+Build plugins for Claude
+.
+September 22, 2026
+Claude Opus 5.5 launch
+We just launched Claude Opus 5.5, the first model in our new Claude 5.5 family. It performs at the level of Claude Fable 5.1 on most work and costs 40% less to run than Opus 5. For more information, see our blog post:
+Introducing Claude Opus 5.5
+.
+September 16, 2026
+Claude Cowork comes to every conversation
+We're rolling out a new Claude experience that makes everything Claude Cowork does available from any conversation. Ask a quick question or hand Claude a bigger task, like a report, spreadsheet, or presentation, without choosing a mode first. Your chats, Cowork tasks, projects, connectors, and skills carry over. The new experience is rolling out gradually to Pro and Max plans on web, desktop, and mobile. Learn more in
+Claude Cowork and chat are one Claude
+.
+Create designs, decks, and docs in any conversation
+You can now ask for a design, deck, or document in any conversation with Claude, including in Claude Code and the
+Artifacts
+tab, and edit it with Claude or directly as you work. Claude Design works inside your conversations with all of its features, including on-canvas editing and importing your design system. Claude Slides gives presentations their own starting point, and Claude Docs is a new way to write living documents with Claude and your team. Artifacts, including Claude Design, Claude Slides, and Claude Docs, are available on every plan, including Free. On Enterprise plans, Claude Design, Claude Slides, and Claude Docs are in beta and off by default until an owner turns them on. Learn more in
+What are artifacts and how do I use them?
+and
+Get started with Claude Docs
+.
 September 15, 2026
 Launching Salesforce in Claude (beta)
 We've launched Salesforce in Claude, a plugin that brings a seller’s accounts, opportunities, and pipeline into Claude with 37 pre-built sales skills. Prep a call, review a deal, create a pipeline dashboard, and send your forecast all from Claude. It’s now available in beta on all paid plans for organizations Salesforce approves through its beta sign-up. For more information, see our blog post:
