@@ -10,6 +10,12 @@ Keel is in the same category as Meta's Muse, a personal AI agent that carries wo
 
 Consumer agents inherit the user's full identity, act on it without limits, and come welded to one vendor's model. A regulated enterprise cannot accept that. Keel gives every agent its own scoped, revocable, audited identity, and makes every action it takes attributable, reviewable, and bounded by policy the tenant controls, on whatever model the tenant has already approved.
 
+## What makes it different
+
+1. **The agent is not the user.** Coding and desktop agents (Claude Code, Cowork) and consumer agents (Muse) act with the user's own credentials, so the agent can reach whatever the user can. A Keel agent starts with no access. For each approved action it gets a short-lived credential scoped to that one action, capped by the user's permissions, tenant policy, and the plan the user approved. See [doc 4, section 4.1.1](docs/04-security-and-compliance.md#411-how-this-differs-from-user-inherited-agents).
+2. **Bring your own model.** It runs on the models the customer has already approved, including self-hosted ones.
+3. **Every action is attributable.** Audit records are written before the action runs, so each action traces back to a person, a plan step, and a policy decision.
+
 ## Scope decisions (from the kickoff)
 
 | Question | Decision |

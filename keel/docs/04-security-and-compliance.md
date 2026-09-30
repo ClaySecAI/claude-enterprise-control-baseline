@@ -12,6 +12,24 @@ Keel has three kinds of principal:
 
 This directly addresses the "non-human agent identity" gap in the Claude Enterprise Control Baseline (section 9.5). Agents do not inherit the user's permissions wholesale. They get the intersection of three things: what the user can do, what the policy allows for this action class, and what the task's plan declared it needs.
 
+### 4.1.1 How this differs from user-inherited agents
+
+Most agents today, including coding agents such as Claude Code, desktop agents such as Cowork, and consumer agents such as Muse, act *as the user*. They can add tool-level allow and deny rules, sandboxes, and per-action prompts, and those narrow which *tools* the agent may run. But whatever does run carries the user's own credentials: their shell environment, their OAuth grants to connected apps, their session. The agent's reach is the user's reach. The Control Baseline records this as an open gap (section 9.5: "Agents currently inherit the user's identity and permissions wholesale").
+
+Keel inverts the default. The agent starts with **nothing** and gets a credential only for one approved call, and only for the scope that call needs.
+
+| | User-inherited agent | Keel |
+|---|---|---|
+| Starting access | Everything the user can reach | Nothing |
+| Credential the agent holds | The user's own (tokens, session, environment) | None standing; a per-call token minted by the credential broker, bound to the task, expiring in minutes |
+| Upper bound on reach | The user's full permissions | The intersection of: user's permissions ∩ policy for this action class ∩ what the approved plan declared ∩ remaining budget |
+| Identity in the target system's logs | The user | The user *and* the agent (`act_for` delegation), so every system can tell a person's action from an agent's |
+| Effect of a successful prompt injection | Anything the user could do with the tools that are enabled | Only what the approved plan and policy already allowed for that step |
+| Revocation | Revoke the user, or hunt down each grant | Kill the task, the agent, the connector, or the tenant; outstanding tokens expire in minutes regardless |
+| Standing and scheduled work | Runs with the user's standing access for as long as it exists | An owned, expiring principal with its own budget (4.1) |
+
+Keel keeps this design regardless of the model a tenant brings, which is why principle 8 (safety must not depend on the model) and this identity model are the same idea from two directions: the model *proposes*, and Keel's identity and policy layers decide what it can actually touch.
+
 ## 4.2 Authorization layers
 
 A tool call executes only if **every** layer allows it:
