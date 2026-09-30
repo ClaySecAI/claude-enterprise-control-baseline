@@ -39,9 +39,9 @@ These are the decisions still to make. Each has a recommendation to react to.
 | Q7 | **Mobile surface** | Native app / Teams and Slack mobile only | Teams and Slack mobile only for v1. Approvals are the main mobile need, and both clients already handle them. |
 | Q8 | **Build vs. buy for DLP and classification** | Build / integrate Purview and existing DLP | Integrate. Customers already have a DLP engine and won't accept a second source of truth. |
 | Q9 | **Minimum model bar.** Should Keel refuse to run long-running tasks on a tenant's model that fails T1? | Refuse / allow with warning | Refuse. Long-running autonomous tasks on a model that can't plan reliably will produce the failures customers blame on Keel. The tenant can still use that model for T2/T3 steps. |
-| Q11 | **Should Keel also offer a bundled default model** for tenants that don't have one approved? | BYOM only / BYOM + optional managed default | BYOM only through GA, with the reference model list as the easy path. Revisit for mid-market, where "just works" matters more than model choice. |
-| Q12 | **Who pays for certification compute** (eval runs use the tenant's model and tokens) | Tenant / Keel credits | Tenant, with the cost shown up front. The certification budget per model is estimated at the time it's registered. |
-| Q10 | **Where does this spec live long-term?** | This folder / new repo | New private repo once it can be created (see the top-level note) |
+| Q10 | **Should Keel also offer a bundled default model** for tenants that don't have one approved? | BYOM only / BYOM + optional managed default | BYOM only through GA, with the reference model list as the easy path. Revisit for mid-market, where "just works" matters more than model choice. |
+| Q11 | **Who pays for certification compute** (eval runs use the tenant's model and tokens) | Tenant / Keel credits | Tenant, with the cost shown up front. The certification budget per model is estimated at the time it's registered. |
+| Q12 | **Where does this spec live long-term?** | This folder / new repo | New private repo once it can be created (see the top-level note) |
 
 ## 5.4 Risks to the plan
 
