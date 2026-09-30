@@ -6,6 +6,111 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-09-27 — Anthropic first-party security documentation
+
+Four Anthropic security documents were reviewed: *Identity & Access Controls* and *Anthropic's Enterprise Security Posture* (both 2026-05-15, Trust Center resources), the *C4G FedRAMP Secure Configuration Guide* v2.1 (2026-07-16, marked intended for public release), and *Best Practice Guide: Claude Code for Public Sector* (January 2026). They are the first primary sources this baseline has had that were written by Anthropic for security reviewers rather than for administrators.
+
+**Two controls were missing entirely.**
+
+- **1.18 Session lifetime.** Administrators can set a maximum organization session lifetime, after which users re-authenticate through the IdP. SCIM deprovisioning or admin removal revokes OAuth tokens and ends active web sessions. There is no per-user concurrent-session limit, which is worth knowing rather than assuming.
+- **1.19 Workload identity federation.** Non-interactive Claude Platform access can authenticate through OIDC federation — AWS IAM roles, GCP service accounts, Azure/Entra workload identities, Kubernetes service accounts, GitHub Actions — instead of a static API key. GA, and nowhere in this document until now.
+
+**Corrections and sharpening.**
+
+- **6.2 was incomplete in a way that mattered.** Conditional Access signals are not passed through to Claude: CA evaluates at authentication and there is no continuous signal, so a device falling out of compliance mid-session is not re-evaluated until 1.18 forces re-authentication. Setting a session lifetime is what bounds the blast radius of a CA policy. Also recorded: no ABAC, no per-conversation ACLs, no native JIT elevation.
+- **2.10.** Per-resource sharing for Projects and Skills targets Claude accounts, not IdP groups, so a share does not track group membership and will not follow a mover or leaver the way SCIM does. Access reviews must cover shares separately from roles.
+- **1.6.** A domain is owned by exactly one parent organization. Multiple organizations on one domain — an information barrier between business units, for example — must be linked under that parent.
+- **10.5 narrowed rather than repeated.** Workload identity federation genuinely closes the *service* half of the non-human identity gap, so IA-9 now applies there. What remains is the *agent* half: an agent inside a user's session still inherits that identity wholesale, with no accountability boundary between what the human asked for and what the agent did.
+- **Section 6 is no longer an outside reading.** Anthropic's own documentation states that content policy is enforced in the customer's DLP, SASE or CASB layer, and its public-sector guidance draws the same boundary as a shared-responsibility table. The section now cites that rather than arguing for it.
+
+**10.6, the FedRAMP question, is answered.** There is a separate authorized path — Claude for Government, a distinct offering with its own authorization package, role model, and materially different behaviour — and the commercial tenant is not it. For Claude Code the federal pattern is the local CLI routed to Bedrock GovCloud or Vertex AI in FedRAMP High regions. This baseline does not cover C4G and now says so explicitly, pointing readers to Anthropic's own C4G guide instead of attempting to absorb a second product.
+
+**Deliberately excluded.** A fifth document reviewed in the same batch carried no distribution marking and read as internal architecture material. Nothing from it was used, and it is not named here. The four cited above are referenced by title and date rather than URL, because they are distributed as documents rather than published at stable web addresses.
+
+Counts regenerated: 450 SP 800-53 citations across 74 distinct written references, 168 CSF 2.0 citations across 23 subcategories, 100 control rows.
+
+## 2026-09-27 — track the Anthropic Trust Center as a watcher source
+
+Added `https://trust.anthropic.com/resources` to `automation/sources.json` as a fourth tracked source, mapped to all surfaces.
+
+It is not a changelog, so it will not diff on a predictable cadence. It is tracked because its published security documentation bears on controls across every surface, and because the baseline currently cites the Trust Center root as the reference for 1.13 (model training) — a portal root standing in for a specific setting, which is a weak citation that better source material may let us replace.
+
+The first run takes the watcher's "New source tracked" path, which lands a content preview in the issue body rather than a diff. That preview is the mechanism that matters here: the Trust Center is unreachable from some networks, and routing it through the watcher is how its content becomes readable to a reviewer who cannot fetch it directly. Expect the extractor to recover little if the portal renders client-side; a near-empty snapshot is a finding to record, not a failure to retry.
+
+## 2026-09-27 — triage of watcher issues #2 and #20
+
+First real triage of watcher output, done by hand because the `draft` job still cannot run (#3). Every claim below was verified against Anthropic's own current documentation on `platform.claude.com`, not taken from the release-notes diff.
+
+**Corrected — the scope name in 1.9 was wrong.** The baseline recommended `read:org_audit` for SIEM consumers. That is not a selectable scope: the four offered at key creation are `read:compliance_activities`, `read:compliance_user_data`, `read:compliance_org_data` and `delete:compliance_user_data`. `read:org_audit` appears only inside an example error message in Anthropic's docs. Anyone who followed this row would have failed to create the key. Also added the warning that `read:compliance_user_data` is much broader than its name suggests — it reads every chat, file, project and session transcript in every linked organization.
+
+**Updated — 5.2 understated session coverage badly.** The row claimed Cowork and Claude Code. The endpoints cover **Cowork, Claude Code, Claude Science, Claude for Microsoft 365, and Claude in Chrome**, local and remote, stable for the first three and beta for the last two.
+
+**Resolved — 7.1.** The contested Cowork audit-coverage question is answered: coverage is stable and documented, and the practitioner guide that claimed exclusion was describing a state that no longer holds. The SOX/HIPAA/PCI-DSS/SOC 2 scoping caveat is withdrawn. Two narrower items replace it: beta status for Claude Science and Claude in Chrome, and the fact that the 1.8 toggle silently and unrecoverably destroys local-session evidence while off.
+
+**New control — 1.17, Inference hooks (beta).** Anthropic POSTs each governed prompt to an AI security server the organization operates and waits for an allow/deny verdict before inference. This is the only inline prompt control Anthropic offers; everything else in this baseline is preventive configuration or after-the-fact audit. RBAC capability gating renumbered 1.17 → 1.18.
+
+**Corrected — 6.3 and 6.4, which this repository added eight days ago.** Both said nothing in the Anthropic console inspects prompt content. Inference hooks does. The rows now state where the two genuinely do not overlap: hooks do not cover Bedrock or Vertex, never receive raw file or image bytes (so a screenshot of a document is not inspected), and can only allow or deny, never redact.
+
+**Added — marketplace policy version floor.** Claude Code 2.1.277 fixed one malformed `strictKnownMarketplaces` or `blockedMarketplaces` entry silently disabling the entire enterprise marketplace policy. Below that version a single typo in 4.5 or 4.6 turns marketplace curation off with no error and no UI indication.
+
+**Reviewed and skipped:** the 2.1.278 auto-mode server-side classifier default (`CLAUDE_CODE_AUTO_MODE_SERVER`) is a billing and overhead change, not a security control; AGENTS.md support in 2.1.277 is already covered by the existing rules-file scanning guidance, which lists it; Salesforce in Claude and Claude Docs are new plugins governed by the existing 2.1 connector catalog and 3.7 plugin-state controls; #2's entire diff was a single bug fix to git permission prompts.
+
+Counts regenerated: 439 SP 800-53 citations, 162 CSF 2.0 citations across 23 subcategories, 98 control rows.
+
+## 2026-09-19 — section 6, supporting security layers (customer-owned)
+
+The `Owner` column showed that 21 of 59 levelled rows are configured outside any Anthropic panel. This adds the controls that have no Anthropic half at all, and so had nowhere to live and were simply absent. Verified by search against the previous revision: `DLP`, `CASB`, `SSPM`, `ExtensionInstall`, `Chrome Enterprise` and `force-install` each returned zero matches; `shadow-AI` returned one, in passing.
+
+- New **section 6** with six controls: 6.1 browser extension install control, 6.2 identity provider enforcement posture, 6.3 endpoint DLP on prompt content, 6.4 network DLP and inline inspection, 6.5 CASB / sanctioned-tenant enforcement, 6.6 shadow-AI discovery. Plus 6.7, what the layer costs you if absent, as a dependency chain rather than a list, and 6.8 on which crosswalk families are satisfied here rather than by the vendor.
+- **6.1 is the one that changes an existing claim.** The Anthropic org toggle in 2.7 governs the Chrome extension for managed accounts; it does not govern whether a user can install it under a personal one. Blocking unmanaged install is a browser-fleet policy and is what actually bounds 7.2.
+- Sections 6 through 10 renumbered to 7 through 11. All cross-references updated and verified: every numbered section reference in the document now resolves to a real heading.
+- Counts regenerated by the validator: 433 SP 800-53 citations across 72 distinct written references, 158 CSF 2.0 citations across 23 distinct subcategories. The new subcategory is `PR.DS-02`, on 6.4.
+
+**Verification status of the new rows.** These are generic security controls rather than Anthropic product claims, so they do not depend on Anthropic documentation. But `chromeenterprise.google`, `support.google.com`, `admx.help` and `learn.microsoft.com` were all unreachable when this was drafted, so the Chrome `ExtensionInstall` policy family is named from general practice and is flagged inline as requiring confirmation against a browser enterprise policy reference before deployment. No vendor documentation URLs were invented; the Reference column points at internal standards, in the style 3.16 already used.
+
+Closes the second half of #19.
+
+## 2026-09-19 — `Owner` column: who implements each control
+
+The document is organised by Anthropic product surface, which quietly implied every control is an Anthropic setting. Many are not. Those were present but scattered as implementation notes — the egress proxy in 1.7, MDM in 3.11 and 3.15 and 3.17, EDR in 3.16, the IdP dependency in 1.1, SIEM throughout section 5 — so they read as incidental rather than as a layer with its own owners.
+
+- Added an `Owner` column to every control table except section 4's setting baseline, whose ownership is uniform (MDM managed preferences, Windows registry, or server-managed settings) and is stated in prose instead. The CI/CD rows at the end of section 4 do carry it.
+- 59 rows classified against a controlled vocabulary: `Anthropic`, `IdP`, `MDM`, `Network`, `Endpoint`, `Browser fleet`, `SIEM`, `CI/CD`, `DNS`, `Process`, with `X + Y` meaning both halves are required and the control is incomplete with either alone.
+- **21 of 59 levelled rows are not configured in an Anthropic panel at all.** That number is the substance of the change: a reader who adopts only what the admin console offers has implemented about two thirds of this baseline, and none of what 6.2 identifies as holding the rest up.
+- Noted in the new section that several families in the 9.3 crosswalk — SI-3 and SI-4 for EDR, SC-7 for egress, SC-28 for encryption at rest, AU-6 for log review — are satisfied by customer infrastructure rather than by any Anthropic setting, which the control identifiers alone do not reveal.
+
+No control's substance changed, so no `Drafted` date moved. This records who configures each control, not what it should be set to.
+
+First half of #19. The controls that are missing entirely rather than merely scattered — DLP, browser extension install blocklisting, CASB, shadow-AI discovery — still have no home and are the second half.
+
+## 2026-09-18 — watcher reaches `main` only through review
+
+The two watcher stages were separate workflows joined by an issue, and that handoff had never once worked. Stage 1 fired on schedule on 2026-09-14, detected a real change and opened an issue; Stage 2 produced no run at all — not a skipped one, none. GitHub does not fire workflow triggers for events raised with the repository's own `GITHUB_TOKEN`, so the issue was inert, and both halves looked healthy from the Actions tab. The contrast that identified it: twelve issues created the same week through the API with a user token each produced a Stage 2 run, correctly skipped by the label guard.
+
+- Merged both stages into `watch-anthropic-updates.yml` as dependent jobs of one run. A job dependency involves no event, so the restriction does not apply. `workflow_dispatch` and `repository_dispatch` are suppressed the same way and would not have helped.
+- **The watcher no longer pushes to `main`.** Snapshots go to a `watch/upstream-<date>-<run>` branch and reach `main` only through a reviewed pull request. This is what lets `main` carry a protection ruleset, and it makes "a security baseline must not rewrite itself unreviewed" structural rather than aspirational — previously the snapshot half of that promise was a direct push.
+- The snapshot PR is opened by the `check` job, before any model runs. It has to advance even when nothing is baseline-relevant, or the same diff re-reports weekly forever; opening it early means that still happens when the `draft` job fails or `ANTHROPIC_API_KEY` is unset. An unconfigured repository degrades to "you get told what changed", not to silence.
+- The `draft` job now adds its changes to that same branch and updates the PR body, rather than opening a second PR. On a no-op it comments and leaves the PR open, since the snapshot still wants merging.
+- Added a post-action re-validation step running both validators, so a push that does not pass fails the job rather than resting on the prompt having been obeyed.
+- Removed `draft-baseline-update.yml`.
+- Dropped the path filters from `validate.yml`. A required status check that only runs for some paths never reports on the others, and a check that never reports blocks a pull request forever. Both validators take under a second, so this makes `tables` safe to mark required in a ruleset.
+
+One consequence of the same token restriction remains and is documented rather than worked around: because the `check` job opens the PR with `GITHUB_TOKEN`, `validate.yml` will not auto-run on it. The content is still validated inside the `draft` job, but the PR's own check sits unreported until someone pushes to the branch or closes and reopens it.
+
+## 2026-09-17 — NIST identifiers validated in CI
+
+The verification pass on 2026-09-12 checked every NIST citation by hand and then made no arrangement to keep checking. Stage 2 proposes crosswalk mappings unattended on a small model, and `check_tables.py` validates structure only — it passes a row citing a control that does not exist. That is the one failure mode this repository's central claim cannot survive, so it is now checked by machine on every change.
+
+- Added [`automation/check_nist.py`](automation/check_nist.py). Validates every SP 800-53 Rev 5 and CSF 2.0 identifier under `docs/` against an ID inventory generated from NIST's own OSCAL catalogs. Runs offline against the committed [`automation/state/nist-ids.json`](automation/state/nist-ids.json); `--refresh` regenerates that inventory when NIST publishes a new catalog release.
+- Wired into [`validate.yml`](.github/workflows/validate.yml) alongside `check_tables.py`, and added to Stage 2's pre-commit gate. Stage 2 is told not to run `--refresh`, since rewriting the inventory is not what a failing check means.
+- **Fixed a bug that made Stage 2's existing validation step unreachable.** Its `--allowedTools` list had no `Bash(python3:*)` entry, so the instruction to run `check_tables.py` before opening a PR could never have executed. Both validators are now runnable there.
+- Current counts, produced by the validator rather than asserted: 401 SP 800-53 citations across 72 distinct written references, 149 CSF 2.0 citations across 22 distinct subcategories, all resolving. The prior hand count of "396" in the verification section was stale; the figure is now generated.
+- Corrected the CSF 2.0 sourcing claim. That count was attributed to NIST's CPRT export, but CPRT sits on `csrc.nist.gov`, which returns 403 to automated clients and cannot be used from CI. NIST's `usnistgov/oscal-content` repository carries CSF 2.0 alongside SP 800-53 and is reachable, so both catalogs now come from there. The 185-subcategory figure is confirmed correct against it.
+- `AC-2j` is now recognised as a statement-part reference rather than treated as a control ID, and reported separately so it stays deliberate.
+- Bumped `actions/checkout` from v4 to v5 across all three workflows; v4 pins Node 20, which GitHub has deprecated.
+
+Known limits, documented in [`automation/README.md`](automation/README.md): the validator cannot detect a real-but-wrong mapping (`IA-8`, `IA-5(1)` and `SI-10` all exist and are all wrong for the things they get cited for), and an identifier whose family letters are not a real 800-53 family is skipped rather than flagged.
+
 ## 2026-09-12 — `Drafted` column added
 
 Every control row now carries a `Drafted` date: the date that row's substance was last authored against upstream documentation. It is not a "verified on" date and makes no claim about current accuracy.
