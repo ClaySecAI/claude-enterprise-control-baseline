@@ -46,7 +46,7 @@ These reuse the Control Baseline's L1–L3 levels.
 | `ts`, `tenant_id`, `region` | |
 | `user_id`, `agent_id`, `task_id`, `step_id` | Full attribution chain |
 | `event_type` | `task.created`, `plan.proposed`, `plan.approved`, `model.request`, `model.response`, `tool.proposed`, `policy.decision`, `approval.requested`, `approval.decided`, `tool.dispatched`, `tool.result`, `memory.write`, `budget.exceeded`, `task.halted`, `config.changed`, `admin.action` |
-| `model` | Model ID, provider channel, token counts, stop reason |
+| `model` | Registered model ID, exact version, provider/adapter, tier, prompt-profile version, routing reason (primary or fallback), token counts, stop reason |
 | `tool` | Connector, action, action class, target resource ID |
 | `policy` | Policy bundle version, rule ID, decision |
 | `payload_ref` | Pointer to the full payload in encrypted object storage, with a content hash |
@@ -63,8 +63,8 @@ These reuse the Control Baseline's L1–L3 levels.
 | Tenant isolation | A dedicated data plane per tenant (no shared databases). The control plane is logically multi-tenant but holds no content. |
 | Encryption | TLS 1.2+ in transit, with mTLS inside the data plane. At rest, AES-256 under customer-managed keys in the customer's KMS. Revoking the key renders the data plane unreadable. |
 | Residency | Region is pinned at tenant creation. Model inference stays in-region, using the provider's inference-geography control or a regional endpoint. Backups also stay in region. |
-| Model provider retention | Customers consume Claude under their own agreement and channel. Keel documents what each channel retains and supports tenants that require zero data retention. Some newer Claude models have retention requirements that exclude ZDR orgs, so the model gateway blocks selecting a model that the tenant's retention posture does not allow. |
-| No training | Contractual commitment that Keel never trains on customer data. Depends on the provider terms of the channel the customer uses. |
+| Model provider retention | Under BYOM the tenant contracts with its model providers directly, so retention, zero-data-retention, and no-training terms are the tenant's agreements, not Keel's. The model registry records each model's retention posture as the tenant attests it. Classification routing (MOD-04) then keeps data away from models whose terms don't allow it. For the strictest data, the answer is a self-hosted model: no content leaves the VPC. |
+| No training | Contractual commitment that Keel never trains on customer data. Model providers' training terms are governed by the tenant's own contracts (see above). |
 | DLP | Ingress and egress classification, Purview label inheritance, and redaction before model send where policy requires it |
 | Retention and legal hold | Per data class. Legal hold overrides deletion. eDiscovery search spans tasks, transcripts, approvals, and memory. |
 
@@ -72,7 +72,7 @@ These reuse the Control Baseline's L1–L3 levels.
 
 | # | Threat | Primary mitigations | Residual |
 |---|---|---|---|
-| T1 | **Indirect prompt injection** via retrieved documents, tickets, or messages causes an unwanted action | Planner/executor split; per-step tool scoping; plan-scope enforcement; untrusted-content labeling; PDP on every call; approvals bound to payload hash; memory quarantine | **Medium.** No mitigation eliminates injection. The design goal is that a successful injection can only do what the approved plan and policy already allowed. |
+| T1 | **Indirect prompt injection** via retrieved documents, tickets, or messages causes an unwanted action | Planner/executor split; per-step tool scoping; plan-scope enforcement; untrusted-content labeling; PDP on every call; approvals bound to payload hash; memory quarantine | **Medium.** No mitigation eliminates injection, and under BYOM resistance varies widely between models. The design goal is that a successful injection can only do what the approved plan and policy already allowed, whichever model is running. |
 | T2 | **Data exfiltration** through a write or external-share action | Action-class policy (external-share denied at L2+); egress DLP; domain allowlists; no general web fetch in v1 | Low–medium |
 | T3 | **Privilege escalation** through the agent: the agent reaches data the user can't | Source ACL enforcement; token exchange with the user as subject; no service accounts with broad scope | Low |
 | T4 | **Runaway autonomy.** A standing task loops, spams, or burns spend. | Autonomy budgets enforced outside the model path; rate limits; expiry; kill switch (ENT-16) | Low |
@@ -80,6 +80,9 @@ These reuse the Control Baseline's L1–L3 levels.
 | T6 | **Insider misuse.** A user tasks the agent to aggregate data they shouldn't combine. | Audit, DLP, and analytics on unusual aggregation; supervisor review queues | Medium |
 | T7 | **Control-plane compromise pushes a malicious policy** | Policy bundles signed with a tenant-held co-signing key for L3; data plane rejects unsigned or rolled-back bundles; policy diffs are audited | Low |
 | T8 | **Audit tampering** | Hash chain, WORM anchoring, SIEM streaming (an independent copy) | Low |
+| T9 | **Weak or poorly aligned BYOM model.** A tenant registers a model that follows injected instructions easily or makes unreliable tool calls. | Certification tiers gate which jobs it can run; all enforcement sits outside the model (principle 8); schema validation of every tool call | Low for safety, because failures are blocked. Medium for usefulness: a weak model produces more denied actions and re-plans, which shows up in analytics. |
+| T10 | **Compromised or spoofed model endpoint** (a self-hosted server or a man-in-the-middle returns hostile outputs) | Endpoints registered by admins only; TLS pinning or private connectivity; outputs are treated as untrusted proposals checked by the PDP, never as commands | Low |
+| T11 | **Silent provider-side model change** alters behavior after certification | Version pinning, canary fingerprinting, automatic pause and recertification (MOD-05) | Low–medium, because some providers do not expose versions |
 
 ## 4.6 Compliance targets
 
@@ -91,19 +94,27 @@ These reuse the Control Baseline's L1–L3 levels.
 | HIPAA | BAA available for dedicated and customer-VPC deployments | v1 GA |
 | SEC 17a-4 / FINRA 4511 | Supported via WORM archive integration plus a third-party attestation letter | v1 GA |
 | DORA (EU FS) | ICT third-party register support, exit plan, incident reporting hooks | v1.x for EU launch |
-| FedRAMP Moderate → High | Sovereign deployment model, Claude via an authorized channel such as Bedrock GovCloud | Year two (see doc 5) |
+| FedRAMP Moderate → High | Sovereign deployment model on self-hosted models or models in an authorized government cloud region. BYOM means Keel's authorization boundary need not include a model provider. | Year two (see doc 5) |
 | NIST SP 800-53 Rev 5 / AI RMF | Control mapping published, reusing the Control Baseline crosswalk structure | v1 GA |
 
-**Verify before committing to a date:** which Claude models are available on each authorized government channel, and at what impact level. This changes frequently, and the Control Baseline tracks it.
+**Verify before committing to a date:** which hosted models are available in each authorized government cloud region, and at what impact level. This changes frequently. For Claude specifically, the Control Baseline tracks it.
 
 ## 4.7 Evaluation and model risk
 
-Evaluation is a formal gate, because FS model-risk teams (SR 11-7) will ask for this evidence first.
+Under BYOM, evaluation happens at two levels. Both are formal gates, because FS model-risk teams (SR 11-7) will ask for this evidence first.
 
+**Level 1: Keel release gate (Keel's lab).**
 - **Capability suite:** golden tasks for each core job and connector, graded on outcome correctness and citation accuracy.
 - **Safety suite:** a prompt-injection corpus planted in documents, tickets, and messages, scored on whether any action outside the plan or policy was *attempted*. Also covers data-aggregation abuse cases and refusal and false-refusal rates.
-- **Regression gate:** every change to model ID, prompt, tool description, or default policy runs both suites. Any regression on the safety suite blocks the release.
-- **Customer-visible model cards:** per-tenant documentation of pinned models, eval results, and change history, packaged for the customer's model-risk review.
+- **Runs against every model on the reference list.** Any change to Keel's prompts, tool descriptions, prompt profiles, or default policy must pass both suites on every reference model. A safety regression on any reference model blocks the release.
+
+**Level 2: Tenant certification (in the tenant's data plane).**
+- The same suites run inside the tenant's data plane against the tenant's registered model, so no eval traffic leaves the boundary. Tenants can add their own golden tasks.
+- The results assign the capability tier (MOD-02). Tenants can set stricter thresholds than Keel's defaults.
+- Recertification runs automatically on a model version change, a prompt-profile change, or a Keel release that changes agent behavior.
+- **Validation pack:** per model, the certification results, tier, prompt profile, known limitations, and change history, formatted for the tenant's model-risk review (MOD-07). This is the artifact that shortens the buyer's model approval from months to weeks.
+
+**What certification does not claim.** It measures behavior within Keel's harness. It does not validate the model for any other use, and it does not replace the tenant's own model-risk sign-off.
 
 ## 4.8 Gaps this closes in the Claude Enterprise Control Baseline
 

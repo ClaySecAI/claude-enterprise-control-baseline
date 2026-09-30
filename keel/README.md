@@ -8,7 +8,7 @@ Keel is in the same category as Meta's Muse, a personal AI agent that carries wo
 
 ## The one-line thesis
 
-Consumer agents inherit the user's full identity and act on it without limits. A regulated enterprise cannot accept that. Keel gives every agent its own scoped, revocable, audited identity, and makes every action it takes attributable, reviewable, and bounded by policy the tenant controls.
+Consumer agents inherit the user's full identity, act on it without limits, and come welded to one vendor's model. A regulated enterprise cannot accept that. Keel gives every agent its own scoped, revocable, audited identity, and makes every action it takes attributable, reviewable, and bounded by policy the tenant controls, on whatever model the tenant has already approved.
 
 ## Scope decisions (from the kickoff)
 
@@ -20,6 +20,7 @@ Consumer agents inherit the user's full identity and act on it without limits. A
 | v1 agent capabilities | Work-app connectors; long-running tasks and goals |
 | Explicitly out of v1 | Email and calendar *send* actions, avatar/voice/video, consumer accounts |
 | Must-have enterprise controls | SSO/SCIM + RBAC; audit and compliance; data controls; admin and policy |
+| Model strategy | **Bring your own model (BYOM) first.** The tenant registers model endpoints it has already approved: hosted APIs, cloud-marketplace models, or self-hosted open-weight models. Keel certifies them and routes between them. Keel ships no model of its own. |
 
 ## Documents
 
@@ -33,4 +34,4 @@ Consumer agents inherit the user's full identity and act on it without limits. A
 
 ## Relationship to the Claude Enterprise Control Baseline
 
-Keel's model layer is Claude. The [Claude Enterprise Control Baseline](../README.md) is the control set for *consuming* Claude in an enterprise. Keel reuses its L1/L2/L3 profile levels and its NIST SP 800-53 Rev 5 spine. Keel also sets out to close three gaps that baseline documents as unsolved (section 6 and 9.5 there): unattended autonomous execution, non-human agent identity, and centrally unreviewable configuration. Doc 4 traces each one.
+Keel is model-agnostic (BYOM), so the tenant's model is whatever its model-risk team has already approved. Claude is one of the models Keel certifies at launch, which is where this repo connects. The [Claude Enterprise Control Baseline](../README.md) is the control set for *consuming* Claude in an enterprise. Keel reuses its L1/L2/L3 profile levels and its NIST SP 800-53 Rev 5 spine. Keel also sets out to close three gaps that baseline documents as unsolved (section 6 and 9.5 there): unattended autonomous execution, non-human agent identity, and centrally unreviewable configuration. Doc 4 traces each one.

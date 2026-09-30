@@ -25,8 +25,8 @@ Keel splits into a **control plane**, which Keel operates and which holds no cus
 │         │                  │                              └────────┬────────┘                                   │
 │         │                  ▼                                       │                                            │
 │         │           ┌──────────────┐                               │                                            │
-│         │           │ Model gateway│──── Claude via tenant's channel (Anthropic API / Claude Platform on AWS /   │
-│         │           │ (routing,    │     Bedrock / Vertex / Foundry), PrivateLink where available              │
+│         │           │ Model gateway│──── Tenant's registered models (BYOM): hosted APIs · Bedrock · Azure AI    │
+│         │           │ (routing,    │     Foundry · Vertex AI · self-hosted vLLM/TGI. PrivateLink where offered  │
 │         │           │  redaction,  │                                                                            │
 │         │           │  metering)   │                                                                            │
 │         │           └──────────────┘                                                                            │
@@ -46,7 +46,7 @@ Keel splits into a **control plane**, which Keel operates and which holds no cus
 |---|---|---|---|
 | **Dedicated SaaS** | Keel-hosted | Keel-hosted, single-tenant, in the customer's chosen region, with customer-managed keys | Mid-size FS and healthcare that want no infrastructure burden |
 | **Customer VPC (default for regulated)** | Keel-hosted | Customer's AWS, Azure, or GCP account, deployed via Terraform + Helm, and operated by Keel through a narrow break-glass role | Large FS and healthcare |
-| **Sovereign / air-gapped** | Customer-hosted | Customer-hosted, with Claude via Bedrock in AWS GovCloud or the equivalent authorized channel | Public sector, defense-adjacent (year two, see doc 5) |
+| **Sovereign / air-gapped** | Customer-hosted | Customer-hosted, running on self-hosted open-weight models or a model in an authorized government cloud region. BYOM is what makes this deployment possible. | Public sector, defense-adjacent (year two, see doc 5) |
 
 The control plane never receives prompts, documents, model outputs, or memory. It sends signed policy and config bundles down, and receives only metering counts and health telemetry back. We will publish the full list of telemetry fields, and each tenant can turn it off.
 
@@ -63,21 +63,34 @@ The control plane never receives prompts, documents, model outputs, or memory. I
 - Scheduled and triggered tasks are workflows with an owner, an expiry, and a re-attestation reminder (AGT-05). This closes the "scheduled tasks have no technical control" gap in the Control Baseline (section 6.3).
 
 ### Agent runtime (harness)
-- A self-hosted agent loop that calls Claude through the model gateway using the Messages API with tool use. Two viable implementations:
-  - the Anthropic SDK's Tool Runner, whose per-turn hooks give us the approval gate, audit write, and error interception points;
-  - the Claude Agent SDK, if we want its built-in context management and subagents.
-  Pick one after the phase-0 spike (doc 5).
-- **Planner/executor split.** One call produces a structured plan with a strict schema that is validated before execution. Each step then runs with only the tools that step needs, which shrinks the injection blast radius per step.
-- **Context hygiene.** Retrieved content is wrapped and labeled as untrusted data. Operator instructions arrive through the system channel only. Server-side compaction keeps long tasks inside the context window.
-- **Model selection.** Default is Claude Opus 5.5 for planning and judgment-heavy steps. Claude Sonnet 5.5 or Claude Haiku 4.5 handle high-volume extraction and summarization sub-steps. Effort is tuned per step type. Every choice is pinned per tenant and changes only through the eval gate (NFR-07).
-- **Optional managed runtime.** Tenants that consume Claude through the first-party API or Claude Platform on AWS can instead run steps on Anthropic Managed Agents. It still sits behind the same policy and tool gateway: custom tools route back into our data plane, so the PDP and audit remain authoritative. It is not the default, because it is unavailable on Bedrock, Vertex, and Foundry.
+- Keel's own agent loop, which is **provider-neutral**. It talks to models only through the model gateway's internal interface: messages, tool definitions, tool calls and results, structured output against a JSON schema, and streaming. The loop never imports a vendor SDK.
+- **Planner/executor split.** One call produces a structured plan against a strict schema, which is validated before execution. Each step then runs with only the tools that step needs, which shrinks the injection blast radius per step. This split also suits BYOM: a strong model can plan while cheaper or self-hosted models execute narrow steps.
+- **Schema-first tool calling.** Tool calls are validated against the tool's JSON schema in Keel, not trusted from the provider. A malformed call is returned to the model as an error and never executed. Models without native tool calling can still run executor steps through constrained structured output, but only up to the tier that allows it.
+- **Context hygiene.** Retrieved content is wrapped and labeled as untrusted data, and operator instructions go through the system channel only. Keel owns context management (summarizing and trimming history) rather than relying on a provider feature, so long tasks behave the same on every model.
+- **Per-model prompt profiles.** Each certified model gets a versioned prompt profile: system prompt variant, tool-description style, and reasoning or effort settings. Profiles are part of what certification tests, so changing one triggers recertification.
 
 ### Model gateway
-- Routes to the tenant's configured Claude channel, over a private endpoint where the provider offers one.
-- Pins model IDs per tenant. There are no silent upgrades.
-- Pre-send DLP and redaction pass (ENT-10). Post-receive checks cover refusal and stop reasons and look for injected tool-call patterns.
-- Meters tokens and cost per task, user, and group (ENT-13), and enforces spend caps.
-- Handles the provider's data-residency controls: inference geography where supported, and otherwise regional endpoint selection (ENT-11).
+The gateway is the core of BYOM.
+
+- **Adapters.** One adapter per provider family: Anthropic API, OpenAI API, Google Gemini API, Amazon Bedrock, Azure AI Foundry / Azure OpenAI, Google Vertex AI, and a generic OpenAI-compatible adapter for self-hosted vLLM and TGI. Each adapter maps the internal interface to the provider's wire format, including tool-call format, stop and refusal reasons, and usage counting. Adapters are the only provider-specific code in Keel.
+- **Model registry.** Holds each registered model's endpoint, region, credentials reference (stored in the tenant's secret manager, never in Keel), exact version, context window, approved data classifications, certification results, and tier (MOD-01, MOD-07).
+- **Routing.** Chooses a model per step from the tenant's step-type map (MOD-03). The router enforces data-classification routing *before* anything is sent (MOD-04), then falls back down the ordered list on errors, refusals, or rate limits. A fallback model must hold a tier at least as high as the step requires, and a fallback can never route content to a model that isn't approved for its classification.
+- **Version pinning and drift detection.** Where the provider exposes a version, it is pinned. Where it doesn't, the gateway fingerprints behavior with a small canary set. Either way, a detected change pauses that model and queues recertification (MOD-05).
+- **Private connectivity.** PrivateLink or Private Service Connect wherever the provider offers it. Self-hosted endpoints stay inside the VPC.
+- **DLP and metering.** Pre-send DLP and redaction (ENT-10), and a post-receive check for refusals, truncation, and injected tool-call patterns. Tokens and cost are metered per task, user, group, *and model* (ENT-13).
+- **Residency.** Each registered model carries its region, and the router will not send content to a model outside the tenant's residency boundary (ENT-11).
+
+#### Capability tiers
+
+Certification assigns each model a tier. Tiers decide which jobs a model may run, not whether the system is safe; safety is enforced outside the model (principle 8).
+
+| Tier | May run | Minimum certification bar |
+|---|---|---|
+| **T1: Planner** | Planning, multi-step long-running tasks, judgment steps (triage, drafting that goes to people) | Passes the full capability suite, the full injection suite, and reliable schema-valid tool calling across long contexts |
+| **T2: Executor** | Single executor steps with a narrow tool set; drafting; bulk writes after approval | Reliable tool calling on short contexts; injection suite pass rate above the tenant's threshold |
+| **T3: Utility** | Extraction, classification, summarization, redaction. No tools. | Accuracy on extraction and summary sets. Structured output only. |
+
+At launch, the reference model list (MOD-08) will cover at least two T1 models from different vendors and at least one self-hosted open-weight model at T2 or better, so an air-gapped tenant is never left without a working configuration. Which specific models land in which tier is a phase-0 output, not a spec decision.
 
 ### Policy decision point (PDP)
 - Evaluates every proposed tool call *before* execution. Inputs: the principal (user + agent instance), the action and its class, the target resource, the data classification of the payload, the task's remaining budget, and time.
@@ -122,7 +135,7 @@ The control plane never receives prompts, documents, model outputs, or memory. I
 ## 3.4 Data flow: one write action, end to end
 
 1. The user asks: "Update the renewal date on the Acme opportunity to 2027-03-31 and tell the account team."
-2. The agent runtime calls Claude (via the model gateway) to produce a plan with two steps: `salesforce.update_record` (write) and `slack.post_message` (write).
+2. The agent runtime asks the tenant's T1 planner model (via the model gateway) to produce a plan with two steps: `salesforce.update_record` (write) and `slack.post_message` (write).
 3. The plan is validated against its schema and shown to the user (AGT-02). The user confirms.
 4. For step 1, the runtime proposes a tool call. The tool gateway asks the PDP, which answers `require_approval(role=account_owner)` because the record is tagged `customer_financial`.
 5. The approvals service sends a card to the account owner, and the task service puts the task into a zero-token wait.
@@ -137,7 +150,9 @@ The control plane never receives prompts, documents, model outputs, or memory. I
 |---|---|---|
 | Workflow engine | Temporal | Phase 0 spike |
 | Policy language | Cedar (analyzable, readable by non-engineers) vs. OPA/Rego (existing enterprise familiarity) | Phase 0 |
-| Harness | Anthropic SDK Tool Runner vs. Claude Agent SDK | Phase 0 spike |
+| Harness | Build Keel's own loop (recommended) vs. adopt a provider-neutral open-source agent framework | Phase 0 spike |
+| Model gateway | Build on a thin in-house adapter layer vs. adopt an open-source LLM gateway (LiteLLM-class) and extend it with registry, classification routing, and certification hooks | Phase 0 spike |
+| Self-hosted serving | vLLM (leading) vs. TGI as the reference stack for self-hosted models | Phase 0 |
 | Primary datastore | PostgreSQL (tasks, policy, metadata) + object storage (artifacts, archives) | Phase 0 |
 | Memory retrieval | pgvector in the same PostgreSQL, to avoid a new data store in the boundary | Phase 1 |
 | Deploy tooling | Terraform + Helm on EKS / AKS / GKE | Phase 0 |

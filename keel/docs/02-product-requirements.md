@@ -48,6 +48,19 @@ Requirement IDs are stable, so we can cite them in architecture, controls, and t
 | CON-05 | Private connector SDK (MCP-based) with a manifest declaring actions, action classes, data categories, and scopes | P1 |
 | CON-06 | Admins enable connectors per group, and can restrict to a subset of actions or of sites/projects/channels | P0 |
 
+### Models (bring your own)
+
+| ID | Requirement | Pri |
+|---|---|---|
+| MOD-01 | Tenant admins register model endpoints: hosted APIs, cloud-marketplace models (Bedrock, Azure AI Foundry, Vertex AI), and self-hosted OpenAI-compatible endpoints (vLLM, TGI). Each record holds the endpoint, region, credentials reference, context window, and the data classifications it is approved for. | P0 |
+| MOD-02 | Keel runs a certification suite against every registered model and assigns a capability tier (section 3.3). A model can only run jobs its tier allows. | P0 |
+| MOD-03 | Per-tenant routing: the admin maps each step type (plan, execute, extract, summarize, judge) to a certified model, with an ordered fallback list | P0 |
+| MOD-04 | Data-classification routing: policy can require that content with a given label only goes to models approved for it. For example, PHI only goes to the self-hosted model. | P0 |
+| MOD-05 | Models are pinned by exact version. A provider-side version change is detected and blocks traffic to that model until it is recertified. | P0 |
+| MOD-06 | A tenant can run Keel entirely on self-hosted models, with no outbound model traffic | P1 |
+| MOD-07 | A model registry view for model-risk teams showing each model's certification results, tier, usage, incidents, and change history, exportable as a validation pack | P1 |
+| MOD-08 | Keel publishes a *reference model list*: models it has certified in its own lab at each tier, so tenants have a known-good starting point | P0 |
+
 ### Enterprise controls
 
 | ID | Requirement | Pri |
@@ -79,13 +92,15 @@ Requirement IDs are stable, so we can cite them in architecture, controls, and t
 | NFR-04 | Audit completeness | 100% of side-effecting actions have an audit record *before* the action executes (write-ahead) |
 | NFR-05 | Scale per tenant | 50k users, 5k concurrent running tasks |
 | NFR-06 | Accessibility | WCAG 2.2 AA for web app and approval surfaces |
-| NFR-07 | Evaluation gate | No model, prompt, or policy-default change ships without passing the regression and safety eval suite (doc 4, section 4.7) |
+| NFR-07 | Evaluation gate | No model, prompt, or policy-default change ships without passing the regression and safety eval suite (doc 4, section 4.7). For BYOM, this also applies to each tenant's registered models: a model version change triggers recertification. |
+| NFR-08 | Model portability | Swapping the model behind a step type needs no change to connectors, policies, or task definitions |
 
 ## 2.5 What "done" looks like for a v1 customer
 
 A mid-size broker-dealer can do all of the following:
 
 - Roll Keel out to 2,000 users with SSO/SCIM.
+- Run it on the model their model-risk committee already approved, reached through their existing cloud contract, and hand that committee Keel's certification pack.
 - Restrict write actions to Salesforce and Jira, with supervisor approval on anything touching client records.
 - Stream every agent action to Splunk.
 - Retain transcripts to 17a-4 storage.
