@@ -10,7 +10,7 @@ Keel splits into a **control plane**, which Keel operates and which holds no cus
                          │  Admin console · Admin API · Licensing/metering (counts only, no content)│
                          └───────────────▲──────────────────────────────────────────────────────────┘
                                          │ signed config + policy bundles (pull, mTLS)
-┌──────────────────────────────────── DATA PLANE (customer VPC / dedicated) ──────────────────────────────────────┐
+┌──────────────────────────────────── DATA PLANE (customer cloud / segmented hosted) ─────────────────────────────┐
 │                                                                                                                 │
 │  Surfaces            ┌────────────┐                                                                             │
 │  Web · Teams · Slack │  API edge  │──── IdP (SAML/OIDC) ─── SCIM                                               │
@@ -44,9 +44,21 @@ Keel splits into a **control plane**, which Keel operates and which holds no cus
 
 | Model | Control plane | Data plane | Who it's for |
 |---|---|---|---|
-| **Dedicated SaaS** | Keel-hosted | Keel-hosted, single-tenant, in the customer's chosen region, with customer-managed keys | Mid-size FS and healthcare that want no infrastructure burden |
-| **Customer VPC (default for regulated)** | Keel-hosted | Customer's AWS, Azure, or GCP account, deployed via Terraform + Helm, and operated by Keel through a narrow break-glass role | Large FS and healthcare |
+| **Customer cloud** | Keel-hosted | The customer's own AWS or Azure account (GCP later), deployed with Terraform + Helm and operated by Keel through a narrow break-glass role. **On AWS the models come from Amazon Bedrock, on Azure from Microsoft Foundry**, reached over private endpoints, so content never leaves the customer's cloud boundary. Self-hosted models are also supported. | Large FS and healthcare; anyone whose security review requires data to stay in their own account |
+| **Keel-hosted, segmented** | Keel-hosted | Keel-hosted, but **one isolated environment per customer**: its own cloud account or subscription, its own network, database, object storage, encryption keys, and model endpoints. Nothing is shared with other customers except the control plane, which holds no content. | Mid-size FS and healthcare that want no infrastructure to run |
 | **Sovereign / air-gapped** | Customer-hosted | Customer-hosted, running on self-hosted open-weight models or a model in an authorized government cloud region. BYOM is what makes this deployment possible. | Public sector, defense-adjacent (year two, see doc 5) |
+
+#### Environment factory (hosted option)
+
+The hosted option depends on spinning up a fresh, segmented environment for each customer quickly and repeatably. Keel provisions it from the same Terraform and Helm code used for the customer-cloud option, so there is one deployment artifact rather than two products.
+
+- **One account or subscription per customer.** Not a namespace or a database schema in a shared cluster. The blast radius of any single compromise is one customer.
+- **Per-customer keys.** Each environment has its own encryption keys, held in a key store the customer can control (BYOK/HYOK, ENT-12). Revoking the key makes that environment unreadable.
+- **No shared data stores, queues, or model endpoints.** The only cross-customer systems are the control plane and the build pipeline, and neither handles content.
+- **Operator access is narrow and recorded.** Keel staff use a break-glass role that is time-limited, requires a ticket and a second approver, and is written to the customer's own audit ledger and SIEM feed.
+- **Promotion path.** A customer can move from the hosted option to their own cloud account with the same configuration, because the environment is defined as code.
+
+Note on the security bar: the request was for a security profile "similar to Muse". I have not verified Muse's actual hosting or isolation model, so this spec sets its own bar (a separate account per customer with customer-held keys) rather than copying a claim about Muse.
 
 The control plane never receives prompts, documents, model outputs, or memory. It sends signed policy and config bundles down, and receives only metering counts and health telemetry back. We will publish the full list of telemetry fields, and each tenant can turn it off.
 

@@ -26,6 +26,8 @@ Consumer agents inherit the user's full identity, act on it without limits, and 
 | v1 agent capabilities | Work-app connectors; long-running tasks and goals |
 | Explicitly out of v1 | Email and calendar *send* actions, avatar/voice/video, consumer accounts |
 | Must-have enterprise controls | SSO/SCIM + RBAC; audit and compliance; data controls; admin and policy |
+| First industry | Financial services. Alignment with Drydock / Pathspan is being explored (open question Q13). |
+| Deployment | Run in the customer's own cloud (Bedrock or Foundry for models) **or** a Keel-hosted environment, segmented per customer. Same code for both. |
 | Model strategy | **Bring your own model (BYOM) first.** The tenant registers model endpoints it has already approved: hosted APIs, cloud-marketplace models, or self-hosted open-weight models. Keel certifies them and routes between them. Keel ships no model of its own. |
 
 ## Documents

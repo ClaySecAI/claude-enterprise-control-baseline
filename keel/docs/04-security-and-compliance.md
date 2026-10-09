@@ -109,7 +109,7 @@ These reuse the Control Baseline's L1–L3 levels.
 | SOC 2 Type II | Security, Availability, Confidentiality | Type I at v1 GA, Type II 6–9 months after |
 | ISO/IEC 27001 + 27701 | Certified | Year one |
 | ISO/IEC 42001 (AI management system) | Certified | Year one to two. It is increasingly asked for in FS procurement. |
-| HIPAA | BAA available for dedicated and customer-VPC deployments | v1 GA |
+| HIPAA | BAA available for both the customer-cloud and Keel-hosted (segmented) deployments | v1 GA |
 | SEC 17a-4 / FINRA 4511 | Supported via WORM archive integration plus a third-party attestation letter | v1 GA |
 | DORA (EU FS) | ICT third-party register support, exit plan, incident reporting hooks | v1.x for EU launch |
 | FedRAMP Moderate → High | Sovereign deployment model on self-hosted models or models in an authorized government cloud region. BYOM means Keel's authorization boundary need not include a model provider. | Year two (see doc 5) |

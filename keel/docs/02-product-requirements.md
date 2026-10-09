@@ -60,6 +60,9 @@ Requirement IDs are stable, so we can cite them in architecture, controls, and t
 | MOD-06 | A tenant can run Keel entirely on self-hosted models, with no outbound model traffic | P1 |
 | MOD-07 | A model registry view for model-risk teams showing each model's certification results, tier, usage, incidents, and change history, exportable as a validation pack | P1 |
 | MOD-08 | Keel publishes a *reference model list*: models it has certified in its own lab at each tier, so tenants have a known-good starting point | P0 |
+| MOD-09 | Certification is paid for by the customer. Before any run, Keel shows an estimate of the token cost for that model and suite and requires the admin to confirm it. Admins can set a monthly certification budget. | P0 |
+| MOD-10 | Keel includes no bundled or default model. A tenant with no certified model for a step type cannot run that step type, and the console says what's missing. | P0 |
+| MOD-11 | Minimum model bar: a model that has not passed the Planner (T1) tier cannot run long-running or standing tasks. The console shows why and which tests failed. | P0 |
 
 ### Enterprise controls
 
