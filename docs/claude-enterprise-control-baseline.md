@@ -8,13 +8,13 @@ Drafted 2026-09-11 from Anthropic's public admin documentation and third-party h
 
 Every control setting, framework identifier, and reference link in this document was re-checked against primary sources on 2026-09-12. What that pass established, and what it did not:
 
-**Verified mechanically, high confidence.** All 32 Claude Code setting keys in section 4 exist in the published [settings schema](https://www.schemastore.org/claude-code-settings.json), with the nesting and enum values as written (the `"disable"` string values for `disableBypassPermissionsMode`, `disableAutoMode`, and `disableDeepLinkRegistration` are correct, not a pattern-matching error). All 396 SP 800-53 Rev 5 citations resolve against NIST's [OSCAL Rev 5 catalog](https://github.com/usnistgov/oscal-content) except one notation error, now fixed. All 22 CSF 2.0 subcategories were checked against NIST's CPRT export of the CSF 2.0 core (185 subcategories) and all 22 are valid. The "1,196 control statements across 20 families" figure in 9.1 was counted from the OSCAL catalog and is exact (324 base + 872 enhancements). Section 8's reference policy and `examples/managed-settings.json` are identical. The managed-settings file paths, macOS MDM domain, and Windows registry key are all correct. Both CVEs in 3.17 are real and accurately described.
+**Verified mechanically, high confidence.** Every Claude Code setting key in section 4 is now validated in CI on each change by [`automation/check_settings.py`](../automation/check_settings.py) against the published [settings schema](https://www.schemastore.org/claude-code-settings.json) — the key exists, it is at the nesting written here, and any pinned value is in that key's enum. The same check confirms section 9's reference policy and `examples/managed-settings.json` are still identical, and that every value in that policy is schema-legal. The `"disable"` string values for `disableBypassPermissionsMode`, `disableAutoMode`, and `disableDeepLinkRegistration` are correct, not a pattern-matching error. Every NIST identifier in this document is now validated in CI on each change by [`automation/check_nist.py`](../automation/check_nist.py), against NIST's own OSCAL catalogs rather than by hand: 450 SP 800-53 Rev 5 citations across 74 distinct written references (one of which, `AC-2j`, is a statement part rather than a control ID), and 168 CSF 2.0 citations across 23 distinct subcategories. All resolve. The "1,196 control statements across 20 families" figure in 9.1 is exact (324 base + 872 enhancements), as is the 185-subcategory CSF 2.0 figure — both are counted from the catalogs by the same script, not asserted. The managed-settings file paths, macOS MDM domain, and Windows registry key are all correct. Both CVEs in 3.17 are real and accurately described.
 
 **Corrected in this pass.** Console panel locations in sections 1–3 were substantially wrong; the RBAC capability list was incomplete (14 claimed, 19 documented, plus seven admin permission areas omitted entirely); the Claude in Chrome default flipped to on as of 2026-09-10; the Cowork telemetry claim was inverted; `managed-mcp.json` was attributed to the wrong surface; "global instructions" is per-user, not an org control; and five reference links were dead. Each correction is called out inline.
 
 **Method, so you can weigh the corrections.** The schema, OSCAL, CSF, link, and CVE checks were run directly against primary sources and are reproducible. The admin-console panel names and locations in sections 1 to 3 came from delegated documentation research; the two corrections with the largest security consequence, the Claude in Chrome default and the Cowork telemetry default, were then re-verified by hand against Anthropic's own pages. The remaining panel corrections are name-for-name swaps carrying the support-article number they came from, and every one of those article URLs resolves, but they have not each been individually re-confirmed. Treat them as better than what they replaced rather than as gospel, and correct anything your own tenant contradicts.
 
-**Not verified, treat as open.** Whether Claude in Slack interactions surface in OTel. The `caffeinate`/Keep Awake behavior in 3.4. The Outlook-specific Graph consent step. The server-managed settings version floor. Section 6.1's Cowork audit-coverage question remains open and still needs a test in your own tenant.
+**Not verified, treat as open.** Whether Claude in Slack interactions surface in OTel. The `caffeinate`/Keep Awake behavior in 3.4. The Outlook-specific Graph consent step. The server-managed settings version floor. Section 7.1's Cowork audit-coverage question was resolved on 2026-09-27 against Anthropic's current documentation; what remains there is narrower and is stated in that section.
 
 ### The `Drafted` column
 
@@ -43,6 +43,38 @@ The rule going forward, enforced by the Stage 2 workflow: bump a row's `Drafted`
 | L2 | Security-sensitive environments. Default target for most enterprises. |
 | L3 | Regulated workloads. Accepts functionality loss. |
 
+## The `Owner` column: who actually implements each control
+
+Every control table carries an `Owner` naming where the control is configured. It is not a RACI and it does not say who is accountable for the outcome — only which system the setting lives in, and therefore which team has to be in the room.
+
+| Owner | Where the control is configured |
+|---|---|
+| `Anthropic` | claude.ai Organization settings, Admin Settings, or the Console |
+| `Anthropic (contract)` | Not a setting at all. Arranged through your account team. |
+| `IdP` | Your identity provider |
+| `MDM` | Managed preferences or registry on the endpoint. No Anthropic panel is involved. |
+| `Network` | Egress proxy, secure web gateway, or firewall |
+| `Endpoint` | EDR, or endpoint agent posture |
+| `Browser fleet` | Chrome or Edge enterprise policy, via Google Workspace admin or MDM |
+| `SIEM` | Your log pipeline: ingestion, retention, alerting |
+| `CI/CD` | Workflow definitions in your own repositories |
+| `DNS` | A record in the zone for the domain being verified |
+| `Process` | No technical control exists. Acceptable-use policy, runbook, or review step. |
+
+`X + Y` means both are required and the control is incomplete with either half alone. The combinations in use are worth reading as claims in their own right:
+
+- **`Anthropic + IdP`** (1.1, 1.2) — Anthropic holds the toggle; your IdP determines whether it means anything. Enabling SSO does not satisfy IA-2(1) or IA-2(2) unless the IdP actually enforces MFA.
+- **`Anthropic + SIEM`** (1.11, 3.8, 5.1–5.5) — Anthropic emits the record; nothing is monitored until your pipeline ingests and alerts on it.
+- **`Anthropic + Browser fleet`** (2.7) — Anthropic holds the org toggle; the browser management platform decides whether the extension can be installed at all.
+- **`Anthropic + MDM`** (3.13) — behaves differently on Claude Desktop 3P, where the control moves to managed preferences.
+- **`Anthropic + Process`** (2.5), **`MDM + Process`** (3.14), **`SIEM + Process`** (5.6) — a technical control exists but does not cover the whole requirement; the remainder is a review step or a runbook.
+
+**21 of the 59 levelled rows are not configured in an Anthropic panel at all**, and `Process` rows have no technical enforcement anywhere. That distribution is the point of the column. A reader who adopts only what the Anthropic console offers has implemented roughly two thirds of this baseline and none of what section 7.2 identifies as the thing holding the rest up.
+
+Section 4's setting table is omitted from this scheme because its ownership is uniform: every key there is delivered by MDM managed preferences, the Windows registry, or server-managed settings, as described under **Delivery mechanism**. The CI/CD rows at the end of section 4 carry the column, because those are yours.
+
+This also matters for the NIST crosswalk in section 10.3. Several families cited there — SI-3 and SI-4 for EDR, SC-7 for egress control, SC-28 for encryption at rest, AU-6 for log review — are satisfied by your infrastructure and not by any Anthropic setting. An assessor cannot tell which is which from the control identifiers alone, and that distinction is what a shared-responsibility discussion turns on.
+
 ## Enterprise defaults worth knowing before you start
 
 Enterprise ships with better defaults than Team, so part of L1 is verification rather than change. On Enterprise: "Run Cowork in the cloud" is off by default (Team has it on), and data is not used for training by default.
@@ -63,26 +95,29 @@ The controls that actually matter are the ones Enterprise does not set for you: 
 
 These apply across all three surfaces. Nothing below them holds without them.
 
-| # | Setting | Location / how to implement | Baseline value | Level | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|---|
-| 1.1 | SAML 2.0 / OIDC SSO | claude.ai, Organization settings, Organization and access. Verify the domain via a DNS TXT record (`anthropic-domain-verification-` prefix), configure the IdP, map attributes, pilot, then enable **Require SSO for Claude**. **Require SSO for Console** is a separate toggle covering the Console org; enabling one does not enable the other. | Enabled, enforced for all members, domains DNS-verified | L1 | IA-2, IA-2(1), IA-2(2) (both MFA enhancements depend on your IdP actually enforcing MFA; SSO enforcement alone does not satisfy them), AC-17 / PR.AA-01, PR.AA-03 | [Set up SSO](https://support.claude.com/en/articles/13132885-set-up-single-sign-on-sso) | 2026-09-12 |
-| 1.2 | Provisioning mode | Same panel, User provisioning. Three options, not two: **Invite only** (default), **Just-in-time (JIT)**, and **SCIM directory sync**. Choose SCIM directory sync, complete the setup flow, then enable group mappings. | SCIM, not JIT. JIT has no deprovisioning half. | L1 | AC-2, AC-2(1), AC-2(3) / PR.AA-01 | [Set up JIT or SCIM provisioning](https://support.claude.com/en/articles/13133195-set-up-jit-or-scim-provisioning) | 2026-09-12 |
-| 1.3 | Primary owners | Organization settings, Members | Exactly one | L1 | AC-6, AC-6(5) / PR.AA-05 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-11 |
-| 1.4 | Owner / membership_admin count | Organization settings, Members. Audit programmatically via `GET /v1/organizations/users` and count the elevated tier. | 2 to 3 total, each with documented justification | L1 | AC-6, AC-6(1), AC-6(5) / PR.AA-05 | [User management API](https://platform.claude.com/docs/en/manage-claude/user-management) | 2026-09-11 |
-| 1.5 | Standard member role | Organization settings, Members. The API assigns only `user` and `managed`; the elevated roles (`owner`, `membership_admin`, `primary_owner`) are assigned in claude.ai Organization settings, not in Claude Console. The `anthropic-beta: ce-user-management-2026-07-13` header is accepted but is no longer required. | `managed` (permissions derive solely from custom roles on the member's groups) | L2 | AC-2(7), AC-3, AC-6 / PR.AA-05 | [User management API](https://platform.claude.com/docs/en/manage-claude/user-management) | 2026-09-12 |
-| 1.6 | Domain claiming | Organization settings, Organization and access, Security, "Migrate accounts using your domain". Requires a DNS-verified domain. Users get a minimum 30-day window to merge or start fresh. The migration is one-way. Communicate before initiating. | Initiate claim to migrate personal Free/Pro/Max accounts on your domain into the tenant. Enterprise-only. | L2 | AC-2, CM-8 / ID.AM-02 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-12 |
-| 1.7 | Tenant restrictions | Egress proxy, not Claude. Get the org UUID from Settings, Account or the bottom of Admin Settings, Organization. Configure the SWG to inject `anthropic-allowed-org-ids: <org-uuid>` (comma-delimited, no spaces) on traffic to claude.ai and api.anthropic.com. Roll out in monitor mode first. Requires TLS inspection. | Enforced | L2 | SC-7, SC-7(5), AC-4, AC-20 / PR.IR-01 | [Tenant restrictions](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions) | 2026-09-11 |
-| 1.8 | Compliance API enablement | claude.ai, Organization settings, API. Primary owner only; cascades to linked orgs. While off, no events are recorded and local session transcripts are not captured. Put the toggle under change control. | On | L1 | AU-2, AU-9, AU-12 / DE.CM-09, PR.PS-04 | [Compliance API access](https://platform.claude.com/docs/en/manage-claude/compliance-api-access) | 2026-09-11 |
-| 1.9 | Compliance Access Key scoping | claude.ai, Organization settings, API. Scopes are fixed at creation. Console admin keys (`sk-ant-admin01-`) reach the Activity Feed only; Compliance Access Keys (`sk-ant-api01-`) reach all endpoints per scope. | `read:org_audit` for SIEM consumers. Issue `delete:compliance_user_data` on a separate, tightly held key or not at all. | L1 | AC-6(1), IA-5, SC-12 / PR.AA-05 | [Admin and Enterprise key scopes](https://platform.claude.com/docs/en/manage-claude/admin-api-keys) | 2026-09-11 |
-| 1.10 | Compliance key lifecycle | Offboarding runbook. Keys are org-scoped and do not expire on their own. Rotation is create-new-then-delete; deletion takes effect on the next request with no grace period. | Delete and reissue on creator departure | L2 | IA-5, AC-2(3) / PR.AA-01 | [Authentication and key expiration](https://platform.claude.com/docs/en/manage-claude/authentication) | 2026-09-12 |
-| 1.11 | Audit log export | Organization settings, Data and Privacy, Export logs. Download link is valid 24 hours. Schedule a recurring task and land the CSV in your log store. | Scheduled export before the 180-day window rolls off. Treat as a floor under 1.8. | L2 | AU-4, AU-6, AU-11 / DE.AE-03, PR.PS-04 | [Access audit logs](https://support.claude.com/en/articles/9970975-access-audit-logs) | 2026-09-11 |
-| 1.12 | Spend limits | Organization settings for org, seat-tier, and group defaults. The API writes per-user overrides only (`scope.type: "user"`). Sweep `GET /v1/organizations/spend_limits/effective` and flag `amount: null`. | No member with an effective `amount` of `null` | L2 | SC-6, SI-4, SA-9 / DE.CM-09 | [Spend Limits API](https://platform.claude.com/docs/en/manage-claude/spend-limits-api) | 2026-09-11 |
-| 1.13 | Model training | Organization settings, Data and Privacy | Off (Enterprise default). Verify rather than assume. | L1 | PT-2, PT-3, SI-12 / GV.PO-01, PR.DS-01 | [Trust Center](https://trust.anthropic.com) | 2026-09-11 |
-| 1.14 | Custom data retention | Organization settings, Data and Privacy | Set to your classification policy | L2 | SI-12, AU-11, PT-3 / PR.DS-01 | [Custom data retention](https://support.claude.com/en/articles/10440198-configure-custom-data-retention-controls-for-enterprise-plans) | 2026-09-11 |
-| 1.15 | Zero Data Retention | Anthropic addendum, by arrangement through your account team | Request for regulated workloads | L3 | SI-12, PT-3 / PR.DS-01 | [API and data retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention) | 2026-09-11 |
-| 1.16 | Pending invites | Organization settings, Members, Invites. Audit via `GET /v1/organizations/invites`, revoke via `DELETE`. | Reviewed weekly. Expiry is server-assigned via `expires_at` and is not configurable; the documented examples show 21 days but no fixed interval is specified. | L1 | AC-2(3) / PR.AA-01 | [Admin API reference](https://platform.claude.com/docs/en/api/beta/organization) | 2026-09-12 |
+| # | Setting | Location / how to implement | Baseline value | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1.1 | SAML 2.0 / OIDC SSO | claude.ai, Organization settings, Organization and access. Verify the domain via a DNS TXT record (`anthropic-domain-verification-` prefix), configure the IdP, map attributes, pilot, then enable **Require SSO for Claude**. **Require SSO for Console** is a separate toggle covering the Console org; enabling one does not enable the other. | Enabled, enforced for all members, domains DNS-verified | L1 | Anthropic + IdP | IA-2, IA-2(1), IA-2(2) (both MFA enhancements depend on your IdP actually enforcing MFA; SSO enforcement alone does not satisfy them), AC-17 / PR.AA-01, PR.AA-03 | [Set up SSO](https://support.claude.com/en/articles/13132885-set-up-single-sign-on-sso) | 2026-09-12 |
+| 1.2 | Provisioning mode | Same panel, User provisioning. Three options, not two: **Invite only** (default), **Just-in-time (JIT)**, and **SCIM directory sync**. Choose SCIM directory sync, complete the setup flow, then enable group mappings. | SCIM, not JIT. JIT has no deprovisioning half. | L1 | Anthropic + IdP | AC-2, AC-2(1), AC-2(3) / PR.AA-01 | [Set up JIT or SCIM provisioning](https://support.claude.com/en/articles/13133195-set-up-jit-or-scim-provisioning) | 2026-09-12 |
+| 1.3 | Primary owners | Organization settings, Members | Exactly one | L1 | Anthropic | AC-6, AC-6(5) / PR.AA-05 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-11 |
+| 1.4 | Owner / membership_admin count | Organization settings, Members. Audit programmatically via `GET /v1/organizations/users` and count the elevated tier. | 2 to 3 total, each with documented justification | L1 | Anthropic | AC-6, AC-6(1), AC-6(5) / PR.AA-05 | [User management API](https://platform.claude.com/docs/en/manage-claude/user-management) | 2026-09-11 |
+| 1.5 | Standard member role | Organization settings, Members. The API assigns only `user` and `managed`; the elevated roles (`owner`, `membership_admin`, `primary_owner`) are assigned in claude.ai Organization settings, not in Claude Console. The `anthropic-beta: ce-user-management-2026-07-13` header is accepted but is no longer required. | `managed` (permissions derive solely from custom roles on the member's groups) | L2 | Anthropic | AC-2(7), AC-3, AC-6 / PR.AA-05 | [User management API](https://platform.claude.com/docs/en/manage-claude/user-management) | 2026-09-12 |
+| 1.6 | Domain claiming | Organization settings, Organization and access, Security, "Migrate accounts using your domain". Requires a DNS-verified domain. Users get a minimum 30-day window to merge or start fresh. The migration is one-way. Communicate before initiating. A domain is owned by exactly one parent organization and cannot be claimed by another. If you need more than one Claude organization on the same domain — an information barrier between business units, for example — link them under that one parent, which owns domain verification and SSO while each linked organization keeps separate billing, usage and projects. Two organizations under different parents cannot share a verified domain. | Initiate claim to migrate personal Free/Pro/Max accounts on your domain into the tenant. Enterprise-only. | L2 | Anthropic + DNS | AC-2, CM-8 / ID.AM-02 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-27 |
+| 1.7 | Tenant restrictions | Egress proxy, not Claude. Get the org UUID from Settings, Account or the bottom of Admin Settings, Organization. Configure the SWG to inject `anthropic-allowed-org-ids: <org-uuid>` (comma-delimited, no spaces) on traffic to claude.ai and api.anthropic.com. Roll out in monitor mode first. Requires TLS inspection. | Enforced | L2 | Network | SC-7, SC-7(5), AC-4, AC-20 / PR.IR-01 | [Tenant restrictions](https://support.claude.com/en/articles/13198485-enforce-network-level-access-control-with-tenant-restrictions) | 2026-09-11 |
+| 1.8 | Compliance API enablement | claude.ai, Organization settings, API. Primary owner only; cascades to linked orgs. While off, no events are recorded and local session transcripts are not captured. Put the toggle under change control. | On | L1 | Anthropic | AU-2, AU-9, AU-12 / DE.CM-09, PR.PS-04 | [Compliance API access](https://platform.claude.com/docs/en/manage-claude/compliance-api-access) | 2026-09-11 |
+| 1.9 | Compliance Access Key scoping | claude.ai, Organization settings, API. Scopes are fixed at creation. Console admin keys (`sk-ant-admin01-`) reach the Activity Feed only; Compliance Access Keys (`sk-ant-api01-`) reach all endpoints per scope. | `read:compliance_activities` for a SIEM pipeline that reads the Activity Feed only. **`read:org_audit` is not a selectable scope** — it appears only inside an example error message in Anthropic's docs; the four scopes offered at key creation are `read:compliance_activities`, `read:compliance_user_data`, `read:compliance_org_data`, and `delete:compliance_user_data`. Note `read:compliance_user_data` is far broader than its name suggests: it reads every chat, file, project and **session transcript** in every linked organization, including content the primary owner has never seen. Issue `delete:compliance_user_data` on a separate, tightly held key or not at all. | L1 | Anthropic | AC-6(1), IA-5, SC-12 / PR.AA-05 | [Admin and Enterprise key scopes](https://platform.claude.com/docs/en/manage-claude/admin-api-keys) | 2026-09-27 |
+| 1.10 | Compliance key lifecycle | Offboarding runbook. Keys are org-scoped and do not expire on their own. Rotation is create-new-then-delete; deletion takes effect on the next request with no grace period. | Delete and reissue on creator departure | L2 | Process | IA-5, AC-2(3) / PR.AA-01 | [Authentication and key expiration](https://platform.claude.com/docs/en/manage-claude/authentication) | 2026-09-12 |
+| 1.11 | Audit log export | Organization settings, Data and Privacy, Export logs. Download link is valid 24 hours. Schedule a recurring task and land the CSV in your log store. | Scheduled export before the 180-day window rolls off. Treat as a floor under 1.8. | L2 | Anthropic + SIEM | AU-4, AU-6, AU-11 / DE.AE-03, PR.PS-04 | [Access audit logs](https://support.claude.com/en/articles/9970975-access-audit-logs) | 2026-09-11 |
+| 1.12 | Spend limits | Organization settings for org, seat-tier, and group defaults. The API writes per-user overrides only (`scope.type: "user"`). Sweep `GET /v1/organizations/spend_limits/effective` and flag `amount: null`. | No member with an effective `amount` of `null` | L2 | Anthropic | SC-6, SI-4, SA-9 / DE.CM-09 | [Spend Limits API](https://platform.claude.com/docs/en/manage-claude/spend-limits-api) | 2026-09-11 |
+| 1.13 | Model training | Organization settings, Data and Privacy | Off (Enterprise default). Verify rather than assume. | L1 | Anthropic | PT-2, PT-3, SI-12 / GV.PO-01, PR.DS-01 | [Trust Center](https://trust.anthropic.com) | 2026-09-11 |
+| 1.14 | Custom data retention | Organization settings, Data and Privacy | Set to your classification policy | L2 | Anthropic | SI-12, AU-11, PT-3 / PR.DS-01 | [Custom data retention](https://support.claude.com/en/articles/10440198-configure-custom-data-retention-controls-for-enterprise-plans) | 2026-09-11 |
+| 1.15 | Zero Data Retention | Anthropic addendum, by arrangement through your account team | Request for regulated workloads | L3 | Anthropic (contract) | SI-12, PT-3 / PR.DS-01 | [API and data retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention) | 2026-09-11 |
+| 1.16 | Pending invites | Organization settings, Members, Invites. Audit via `GET /v1/organizations/invites`, revoke via `DELETE`. | Reviewed weekly. Expiry is server-assigned via `expires_at` and is not configurable; the documented examples show 21 days but no fixed interval is specified. | L1 | Anthropic | AC-2(3) / PR.AA-01 | [Admin API reference](https://platform.claude.com/docs/en/api/beta/organization) | 2026-09-12 |
+| 1.17 | Inference hooks (beta) | claude.ai, Organization settings. Requires the `organization:manage` permission, held only by Owner and Primary owner. Anthropic POSTs each governed prompt to an HTTPS **AI security server you operate**, signed per the Standard Webhooks spec, and waits for an allow/deny verdict within a configurable timeout (5s default). Roll out with shadow mode, then a rollout percentage, then role exclusions. Set failure handling deliberately: on timeout or error it either blocks or allows uninspected, and sustained failures trip a circuit breaker that applies that setting to everything. One hook governs claude.ai, Cowork, Claude Code and Claude Tag. **Not available on Bedrock or Vertex**, which is the same blind spot as 7.5. Denials are recorded in the Activity Feed. | Shadow mode first; enforce with fail-closed once verdict latency is understood. The only inline prompt control Anthropic offers — everything else in this baseline is preventive config or after-the-fact audit. | L2 | Anthropic + Process | AC-4, SI-4, AU-2 / PR.DS-01, DE.CM-09 | [Inference hooks](https://platform.claude.com/docs/en/manage-claude/inference-hooks) | 2026-09-27 |
+| 1.18 | Session lifetime | claude.ai, Organization settings. Administrators set a maximum session lifetime for the organization; at that interval users must re-authenticate through the IdP. Deprovisioning via SCIM, or removal by an admin, revokes that user's OAuth tokens and ends their active Claude web sessions. **There is no per-user concurrent-session limit**, so a user may hold sessions on any number of devices simultaneously. | Set to your standard for privileged SaaS. Unset means sessions persist until the IdP or the user ends them. | L2 | Anthropic + IdP | AC-12, IA-11 / PR.AA-03 | Identity & Access Controls (Anthropic, 2026-05-15) | 2026-09-27 |
+| 1.19 | Workload identity federation | Claude Platform. Non-interactive workload access authenticates through OIDC federation rather than a long-lived key: AWS IAM roles, GCP service accounts, Azure/Entra workload identities, Kubernetes service accounts, GitHub Actions, and other OIDC issuers. GA. | Use federation for every service account and CI pipeline. Prefer it over issuing a static API key, which has no expiry and no workload binding. | L2 | Anthropic + IdP | IA-9, IA-5, AC-3 / PR.AA-01, PR.AA-05 | Identity & Access Controls (Anthropic, 2026-05-15) | 2026-09-27 |
 
-### 1.17 RBAC capability gating (Enterprise only)
+### 1.20 RBAC capability gating (Enterprise only)
 
 Enterprise custom roles govern 19 capabilities (verified 2026-09-12): Chat; Code execution and file creation; Memory; Web search; Public projects; Create skills; Share skills and plugins with org members; Share skills with the full organization; Share skills and plugins with groups; Skill and plugin security scanning; Claude Code; Fast mode; Claude Code dynamic workflows; Claude Security; Claude Code artifacts; Claude Design; Claude Cowork; Cowork in the cloud (beta); Claude for Chrome.
 
@@ -119,19 +154,19 @@ Owners and primary owners are unaffected by RBAC and always retain full access. 
 
 ## 2. Web surface (claude.ai)
 
-| # | Setting | Location / how to implement | Baseline value | Level | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|---|
-| 2.1 | Connector catalog | Organization settings, Connectors. Disable anything without a named owner and business justification. | Only reviewed connectors enabled | L1 | CM-7, CM-7(1), SA-9 / PR.PS-01, GV.SC-06 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-11 |
-| 2.2 | Per-action connector permissions | Per connector: Customize, Connectors, Tool permissions, then set each action category to Always allow, Needs approval, Blocked, or Custom (per-tool configuration). | Write categories Blocked or Needs approval. Always allow reserved for read-only. | L1 | AC-3, AC-4, CM-7 / PR.PS-01 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-12 |
-| 2.3 | Write-capable connector tools | Per connector tool stance. Example on the Slack connector: `read_channel` allow, `send_message` blocked. | Block `send_email`, `post_message`, `create_file` and equivalents unless individually justified | L2 | AC-3, AC-4 / PR.PS-01 | [Connectors overview](https://claude.com/docs/connectors/overview) | 2026-09-11 |
-| 2.4 | Verified-domain connector protection | "Restrict verified-domain connectors to your enterprise", under Organization settings, Organization and access, Connector domain restriction (not under Connectors). Requires domain verification from 1.1 and Identity & Access = Can manage. | Enabled | L2 | SC-7, AC-4, AC-21 / PR.IR-01 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-12 |
-| 2.5 | Custom remote MCP connectors | Organization settings, Connectors. Review server source, tool definitions, network egress, and auth method before approval. Record in the 2.12 registry. | Admin-approved only | L2 | SA-9, SR-3, SR-5, RA-3 / GV.SC-04, GV.SC-06 | [Connectors overview](https://claude.com/docs/connectors/overview) | 2026-09-11 |
-| 2.6 | Code execution network egress | Organization settings, Capabilities. Four levels: off, package managers only (default), package managers plus specified domains, all domains. Cowork maintains its own separate egress allowlist and mount controls; do not assume it inherits this one. | Keep defaults. Add only domains you have tested. | L1 | SC-7, SC-7(4), AC-4 / PR.IR-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-12 |
-| 2.7 | Claude in Chrome | Organization settings, Claude in Chrome. Deploy the extension through Google Workspace admin or MDM rather than self-service install. | Off. **No longer the default**: per Anthropic's admin-controls article it turns on by default from 2026-09-10 unless previously disabled, so set it explicitly. If required, strict allowlist of 5 to 10 domains. | L2 | CM-7, CM-7(1), SC-18, AC-3 / PR.PS-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-12 |
-| 2.8 | Chrome blocklist additions | Same panel, blocklist field. Default blocks cover financial, banking, investment, crypto, adult, and pirated content only. | Add healthcare portals, AWS/GCP/Azure consoles, password manager vaults, HR and payroll, SSO admin panels, internal wikis, confidential mail | L2 | CM-7, AC-3 / PR.PS-01 | [Claude in Chrome permissions guide](https://support.claude.com/en/articles/12902446-claude-in-chrome-permissions-guide) | 2026-09-11 |
-| 2.9 | Chrome 1Password integration | Organization settings, Claude in Chrome | Off unless explicitly risk-accepted | L2 | IA-5, CM-7 / PR.AA-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-11 |
-| 2.10 | Project sharing | Organization settings. Gate further per group via custom roles (1.17). | Public projects disabled | L2 | AC-3, AC-21 / PR.DS-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-11 |
-| 2.11 | User feedback sharing | Organization settings | Set per your data classification policy | L2 | PT-2, PT-3 / GV.PO-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-11 |
+| # | Setting | Location / how to implement | Baseline value | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2.1 | Connector catalog | Organization settings, Connectors. Disable anything without a named owner and business justification. | Only reviewed connectors enabled | L1 | Anthropic | CM-7, CM-7(1), SA-9 / PR.PS-01, GV.SC-06 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-11 |
+| 2.2 | Per-action connector permissions | Per connector: Customize, Connectors, Tool permissions, then set each action category to Always allow, Needs approval, Blocked, or Custom (per-tool configuration). | Write categories Blocked or Needs approval. Always allow reserved for read-only. | L1 | Anthropic | AC-3, AC-4, CM-7 / PR.PS-01 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-12 |
+| 2.3 | Write-capable connector tools | Per connector tool stance. Example on the Slack connector: `read_channel` allow, `send_message` blocked. | Block `send_email`, `post_message`, `create_file` and equivalents unless individually justified | L2 | Anthropic | AC-3, AC-4 / PR.PS-01 | [Connectors overview](https://claude.com/docs/connectors/overview) | 2026-09-11 |
+| 2.4 | Verified-domain connector protection | "Restrict verified-domain connectors to your enterprise", under Organization settings, Organization and access, Connector domain restriction (not under Connectors). Requires domain verification from 1.1 and Identity & Access = Can manage. | Enabled | L2 | Anthropic | SC-7, AC-4, AC-21 / PR.IR-01 | [Use connectors](https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities) | 2026-09-12 |
+| 2.5 | Custom remote MCP connectors | Organization settings, Connectors. Review server source, tool definitions, network egress, and auth method before approval. Record in the 2.12 registry. | Admin-approved only | L2 | Anthropic + Process | SA-9, SR-3, SR-5, RA-3 / GV.SC-04, GV.SC-06 | [Connectors overview](https://claude.com/docs/connectors/overview) | 2026-09-11 |
+| 2.6 | Code execution network egress | Organization settings, Capabilities. Four levels: off, package managers only (default), package managers plus specified domains, all domains. Cowork maintains its own separate egress allowlist and mount controls; do not assume it inherits this one. | Keep defaults. Add only domains you have tested. | L1 | Anthropic | SC-7, SC-7(4), AC-4 / PR.IR-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-12 |
+| 2.7 | Claude in Chrome | Organization settings, Claude in Chrome. Deploy the extension through Google Workspace admin or MDM rather than self-service install. | Off. **No longer the default**: per Anthropic's admin-controls article it turns on by default from 2026-09-10 unless previously disabled, so set it explicitly. If required, strict allowlist of 5 to 10 domains. | L2 | Anthropic + Browser fleet | CM-7, CM-7(1), SC-18, AC-3 / PR.PS-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-12 |
+| 2.8 | Chrome blocklist additions | Same panel, blocklist field. Default blocks cover financial, banking, investment, crypto, adult, and pirated content only. | Add healthcare portals, AWS/GCP/Azure consoles, password manager vaults, HR and payroll, SSO admin panels, internal wikis, confidential mail | L2 | Anthropic | CM-7, AC-3 / PR.PS-01 | [Claude in Chrome permissions guide](https://support.claude.com/en/articles/12902446-claude-in-chrome-permissions-guide) | 2026-09-11 |
+| 2.9 | Chrome 1Password integration | Organization settings, Claude in Chrome | Off unless explicitly risk-accepted | L2 | Anthropic | IA-5, CM-7 / PR.AA-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-11 |
+| 2.10 | Project sharing | Organization settings. Gate further per group via custom roles (1.20). Note the grain mismatch: per-resource sharing for Projects and Skills targets **Claude accounts, not IdP groups**, so a share does not track group membership and will not follow a mover or leaver the way SCIM does. Access reviews have to cover shares separately from roles. | Public projects disabled | L2 | Anthropic | AC-3, AC-21 / PR.DS-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-27 |
+| 2.11 | User feedback sharing | Organization settings | Set per your data classification policy | L2 | Anthropic | PT-2, PT-3 / GV.PO-01 | [Enterprise administrator guide](https://claude.com/resources/tutorials/claude-enterprise-administrator-guide) | 2026-09-11 |
 
 ### 2.12 Connector registry (procedural)
 
@@ -145,16 +180,16 @@ This is the surface with the most risk and the least admin control. Cowork runs 
 
 ### Org-level toggles
 
-| # | Setting | Location / how to implement | Baseline value | Level | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|---|
-| 3.1 | Cowork | Organization settings, Cowork, "Enable for your organization". Capabilities is a sibling section (code execution egress, web search), not the parent of this toggle. Build custom roles and groups and migrate pilot members to Custom roles before flipping the org toggle, so there is no window of org-wide access. RBAC can only subtract from what the toggle permits. | On, restricted by RBAC to approved groups | L2 | CM-7, AC-3 / PR.PS-01 | [Use Cowork on Team and Enterprise plans](https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans) | 2026-09-12 |
-| 3.2 | Run Cowork in the cloud | Admin Settings, Cowork | Off (Enterprise default). Cloud sessions execute outside your endpoint controls. | L2 | AC-20, SC-7 / PR.IR-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-11 |
-| 3.3 | "Allow 'Always allow' for connector tools" | Organization settings, Cowork | Off (default). Preserves the human gate on write-capable tools. | L1 | AC-3, CM-7 / PR.PS-01 | [Use Cowork on Team and Enterprise plans](https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans) | 2026-09-12 |
-| 3.4 | Dispatch | As of 2026-09-12, limited beta on Pro and Max only, so it is not present on Team or Enterprise. Revisit if it reaches business plans. The "Keep Awake" implementation detail (`caffeinate` on macOS overriding MDM sleep policy) is not documented by Anthropic; treat as unverified. | Not present. Nothing to configure today. | L1 | AC-19, AC-20, CM-7 / PR.PS-01 | [Assign tasks from anywhere (Dispatch)](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork) | 2026-09-12 |
-| 3.5 | Cowork built-in browser | There is no "Chrome-to-Cowork bridge" toggle. Claude in Chrome is its own section (Organization settings, Claude in Chrome, "Enable for your team"), not under Connectors. The Cowork-side control is **Built-in browser**. | Built-in browser off unless justified | L2 | CM-7, SC-18 / PR.PS-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-12 |
-| 3.6 | Organization instructions | **Correction:** "Global instructions" (Settings, Cowork) is a per-user setting and is not an admin control. The org-wide equivalent is **organization instructions**, set by an admin; on third-party deployments the key is `organizationInstructions`. Text in 3.9. | Deployed org-wide | L2 | SI-10, SC-18 / PR.PS-01 | [Set organization instructions](https://support.claude.com/en/articles/14546867-set-organization-instructions) | 2026-09-12 |
-| 3.7 | Plugin install preferences | Organization settings, Plugins. Four states, not three: **Installed by default**, **Available for install**, **Not available**, and **Required** (auto-installed, user cannot remove). Treat Required as a change-controlled action. Stand up a marketplace on a GitHub or GitHub Enterprise repo with branch protection and commit signing; the repo must be private or internal, public marketplace repos are not permitted. | Private marketplace only | L2 | CM-7(5), CM-11, SR-3, SR-11 / GV.SC-06, ID.RA-09 | [Use plugins in Cowork](https://support.claude.com/en/articles/13837433-manage-plugins-for-your-organization) | 2026-09-12 |
-| 3.8 | OTel endpoint | Admin Settings, Cowork. Configure OTLP endpoint, protocol, and headers. Requires Claude Desktop 1.1.4173 or later. Redact at the collector per section 5. | Configured, routed to SIEM | L1 | AU-2, AU-6, AU-12, SI-4 / DE.CM-01, DE.CM-09 | [Cowork monitoring](https://claude.com/docs/cowork/monitoring) | 2026-09-11 |
+| # | Setting | Location / how to implement | Baseline value | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 3.1 | Cowork | Organization settings, Cowork, "Enable for your organization". Capabilities is a sibling section (code execution egress, web search), not the parent of this toggle. Build custom roles and groups and migrate pilot members to Custom roles before flipping the org toggle, so there is no window of org-wide access. RBAC can only subtract from what the toggle permits. | On, restricted by RBAC to approved groups | L2 | Anthropic | CM-7, AC-3 / PR.PS-01 | [Use Cowork on Team and Enterprise plans](https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans) | 2026-09-12 |
+| 3.2 | Run Cowork in the cloud | Admin Settings, Cowork | Off (Enterprise default). Cloud sessions execute outside your endpoint controls. | L2 | Anthropic | AC-20, SC-7 / PR.IR-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-11 |
+| 3.3 | "Allow 'Always allow' for connector tools" | Organization settings, Cowork | Off (default). Preserves the human gate on write-capable tools. | L1 | Anthropic | AC-3, CM-7 / PR.PS-01 | [Use Cowork on Team and Enterprise plans](https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans) | 2026-09-12 |
+| 3.4 | Dispatch | As of 2026-09-12, limited beta on Pro and Max only, so it is not present on Team or Enterprise. Revisit if it reaches business plans. The "Keep Awake" implementation detail (`caffeinate` on macOS overriding MDM sleep policy) is not documented by Anthropic; treat as unverified. | Not present. Nothing to configure today. | L1 | Anthropic | AC-19, AC-20, CM-7 / PR.PS-01 | [Assign tasks from anywhere (Dispatch)](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork) | 2026-09-12 |
+| 3.5 | Cowork built-in browser | There is no "Chrome-to-Cowork bridge" toggle. Claude in Chrome is its own section (Organization settings, Claude in Chrome, "Enable for your team"), not under Connectors. The Cowork-side control is **Built-in browser**. | Built-in browser off unless justified | L2 | Anthropic | CM-7, SC-18 / PR.PS-01 | [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) | 2026-09-12 |
+| 3.6 | Organization instructions | **Correction:** "Global instructions" (Settings, Cowork) is a per-user setting and is not an admin control. The org-wide equivalent is **organization instructions**, set by an admin; on third-party deployments the key is `organizationInstructions`. Text in 3.9. | Deployed org-wide | L2 | Anthropic | SI-10, SC-18 / PR.PS-01 | [Set organization instructions](https://support.claude.com/en/articles/14546867-set-organization-instructions) | 2026-09-12 |
+| 3.7 | Plugin install preferences | Organization settings, Plugins. Four states, not three: **Installed by default**, **Available for install**, **Not available**, and **Required** (auto-installed, user cannot remove). Treat Required as a change-controlled action. Stand up a marketplace on a GitHub or GitHub Enterprise repo with branch protection and commit signing; the repo must be private or internal, public marketplace repos are not permitted. | Private marketplace only | L2 | Anthropic | CM-7(5), CM-11, SR-3, SR-11 / GV.SC-06, ID.RA-09 | [Use plugins in Cowork](https://support.claude.com/en/articles/13837433-manage-plugins-for-your-organization) | 2026-09-12 |
+| 3.8 | OTel endpoint | Admin Settings, Cowork. Configure OTLP endpoint, protocol, and headers. Requires Claude Desktop 1.1.4173 or later. Redact at the collector per section 5. | Configured, routed to SIEM | L1 | Anthropic + SIEM | AU-2, AU-6, AU-12, SI-4 / DE.CM-01, DE.CM-09 | [Cowork monitoring](https://claude.com/docs/cowork/monitoring) | 2026-09-11 |
 
 ### 3.9 Global instructions baseline text
 
@@ -172,24 +207,24 @@ Scheduled tasks must not send messages, make purchases, or modify files outside 
 
 Server-managed settings cannot distribute MCP server configs. This part requires MDM.
 
-| # | Setting | Delivery / how to implement | Baseline value | Level | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|---|
-| 3.10 | `managed-mcp.json` (Claude Code) and `managedMcpServers` (Desktop/Cowork) | **Scope correction:** `managed-mcp.json` governs **Claude Code**, not the desktop app. It does not reach the connectors Claude Desktop delivers, and Claude Code ignores it inside the app's Cowork sessions because Desktop supplies and locks those servers itself. For Desktop/Cowork use `managedMcpServers`. Even where it applies, "exclusive control" overstates it: in-process `type: "sdk"` servers and `managedMcpServers` entries still load. | Both deployed, to the surface each one actually governs | L2 | CM-7(5), CM-11, SR-4 / GV.SC-04 | [Managed MCP](https://code.claude.com/docs/en/managed-mcp) | 2026-09-12 |
-| 3.11 | MCPB / desktop extension signing | MDM. On Claude Desktop 3P set `isDesktopExtensionSignatureRequired: true` (default `false`); unsigned `.mcpb` extensions are then rejected. | Signed extensions only | L2 | SR-11, SI-7 / GV.SC-06 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
-| 3.12 | Local dev MCP | MDM. On 3P, `isLocalDevMcpEnabled: false` (default `true`), so users cannot add local MCP servers from Settings, Developer. | Disabled | L3 | CM-7(5), CM-11 / PR.PS-01 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
-| 3.13 | Per-tool MCP stance | Session UI in standard Cowork. On 3P, lock via `toolPolicy` inside `managedMcpServers` entries, per tool, values `allow` / `ask` / `blocked`. Users cannot remove managed servers. Not readable from a plugin's `.mcp.json`; use `orgPluginSettings` there. | Read tools allow, write tools blocked | L2 | AC-3, AC-4, CM-7 / PR.PS-01 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
+| # | Setting | Delivery / how to implement | Baseline value | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 3.10 | `managed-mcp.json` (Claude Code) and `managedMcpServers` (Desktop/Cowork) | **Scope correction:** `managed-mcp.json` governs **Claude Code**, not the desktop app. It does not reach the connectors Claude Desktop delivers, and Claude Code ignores it inside the app's Cowork sessions because Desktop supplies and locks those servers itself. For Desktop/Cowork use `managedMcpServers`. Even where it applies, "exclusive control" overstates it: in-process `type: "sdk"` servers and `managedMcpServers` entries still load. | Both deployed, to the surface each one actually governs | L2 | MDM | CM-7(5), CM-11, SR-4 / GV.SC-04 | [Managed MCP](https://code.claude.com/docs/en/managed-mcp) | 2026-09-12 |
+| 3.11 | MCPB / desktop extension signing | MDM. On Claude Desktop 3P set `isDesktopExtensionSignatureRequired: true` (default `false`); unsigned `.mcpb` extensions are then rejected. | Signed extensions only | L2 | MDM | SR-11, SI-7 / GV.SC-06 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
+| 3.12 | Local dev MCP | MDM. On 3P, `isLocalDevMcpEnabled: false` (default `true`), so users cannot add local MCP servers from Settings, Developer. | Disabled | L3 | MDM | CM-7(5), CM-11 / PR.PS-01 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
+| 3.13 | Per-tool MCP stance | Session UI in standard Cowork. On 3P, lock via `toolPolicy` inside `managedMcpServers` entries, per tool, values `allow` / `ask` / `blocked`. Users cannot remove managed servers. Not readable from a plugin's `.mcp.json`; use `orgPluginSettings` there. | Read tools allow, write tools blocked | L2 | Anthropic + MDM | AC-3, AC-4, CM-7 / PR.PS-01 | [Claude Desktop 3P configuration](https://claude.com/docs/third-party/claude-desktop/configuration) | 2026-09-12 |
 
 ### Endpoint and data protection
 
-| # | Control | Baseline value and how to implement | Level | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|
-| 3.14 | Workspace folder policy | Dedicated folder such as `~/Documents/Claude` or `/cowork-workspace`. Prohibit mounting home, Desktop, Downloads, or cloud-synced folders. Enforce in AUP; enforce technically via `allowedWorkspaceFolders` on 3P deployments. | L2 | AC-3, AC-6, SC-39 / PR.DS-01 | [Organize work with projects](https://claude.com/docs/cowork/guide/projects) | 2026-09-11 |
-| 3.15 | Full-disk encryption | FileVault or BitLocker enforced via MDM on every machine running Claude Desktop. Cowork history is local-only and outside Anthropic retention policy. | L1 | SC-28, SC-28(1) / PR.DS-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-11 |
-| 3.16 | EDR coverage | Deployed on all Claude Desktop endpoints, tuned for anomalous file access. | L1 | SI-3, SI-4 / DE.CM-01 | Internal endpoint standard | 2026-09-11 |
-| 3.17 | Client version patching | Patched via MDM. CVE-2025-59536 (code execution before the startup trust dialog, fixed 1.0.111) and CVE-2026-21852 (repo-supplied settings redirect `ANTHROPIC_BASE_URL` and leak the API key before trust confirmation, fixed 2.0.65) are both **Claude Code** CVEs, not Claude Desktop, and both are triggered by opening an untrusted repository. The Desktop-specific advisory is GHSA-5p5x-5294-qhp3, local privilege escalation via directory junction in CoworkVMService. Patch both clients. | L1 | SI-2, SI-2(2), RA-5 / ID.RA-01, PR.PS-02 | [Claude Code security](https://code.claude.com/docs/en/security) | 2026-09-12 |
-| 3.18 | Scheduled tasks | Read-only operations only. No message sending, purchases, or writes outside the working folder. No technical control exists; enforce via AUP and weekly OTel inventory spot-checks. | L2 | CM-7, AC-3, AU-2 / GV.PO-01 | [Schedule recurring tasks in Cowork](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork) | 2026-09-11 |
-| 3.19 | Live artifacts | AUP-scoped. A shared artifact runs against the **viewer's own** connectors, not the creator's, so two viewers see different data. Mitigations Anthropic does provide: the page never sees credentials (claude.ai brokers every call), each viewer must approve before the first connector call, and connector-using artifacts are shareable only within the organization. Still treat artifacts from outside the org like macro-enabled spreadsheets. Artifact connector calls surface as `tool_result` events in OTel. | L2 | AC-21, SC-18, SR-3 / GV.PO-01, PR.DS-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-12 |
-| 3.20 | Project instructions | Not visible in the admin console. They function as a per-user system prompt security cannot review centrally. Include project instruction and memory files in endpoint protection scope and in tabletop scenarios. | L2 | CM-3, CM-6, SI-7 / PR.PS-01 | [Organize work with projects](https://claude.com/docs/cowork/guide/projects) | 2026-09-11 |
+| # | Control | Baseline value and how to implement | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 3.14 | Workspace folder policy | Dedicated folder such as `~/Documents/Claude` or `/cowork-workspace`. Prohibit mounting home, Desktop, Downloads, or cloud-synced folders. Enforce in AUP; enforce technically via `allowedWorkspaceFolders` on 3P deployments. | L2 | MDM + Process | AC-3, AC-6, SC-39 / PR.DS-01 | [Organize work with projects](https://claude.com/docs/cowork/guide/projects) | 2026-09-11 |
+| 3.15 | Full-disk encryption | FileVault or BitLocker enforced via MDM on every machine running Claude Desktop. Cowork history is local-only and outside Anthropic retention policy. | L1 | MDM | SC-28, SC-28(1) / PR.DS-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-11 |
+| 3.16 | EDR coverage | Deployed on all Claude Desktop endpoints, tuned for anomalous file access. | L1 | Endpoint | SI-3, SI-4 / DE.CM-01 | Internal endpoint standard | 2026-09-11 |
+| 3.17 | Client version patching | Patched via MDM. CVE-2025-59536 (code execution before the startup trust dialog, fixed 1.0.111) and CVE-2026-21852 (repo-supplied settings redirect `ANTHROPIC_BASE_URL` and leak the API key before trust confirmation, fixed 2.0.65) are both **Claude Code** CVEs, not Claude Desktop, and both are triggered by opening an untrusted repository. The Desktop-specific advisory is GHSA-5p5x-5294-qhp3, local privilege escalation via directory junction in CoworkVMService. Patch both clients. | L1 | MDM | SI-2, SI-2(2), RA-5 / ID.RA-01, PR.PS-02 | [Claude Code security](https://code.claude.com/docs/en/security) | 2026-09-12 |
+| 3.18 | Scheduled tasks | Read-only operations only. No message sending, purchases, or writes outside the working folder. No technical control exists; enforce via AUP and weekly OTel inventory spot-checks. | L2 | Process | CM-7, AC-3, AU-2 / GV.PO-01 | [Schedule recurring tasks in Cowork](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork) | 2026-09-11 |
+| 3.19 | Live artifacts | AUP-scoped. A shared artifact runs against the **viewer's own** connectors, not the creator's, so two viewers see different data. Mitigations Anthropic does provide: the page never sees credentials (claude.ai brokers every call), each viewer must approve before the first connector call, and connector-using artifacts are shareable only within the organization. Still treat artifacts from outside the org like macro-enabled spreadsheets. Artifact connector calls surface as `tool_result` events in OTel. | L2 | Process | AC-21, SC-18, SR-3 / GV.PO-01, PR.DS-01 | [Cowork overview](https://claude.com/docs/cowork/overview) | 2026-09-12 |
+| 3.20 | Project instructions | Not visible in the admin console. They function as a per-user system prompt security cannot review centrally. Include project instruction and memory files in endpoint protection scope and in tabletop scenarios. | L2 | Process | CM-3, CM-6, SI-7 / PR.PS-01 | [Organize work with projects](https://claude.com/docs/cowork/guide/projects) | 2026-09-11 |
 
 ### Adjacent surfaces that Cowork admin settings do not govern
 
@@ -261,7 +296,7 @@ Implementation reference: [Claude Code settings and managed policy](https://code
 | 4.31 | `env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `"1"` | `"1"` | `"1"` | CM-7(1), SC-7 | [Settings](https://code.claude.com/docs/en/settings) | 2026-09-11 |
 | 4.32 | `companyAnnouncements` | policy reminder | policy reminder | policy reminder | AT-2, PL-4 | [Settings](https://code.claude.com/docs/en/settings) | 2026-09-11 |
 
-Two keys appear in the section 8 reference policy without a row above: `pluginTrustMessage` (the text shown when a plugin is blocked, no security effect on its own) and `allowedChannelPlugins` (`[]` alongside `channelsEnabled: false`, CM-7).
+Two keys appear in the section 9 reference policy without a row above: `pluginTrustMessage` (the text shown when a plugin is blocked, no security effect on its own) and `allowedChannelPlugins` (`[]` alongside `channelsEnabled: false`, CM-7).
 
 **Weakening keys worth pinning explicitly.** Each key below exists in the published settings schema and loosens the sandbox if a lower layer sets it. Descriptions are quoted or paraphrased from the schema's own `description` field, not inferred from the key name. These are **not** in the section 8 reference policy below; add them deliberately after reading the interaction notes.
 
@@ -277,6 +312,10 @@ Two keys appear in the section 8 reference policy without a row above: `pluginTr
 That last one conflicts directly with 1.7. Its schema note says it is "required for Go-based tools like `gh`, `gcloud`, and `terraform` to verify TLS certificates when using `httpProxyPort` with a MITM proxy and custom CA," and it "reduces security by opening a potential data exfiltration path." Tenant restrictions (1.7) require TLS inspection, which is exactly that configuration. So on macOS fleets running both, you are choosing between working `gh`/`terraform` inside the sandbox and closing that path. Decide it consciously and write down which way you went; do not let it be settled by whoever files the first broken-tooling ticket.
 
 Sandbox platform support: macOS uses Seatbelt and is built in. Linux and WSL2 need `bubblewrap` and `socat` installed. Windows is not supported, which means Windows developers get permission rules but no kernel-level enforcement. Plan around that.
+
+### Marketplace policy version floor
+
+**Version floor for the marketplace policy, added 2026-09-27.** Claude Code 2.1.277 fixed a bug where *one* malformed `strictKnownMarketplaces` or `blockedMarketplaces` entry silently disabled the whole enterprise marketplace policy. Below 2.1.277, a single typo in 4.5 or 4.6 turns marketplace curation off completely with no error and no indication in the UI — the policy reads as configured and enforces nothing. Treat 2.1.277 as the floor for anyone relying on 4.5 or 4.6, and validate the entries rather than trusting that they parsed.
 
 ### Four traps in this configuration
 
@@ -296,15 +335,15 @@ Script-executing settings are an injection surface. `apiKeyHelper`, `otelHeaders
 
 `anthropics/claude-code-action` runs without network restrictions by default, unlike GitHub Copilot's default firewall.
 
-| # | Control | Baseline value and how to implement | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|
-| 4.33 | `step-security/harden-runner` | First step in every Claude Code job. Start `egress-policy: audit` to build a baseline, then move to `block` with `api.anthropic.com:443`, `github.com:443`, `api.github.com:443`. | SC-7, SC-7(4) / PR.IR-01 | [harden-runner](https://github.com/step-security/harden-runner) | 2026-09-11 |
-| 4.34 | Action pinning | Pin by commit SHA, never by tag. | SR-4, SR-11, CM-5 / GV.SC-06 | [GitHub Actions](https://code.claude.com/docs/en/github-actions) | 2026-09-11 |
-| 4.35 | `claude_args: --allowedTools` | `Read,Glob,Grep,Agent` for review tasks. **The standalone `allowed_tools` input does not exist in claude-code-action v1**; it was a v0.x input. v1 takes `prompt` and `claude_args`, and tool restrictions go in `claude_args` as CLI flags. | AC-3, CM-7 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
-| 4.36 | `claude_args: --disallowedTools` | `Bash,WebFetch,WebSearch`. Same v1 correction as 4.35: not a standalone `disallowed_tools` input. | CM-7(1), AC-4 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
-| 4.37 | `claude_args: --max-turns` | 10 to 20. Bounds the agent loop. Same v1 correction: not a standalone `max_turns` input. | SC-6, CM-7 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
-| 4.38 | Workflow permissions | `permissions: {}` at workflow level, minimum grants per job. Never `write-all`. | AC-6, AC-6(1) / PR.AA-05 | [GitHub Actions](https://code.claude.com/docs/en/github-actions) | 2026-09-11 |
-| 4.39 | `claude-code-security-review` | Internal PRs only. It is not hardened against prompt injection. Never on fork PRs. | SA-11, RA-5 / ID.RA-01 | [claude-code-security-review](https://github.com/anthropics/claude-code-security-review) | 2026-09-11 |
+| # | Control | Baseline value and how to implement | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- |
+| 4.33 | `step-security/harden-runner` | First step in every Claude Code job. Start `egress-policy: audit` to build a baseline, then move to `block` with `api.anthropic.com:443`, `github.com:443`, `api.github.com:443`. | CI/CD | SC-7, SC-7(4) / PR.IR-01 | [harden-runner](https://github.com/step-security/harden-runner) | 2026-09-11 |
+| 4.34 | Action pinning | Pin by commit SHA, never by tag. | CI/CD | SR-4, SR-11, CM-5 / GV.SC-06 | [GitHub Actions](https://code.claude.com/docs/en/github-actions) | 2026-09-11 |
+| 4.35 | `claude_args: --allowedTools` | `Read,Glob,Grep,Agent` for review tasks. **The standalone `allowed_tools` input does not exist in claude-code-action v1**; it was a v0.x input. v1 takes `prompt` and `claude_args`, and tool restrictions go in `claude_args` as CLI flags. | CI/CD | AC-3, CM-7 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
+| 4.36 | `claude_args: --disallowedTools` | `Bash,WebFetch,WebSearch`. Same v1 correction as 4.35: not a standalone `disallowed_tools` input. | CI/CD | CM-7(1), AC-4 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
+| 4.37 | `claude_args: --max-turns` | 10 to 20. Bounds the agent loop. Same v1 correction: not a standalone `max_turns` input. | CI/CD | SC-6, CM-7 / PR.PS-01 | [claude-code-action](https://github.com/anthropics/claude-code-action) | 2026-09-12 |
+| 4.38 | Workflow permissions | `permissions: {}` at workflow level, minimum grants per job. Never `write-all`. | CI/CD | AC-6, AC-6(1) / PR.AA-05 | [GitHub Actions](https://code.claude.com/docs/en/github-actions) | 2026-09-11 |
+| 4.39 | `claude-code-security-review` | Internal PRs only. It is not hardened against prompt injection. Never on fork PRs. | CI/CD | SA-11, RA-5 / ID.RA-01 | [claude-code-security-review](https://github.com/anthropics/claude-code-security-review) | 2026-09-11 |
 
 ### Rules-file scanning
 
@@ -314,14 +353,14 @@ Claude Code reads `CLAUDE.md`, `AGENTS.md`, `SKILL.md`, and `.claude/` contents 
 
 ## 5. Monitoring and audit
 
-| # | Source | Covers | Baseline | NIST 800-53 / CSF 2.0 | Reference | Drafted |
-|---|---|---|---|---|---|---|
-| 5.1 | Compliance API `/v1/compliance/activities` | Activity feed | Continuous consumption into SIEM. Shared 600 rpm limit per parent org, so size polling and backoff accordingly. | AU-6, AU-12, SI-4 / DE.CM-09 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-11 |
-| 5.2 | Compliance API session endpoints | Chat, files, projects, and per current documentation local and cloud Cowork and Claude Code session transcripts | Verify coverage against your own tenant. See 6.1. | AU-2, AU-12 / DE.CM-09 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-11 |
-| 5.3 | Audit log CSV export | Admin actions, 180-day lookback | Scheduled export, retained per policy | AU-4, AU-11 / PR.PS-04 | [Access audit logs](https://support.claude.com/en/articles/9970975-access-audit-logs) | 2026-09-11 |
-| 5.4 | Claude Code Analytics API | Per-user sessions, commits, PRs, LOC, tool acceptance, cost | Daily pull. Alert on acceptance rate below 70 percent and unusual session counts. Blind to Bedrock, Foundry, Vertex, and Claude Platform on AWS routing. | AU-6, SI-4 / DE.CM-01 | [Usage and cost API](https://platform.claude.com/docs/en/manage-claude/usage-cost-api) | 2026-09-11 |
-| 5.5 | OpenTelemetry | Cowork and Claude Code session activity | Routed to SIEM. Correlate with `session_id` and `prompt.id`. | AU-2, AU-12, SI-4 / DE.CM-01 | [Claude Code monitoring](https://code.claude.com/docs/en/monitoring-usage), [Cowork monitoring](https://claude.com/docs/cowork/monitoring) | 2026-09-11 |
-| 5.6 | Leaked-key response | `activity_types[]=compliance_api_accessed` | Match `actor.api_key_id` to the compromised key | IR-4, IR-5, IR-6 / RS.AN-03 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-11 |
+| # | Source | Covers | Baseline | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 5.1 | Compliance API `/v1/compliance/activities` | Activity feed | Continuous consumption into SIEM. Shared 600 rpm limit per parent org, so size polling and backoff accordingly. | Anthropic + SIEM | AU-6, AU-12, SI-4 / DE.CM-09 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-11 |
+| 5.2 | Compliance API session endpoints | Local (on-machine) and remote session transcripts for **Cowork, Claude Code, Claude Science, Claude for Microsoft 365, and Claude in Chrome**. Stable for Cowork, Claude Code and Claude for Microsoft 365; **beta for Claude Science and Claude in Chrome**. Requires a Compliance Access Key with `read:compliance_user_data` — no new key, scope or client update. Local-session capture is gated by the 1.8 toggle: transcripts of sessions that run while the Compliance API is off are never captured and cannot be recovered. | Ingest all five surfaces, not just Cowork and Claude Code. | Anthropic + SIEM | AU-2, AU-12 / DE.CM-09 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-27 |
+| 5.3 | Audit log CSV export | Admin actions, 180-day lookback | Scheduled export, retained per policy | Anthropic + SIEM | AU-4, AU-11 / PR.PS-04 | [Access audit logs](https://support.claude.com/en/articles/9970975-access-audit-logs) | 2026-09-11 |
+| 5.4 | Claude Code Analytics API | Per-user sessions, commits, PRs, LOC, tool acceptance, cost | Daily pull. Alert on acceptance rate below 70 percent and unusual session counts. Blind to Bedrock, Foundry, Vertex, and Claude Platform on AWS routing. | Anthropic + SIEM | AU-6, SI-4 / DE.CM-01 | [Usage and cost API](https://platform.claude.com/docs/en/manage-claude/usage-cost-api) | 2026-09-11 |
+| 5.5 | OpenTelemetry | Cowork and Claude Code session activity | Routed to SIEM. Correlate with `session_id` and `prompt.id`. | Anthropic + SIEM | AU-2, AU-12, SI-4 / DE.CM-01 | [Claude Code monitoring](https://code.claude.com/docs/en/monitoring-usage), [Cowork monitoring](https://claude.com/docs/cowork/monitoring) | 2026-09-11 |
+| 5.6 | Leaked-key response | `activity_types[]=compliance_api_accessed` | Match `actor.api_key_id` to the compromised key | SIEM + Process | IR-4, IR-5, IR-6 / RS.AN-03 | [Compliance API](https://platform.claude.com/docs/en/manage-claude/compliance-api) | 2026-09-11 |
 
 OTel redaction to configure at the collector before ingestion:
 
@@ -333,43 +372,84 @@ OTel redaction to configure at the collector before ingestion:
 
 ---
 
-## 6. Known gaps and residual risk
+## 6. Supporting security layers (customer-owned)
+
+Sections 1 to 5 are organised by Anthropic product surface. This one is organised by the thing every deployment actually rests on: controls Anthropic does not provide, does not configure, and cannot enforce for you.
+
+Some already appear above, carried as `Owner` values on rows that also have an Anthropic half — the egress proxy in 1.7, MDM in 3.11, 3.15 and 3.17, EDR in 3.16, the IdP behind 1.1, the log pipeline behind all of section 5. Those stay where they are, attached to the Anthropic control they support. What follows is the set with no Anthropic half at all, which until now had nowhere to live and so was simply absent.
+
+This is not an outside reading of the product. Anthropic's own enterprise security documentation states the position directly: authority sits in customer-held systems, identity and group membership come from the customer's IdP over SAML 2.0 / OIDC and SCIM 2.0, and **content policy is enforced in the customer's DLP, SASE, or CASB layer** over inspectable HTTPS to a published endpoint set — Anthropic publishes the standard each control integrates over rather than shipping a vendor-specific connector. The company's public-sector guidance draws the same line as a shared-responsibility table, placing endpoint security, user authentication and authorization, data classification, audit logging, incident response and continuous monitoring on the customer side of the boundary. The controls below are that layer, named.
+
+The dependency runs one way. 7.2 states it plainly for the console: a user on a corporate machine can sign into a personal Pro or Max account and get Cowork, Chrome, plugins and Computer Use with zero admin oversight. Every toggle in sections 1 to 3 is advisory against that user. The controls below are what make them binding, which is why an organisation that cannot do TLS inspection should read sections 2 and 3 as guidance for cooperative users rather than as enforcement.
+
+| # | Control | How to implement | Baseline value | Level | Owner | NIST 800-53 / CSF 2.0 | Reference | Drafted |
+|---|---|---|---|---|---|---|---|---|
+| 6.1 | Browser extension install control | Block the Claude extension from self-service install, then force-install and pin the approved build to managed profiles only. In Chrome this is the `ExtensionInstall` policy family (blocklist, allowlist, forcelist) via Google Workspace admin or MDM; Edge has equivalents. **Policy key names are from general practice and were not verifiable when this row was drafted — confirm against your browser's enterprise policy reference before deploying.** This is the control that bounds 2.7: the Anthropic org toggle governs the extension for managed accounts, not whether a user can install it under a personal one. | Unmanaged install blocked; approved build force-installed to managed profiles | L2 | Browser fleet | CM-7(5), CM-11, SC-18 / PR.PS-01 | Internal browser management standard | 2026-09-19 |
+| 6.2 | Identity provider enforcement posture | 1.1 enables SSO; it does not make SSO strong. MFA, conditional access, device compliance and session lifetime are all IdP-side, and SSO enforcement alone satisfies none of them. **Conditional Access signals are not passed through to Claude**: CA evaluates at authentication and Claude receives no continuous signal, so a device that falls out of compliance mid-session is not re-evaluated until the 1.18 session lifetime forces re-authentication. Setting 1.18 is therefore what converts your CA policy into something with a bounded blast radius. Claude also offers no ABAC, no per-conversation ACLs, and no native just-in-time elevation, so segmentation has to be expressed as IdP groups bound to dedicated roles. Set the policy that actually gates access here, and record it, because the SP 800-53 IA-2 enhancements the crosswalk claims are satisfied at this layer and nowhere else. | MFA enforced for all members; conditional access on device compliance | L1 | IdP | IA-2(1), IA-2(2), AC-17 / PR.AA-01, PR.AA-03 | Internal identity standard | 2026-09-27 |
+| 6.3 | Endpoint DLP on prompt content | Inspect content leaving the endpoint into a Claude client — the desktop app, the browser extension, and Claude Code. Pasting a credential file or a customer record into a prompt is an egress event. Anthropic's **Inference hooks** (1.17, beta) now offer an inline allow/deny verdict on governed prompts, so this is no longer the only option — but the two do not overlap fully: hooks do not cover Bedrock or Vertex, never receive raw file or image bytes (so a screenshot of a document is not inspected), and cannot redact, only allow or deny. Endpoint DLP remains the control that sees content before it leaves the machine at all. Note the coverage gap this shares with 7.4: project instructions and local Cowork state are on disk and are not inspected by anything Anthropic operates. | Monitor mode first, then block on classified-data patterns | L2 | Endpoint | AC-4, SI-4 / PR.DS-01 | Internal data protection standard | 2026-09-27 |
+| 6.4 | Network DLP and inline inspection | The network-side half of 6.3, covering unmanaged endpoints that endpoint DLP does not reach, and the surfaces Inference hooks (1.17) cannot govern — Bedrock and Vertex routing, and image-only content. Requires TLS inspection, the same prerequisite as 1.7, so these two should be planned together rather than separately. | Inspect and log; block on classified-data patterns for L3 | L2 | Network | AC-4, SC-7, SI-4 / PR.IR-01, PR.DS-02 | Internal network standard | 2026-09-27 |
+| 6.5 | CASB / sanctioned-tenant enforcement | 1.7 injects the tenant-restriction header. This is the broader control around it: a sanctioned-versus-unsanctioned policy for AI services generally, so that blocking personal Claude tenants does not simply move the behaviour to an unmanaged competitor. Without it, 1.7 is a single-vendor fix for a category-wide problem. | Claude sanctioned to the org tenant; unsanctioned AI services blocked or monitored | L2 | Network | AC-4, AC-20, SC-7 / PR.IR-01 | Internal SaaS governance standard | 2026-09-19 |
+| 6.6 | Shadow-AI discovery | Detect personal-account and unsanctioned AI usage rather than assuming the controls above hold. This is the detective control over 7.2 and the only thing that tells you whether your preventive layer is working. Feed it from proxy logs, CASB telemetry and endpoint inventory — not from the Anthropic Analytics API, which by 7.5 cannot see traffic that never reached your tenant. | Reviewed monthly, alongside the connector audit in section 8 | L2 | Network + SIEM | CM-8, SI-4, AC-20 / ID.AM-02, DE.CM-09 | Internal monitoring standard | 2026-09-19 |
+
+### 6.7 What this layer costs you if it is absent
+
+Worth stating as a dependency chain rather than a list, because the failures compound:
+
+Without **6.1**, the Chrome controls in 2.7 to 2.9 apply only to users who installed the managed extension, which is the population least likely to need them. Without **6.2**, 1.1 delivers single sign-on and no assurance, and the IA-2 enhancements in the crosswalk are unsatisfied regardless of what the Anthropic panel says. Without **6.3** and **6.4**, no control anywhere in this document inspects what a user types into a prompt. Without **6.5**, 1.7 blocks one vendor. Without **6.6**, none of the above is observable and the first evidence of failure is an incident.
+
+None of these are Anthropic's to ship. All of them are load-bearing for controls that are.
+
+### 6.8 A note on the NIST crosswalk
+
+Several families the crosswalk in 10.3 cites are satisfied at this layer and not by any Anthropic setting: SI-3 and SI-4 for endpoint detection, SC-7 for egress control, SC-28 for encryption at rest, AU-6 for log review, and the IA-2 enhancements above. A reader mapping this baseline into an SSP should attribute those to the supporting infrastructure rather than to the vendor, because an assessor who tests them will be testing your proxy, your IdP and your EDR.
+
+---
+
+## 7. Known gaps and residual risk
 
 These are the items to put in the risk register, not the checklist.
 
-### 6.1 Cowork audit coverage is contested and needs tenant verification
+### 7.1 Cowork audit coverage: resolved for Cowork, still open for two surfaces
 
-Sources disagree. Documentation current to August 2026 states the Compliance API session endpoints return transcripts of Cowork and Claude Code sessions run on user machines. A widely cited practitioner guide updated in May 2026 states Cowork activity is excluded from audit logs, the Compliance API, and data exports entirely.
+This entry recorded a contradiction between documentation stating the Compliance API returns Cowork transcripts and a May 2026 practitioner guide stating Cowork was excluded from audit logs, the Compliance API, and exports entirely.
 
-The likeliest explanation is that coverage was added between those dates. Do not take either on faith. Run a test Cowork session under an Enterprise-signed-in account and confirm whether it appears in the session endpoints before you write "Cowork is auditable" into any control narrative. Until you have confirmed it in your own tenant, treat Cowork as out of scope for SOX, HIPAA, PCI-DSS, and SOC 2 workloads.
+**Resolved on 2026-09-27 against Anthropic's own current documentation.** The session endpoints are stable for Cowork, Claude Code, and Claude for Microsoft 365, and cover both local (on-machine) and remote sessions. The practitioner guide was describing a state that no longer holds. Cowork is auditable, and the residual risk that kept it out of SOX, HIPAA, PCI-DSS and SOC 2 scope is withdrawn on that basis.
 
-### 6.2 Admin toggles are advisory without tenant restrictions
+Two things replace it, and both are narrower:
+
+**Claude Science and Claude in Chrome session coverage is beta.** Same key, same `read:compliance_user_data` scope, no client change, but beta is not a compliance guarantee. Confirm retention and completeness before relying on either in a control narrative.
+
+**Capture is gated by the 1.8 toggle, and the gap is unrecoverable.** Local-session transcripts are captured only while the Compliance API is enabled. Sessions that run while it is off are never recorded and cannot be retrieved afterwards, which makes that toggle a silent evidence-destruction control, not merely an on/off for a feature. It belongs under change control for that reason, as 1.8 already says.
+
+The tenant test is still worth running once, to confirm your own configuration, but it is no longer answering an open question about the product.
+
+### 7.2 Admin toggles are advisory without tenant restrictions
 
 A user on a corporate machine can sign into a personal Pro or Max account and get Cowork, Chrome, plugins, and Computer Use with zero admin oversight. Tenant restrictions at the egress proxy are the only control that closes this, and they require TLS inspection. If you cannot do header injection on inspected traffic, most of section 3 is a suggestion.
 
-### 6.3 Scheduled tasks have no technical control
+### 7.3 Scheduled tasks have no technical control
 
 No approval workflow, no frequency limits, no scope limits. Tasks run unattended while the desktop app is open. The only controls available are AUP language and weekly OTel spot-checks of the task inventory.
 
-### 6.4 Project instructions are invisible to security
+### 7.4 Project instructions are invisible to security
 
 They act as a per-user system prompt stored locally, with no central review path. Anyone with filesystem access to a project's instruction file can influence every subsequent session in that project.
 
-### 6.5 Non-Anthropic routing is invisible to the Analytics API
+### 7.5 Non-Anthropic routing is invisible to the Analytics API
 
 Sessions routed through Bedrock, Foundry, Vertex AI, or Claude Platform on AWS do not appear in the Claude Code Analytics API. If those paths are permitted, close the gap with OTel or provider-side logging or your shadow-AI detection is only covering one route.
 
-### 6.6 Prompt injection residual risk
+### 7.6 Prompt injection residual risk
 
 Anthropic self-reports roughly a 1 percent attack success rate on Claude in Chrome after mitigations. Every control in section 3 reduces blast radius. None of them make injection unlikely.
 
-### 6.7 Console churn
+### 7.7 Console churn
 
 Anthropic changes the admin console roughly monthly. A baseline written at onboarding is stale within a quarter. Assign an owner and a revalidation date.
 
 ---
 
-## 7. Operating cadence
+## 8. Operating cadence
 
 Weekly: OTel dashboard review, scheduled task inventory spot-check, user-reported incident review.
 
@@ -379,7 +459,7 @@ Quarterly: formal access review across both the claude.ai org and the Console or
 
 ---
 
-## 8. Reference `managed-settings.json` (L2)
+## 9. Reference `managed-settings.json` (L2)
 
 ```json
 {
@@ -495,9 +575,9 @@ Deploy `managed-mcp.json` alongside this file at the same OS path via MDM. When 
 
 ---
 
-## 9. NIST framework alignment
+## 10. NIST framework alignment
 
-### 9.1 Which NIST publication does what
+### 10.1 Which NIST publication does what
 
 Four layers, and they are not interchangeable. Picking the wrong one produces a mapping that reads well and assesses badly.
 
@@ -513,7 +593,7 @@ Two supporting items worth tracking rather than mapping: CAISI launched the AI A
 
 Verify current status before relying on any draft state above. This was checked 2026-09-11.
 
-### 9.2 Where the three surfaces land in COSAiS
+### 10.2 Where the three surfaces land in COSAiS
 
 The five COSAiS use cases split this baseline across three different forthcoming overlays. Worth structuring your internal document to match, because it determines which overlay you inherit from when they publish.
 
@@ -526,7 +606,7 @@ The five COSAiS use cases split this baseline across three different forthcoming
 
 Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only use case with a published draft. That is the practical problem with treating COSAiS as your source today.
 
-### 9.3 Control crosswalk
+### 10.3 Control crosswalk
 
 800-53 Rev 5 is the spine. CSF 2.0 subcategories follow IR 8596 structure. AI RMF functions are the governance wrapper, included because they are what your risk committee will ask for.
 
@@ -545,7 +625,10 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 | 1.13 Training opt-out | PT-2, PT-3, SI-12 | GV.PO-01, PR.DS-01 | GOVERN 1 |
 | 1.14, 1.15 Retention and ZDR | SI-12, AU-11, PT-3 | PR.DS-01 | MANAGE 1 |
 | 1.16 Invite hygiene | AC-2(3) | PR.AA-01 | GOVERN 2 |
-| 1.17 RBAC capability gating | AC-2(7), AC-3, AC-6, CM-7 | PR.AA-05, PR.PS-01 | GOVERN 2 |
+| 1.17 Inference hooks | AC-4, SI-4, AU-2 | PR.DS-01, DE.CM-09 | MANAGE 2 |
+| 1.18 Session lifetime | AC-12, IA-11 | PR.AA-03 | GOVERN 2 |
+| 1.19 Workload identity federation | IA-9, IA-5, AC-3 | PR.AA-01, PR.AA-05 | GOVERN 2 |
+| 1.20 RBAC capability gating | AC-2(7), AC-3, AC-6, CM-7 | PR.AA-05, PR.PS-01 | GOVERN 2 |
 | 2.1 to 2.3 Connector governance | CM-7, CM-7(1), AC-3, AC-4, SA-9 | PR.PS-01, GV.SC-06 | MANAGE 1 |
 | 2.4 Verified-domain protection | SC-7, AC-4, AC-21 | PR.IR-01 | MANAGE 1 |
 | 2.5 Custom MCP connector review | SA-9, SR-3, SR-5, RA-3 | GV.SC-04, GV.SC-06 | GOVERN 6 |
@@ -575,10 +658,10 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 | 4.33 to 4.39 CI/CD hardening | SA-11, SR-3, SR-4, SR-11, CM-5, SC-7 | GV.SC-06, PR.PS-01 | GOVERN 6 |
 | Rules-file scanning | SI-3, SI-7, SI-10, SR-11 | DE.CM-01, GV.SC-06 | MEASURE 1 |
 | 5.1 to 5.6 Monitoring and audit | AU-2, AU-6, AU-12, SI-4, IR-4, IR-5, IR-6 | DE.CM-01, DE.AE-03, RS.AN-03 | MEASURE 1, MANAGE 2 |
-| 6.x Documented gaps | CA-5, RA-3, PM-9 | GV.RM-03, ID.RA-05 | MANAGE 4 |
-| 7.x Operating cadence | CA-2, CA-7, AC-2j | ID.IM-03, GV.OV-03 | MEASURE 3 |
+| 7.x Documented gaps | CA-5, RA-3, PM-9 | GV.RM-03, ID.RA-05 | MANAGE 4 |
+| 8.x Operating cadence | CA-2, CA-7, AC-2j | ID.IM-03, GV.OV-03 | MEASURE 3 |
 
-### 9.4 Threat mapping (AI 100-2e2025)
+### 10.4 Threat mapping (AI 100-2e2025)
 
 The attack classes this baseline actually addresses, and which controls carry the weight:
 
@@ -590,7 +673,7 @@ The attack classes this baseline actually addresses, and which controls carry th
 | Model or config integrity (rules-file backdoor) | Rules-file CI scanning, 4.2 to 4.4 managed-only enforcement | Medium. Project instructions remain centrally invisible. |
 | Credential theft from the endpoint | 4.29 sandbox denyRead, 3.15 FDE, 4.9 deny rules | Medium on macOS and Linux. High on Windows, where no kernel sandbox exists. |
 
-### 9.5 Where SP 800-53 Rev 5 does not reach
+### 10.5 Where SP 800-53 Rev 5 does not reach
 
 Four controls in this baseline have no clean Rev 5 home. Document them as overlay-pending rather than forcing a bad mapping, because a stretched mapping fails assessment worse than an honest gap does.
 
@@ -598,23 +681,23 @@ Unattended autonomous execution. Scheduled tasks run for hours with no human in 
 
 Prompt-injection-resistant input handling. SI-10 was written for form and parameter validation against a defined input specification. An LLM has no input specification. Citing SI-10 for prompt injection is the single most common overreach in AI control mappings and it will not survive a competent assessor.
 
-Non-human agent identity. Agents currently inherit the user's identity and permissions wholesale. There is no per-agent credential, no scoped delegation, no accountability boundary. IA-9 covers service identification but not delegated autonomous action. This is exactly what the NCCoE February 2026 concept paper is aimed at.
+Non-human agent identity, narrowed 2026-09-27. Workload identity federation (1.19) does give non-interactive Claude Platform workloads a real federated identity — an AWS IAM role, a GCP service account, a Kubernetes service account — rather than a static key, so the *service* half of this gap is addressed and IA-9 genuinely applies there. What remains unaddressed is the *agent* half: an agent acting inside a user's session still inherits that user's identity and permissions wholesale, with no per-agent credential, no scoped delegation, and no accountability boundary between what the human asked for and what the agent did. IA-9 covers service identification but not delegated autonomous action. That residue is exactly what the NCCoE February 2026 concept paper is aimed at.
 
 Centrally unreviewable configuration. Project instructions and local Cowork state function as per-user configuration that security cannot inspect. CM-6 assumes configuration settings are enumerable and assessable. Here they are not.
 
-### 9.6 Practical guidance on using this mapping
+### 10.6 Practical guidance on using this mapping
 
 Use SP 800-53 Rev 5 as the spine, not the AI RMF. The AI RMF is a trustworthiness risk framework with no assessable control statements. Mapping "set `disableBypassPermissionsMode` to `disable`" to MANAGE 1 is true and tells an assessor nothing. Keep AI RMF and IR 8596 as the governance wrapper above the control layer, which is also how NIST itself positions the relationship in the COSAiS concept paper.
 
-Do not cite COSAiS as a requirement source yet. Only the predictive AI annotated outline exists, and predictive AI is the one use case this baseline does not touch. Cite it as a forward-looking alignment commitment, structure section 9.2 into your document now, and plan a re-mapping pass when 8605B and the agent overlays reach public draft.
+Do not cite COSAiS as a requirement source yet. Only the predictive AI annotated outline exists, and predictive AI is the one use case this baseline does not touch. Cite it as a forward-looking alignment commitment, structure section 10.2 into your document now, and plan a re-mapping pass when 8605B and the agent overlays reach public draft.
 
 IR 8596 is preliminary draft only. It went out 2025-12-16 with comments closing 2026-01-30. Reference it as directional, not authoritative.
 
-If any of this touches federal data, resolve the FedRAMP question first. FISMA provides no AI carve-out, so an AI system processing federal data is a federal information system under the standard baseline. Before the control mapping matters, confirm the authorization status of the specific Anthropic offering you are deploying, and whether that is the commercial claude.ai tenant or a government-authorized path. That answer changes the baseline, not just the paperwork.
+If any of this touches federal data, resolve the FedRAMP question first. FISMA provides no AI carve-out, so an AI system processing federal data is a federal information system under the standard baseline. Before the control mapping matters, confirm which offering you are deploying, because there is a separate authorized path and the commercial tenant is not it. Anthropic operates **Claude for Government (C4G)** as a distinct FedRAMP offering on its own service address, with its own authorization package, its own Customer Responsibilities Matrix, its own administrative role model, and materially different behaviour — on C4G the Compliance API is enabled by default and returns governance and audit events only, conversation content is not stored server-side, and the tenant-restriction header differs from the commercial one in 1.7. For Claude Code specifically, the federal pattern is the local CLI routed to Amazon Bedrock in GovCloud or to Vertex AI in FedRAMP High authorized regions, with the agency owning the CLI, the endpoint, and the NIST 800-53 implementation. **This baseline does not cover C4G and should not be used as one.** It is written for the commercial Claude Enterprise tenant. If you are deploying into a federal environment, start from Anthropic's own C4G FedRAMP Secure Configuration Guide and the Claude Code public-sector guidance, available through the Anthropic Trust Center or your account team — see section 11.
 
 ---
 
-## 10. Reference index
+## 11. Reference index
 
 ### NIST publications
 
@@ -646,10 +729,10 @@ If any of this touches federal data, resolve the FedRAMP question first. FISMA p
 
 ### A note on these links
 
-Every link in this document was swept on 2026-09-12. All resolve, with one caveat: the NCCoE Cyber AI Profile project page returns 403 to automated clients because NIST blocks bot user agents there, so it cannot be machine-checked and must be eyeballed. Five were dead and have been replaced: the AI 600-1 page, the COSAiS project page, the Anthropic usage policy, the HackerOne VDP, and `code.claude.com/docs/en/auto-mode` (the real page is `/auto-mode-config`). Roughly ten more had changed slugs and were updated, including the move from `claude.com/docs/cowork/3p/` to `claude.com/docs/third-party/claude-desktop/`. Anthropic reorganized its docs from `docs.anthropic.com` onto `platform.claude.com`, `code.claude.com`, and `support.claude.com` during 2026, so expect this to keep drifting. The automated watcher in `automation/` diffs the three sources Anthropic changelogs; it does not link-check, so keep the link sweep on the quarterly revalidation in section 7.
+Every link in this document was swept on 2026-09-12. All resolve, with one caveat: the NCCoE Cyber AI Profile project page returns 403 to automated clients because NIST blocks bot user agents there, so it cannot be machine-checked and must be eyeballed. Five were dead and have been replaced: the AI 600-1 page, the COSAiS project page, the Anthropic usage policy, the HackerOne VDP, and `code.claude.com/docs/en/auto-mode` (the real page is `/auto-mode-config`). Roughly ten more had changed slugs and were updated, including the move from `claude.com/docs/cowork/3p/` to `claude.com/docs/third-party/claude-desktop/`. Anthropic reorganized its docs from `docs.anthropic.com` onto `platform.claude.com`, `code.claude.com`, and `support.claude.com` during 2026, so expect this to keep drifting. The automated watcher in `automation/` diffs the three sources Anthropic changelogs; it does not link-check, so keep the link sweep on the quarterly revalidation in section 8.
 
 ---
 
 ## Sources
 
-Anthropic administrator and Claude Code documentation (platform.claude.com, code.claude.com, support.claude.com), the How to Harden Anthropic platform, Claude Enterprise, and Claude Code guides (v1.1.0 / v0.2.0 / v1.0.2, last updated 2026-08-15), and Harmonic Security's Cowork practitioner guide (last updated 2026-05-20). Framework alignment sources: NIST SP 800-53 Rev 5, NIST AI RMF 1.0 and AI 600-1, NIST CSF 2.0, NIST IR 8596 iprd (Cyber AI Profile, preliminary draft 2025-12-16), the NIST COSAiS project and NISTIR 8605 series concept paper and January 2026 annotated outline, NIST AI 100-2e2025, and NIST SP 800-218A. Draft status of IR 8596 and the 8605 series verified 2026-09-11 and subject to change.
+Anthropic first-party security documentation reviewed 2026-09-27: *Identity & Access Controls* and *Anthropic's Enterprise Security Posture* (both 2026-05-15, Anthropic Trust Center resources); *Claude for Government (C4G) FedRAMP Secure Configuration Guide* v2.1 (2026-07-16, marked intended for public release, obtainable via the Anthropic Trust Center or fedramp@anthropic.com); and *Best Practice Guide: Claude Code for Public Sector* (January 2026). These informed controls 1.6, 1.18, 1.19, 2.10, 6.2, section 6's framing, 10.5 and 10.6. They are cited by title and date rather than by URL because they are distributed as documents rather than published at stable web addresses. Anthropic administrator and Claude Code documentation (platform.claude.com, code.claude.com, support.claude.com), the How to Harden Anthropic platform, Claude Enterprise, and Claude Code guides (v1.1.0 / v0.2.0 / v1.0.2, last updated 2026-08-15), and Harmonic Security's Cowork practitioner guide (last updated 2026-05-20). Framework alignment sources: NIST SP 800-53 Rev 5, NIST AI RMF 1.0 and AI 600-1, NIST CSF 2.0, NIST IR 8596 iprd (Cyber AI Profile, preliminary draft 2025-12-16), the NIST COSAiS project and NISTIR 8605 series concept paper and January 2026 annotated outline, NIST AI 100-2e2025, and NIST SP 800-218A. Draft status of IR 8596 and the 8605 series verified 2026-09-11 and subject to change.

@@ -19,5 +19,12 @@
     "url": "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md",
     "type": "raw",
     "baseline_surface": "CLI"
+  },
+  {
+    "id": "trust-center-resources",
+    "label": "Anthropic Trust Center resources (security configuration guidance)",
+    "url": "https://trust.anthropic.com/resources",
+    "type": "html",
+    "baseline_surface": "All"
   }
 ]
