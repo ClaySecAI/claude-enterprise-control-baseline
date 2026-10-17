@@ -26,5 +26,26 @@
     "url": "https://trust.anthropic.com/resources",
     "type": "html",
     "baseline_surface": "All"
+  },
+  {
+    "id": "sitemap-platform",
+    "label": "Platform sitemap",
+    "url": "https://platform.claude.com/sitemap.xml",
+    "type": "sitemap",
+    "baseline_surface": "Web"
+  },
+  {
+    "id": "sitemap-platform-cookbook",
+    "label": "Platform cookbook sitemap",
+    "url": "https://platform.claude.com/cookbook/sitemap.xml",
+    "type": "sitemap",
+    "baseline_surface": "Web"
+  },
+  {
+    "id": "sitemap-code",
+    "label": "Claude Code docs sitemap",
+    "url": "https://code.claude.com/docs/sitemap.xml",
+    "type": "sitemap",
+    "baseline_surface": "CLI"
   }
 ]

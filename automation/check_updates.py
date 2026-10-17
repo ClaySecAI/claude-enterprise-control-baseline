@@ -78,6 +78,36 @@ def extract_text(raw: str, source_type: str) -> str:
     return normalize(parser.get_text())
 
 
+# Non-English locale paths (/docs/ja/..., /docs/pt-BR/...) are dropped: both docs
+# sitemaps carry ~12 locales and each new page would otherwise appear that many times.
+LOCALE_PATH = re.compile(r"/docs/(?!en/)[a-z]{2}(?:-[A-Za-z]{2,4})?/")
+ADMIN_PATH = re.compile(r"admin|security|settings|iam", re.IGNORECASE)
+
+
+def sitemap_urls(raw: str) -> list:
+    """Sorted, de-duplicated English-only <loc> values from a plain urlset."""
+    urls = re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", raw)
+    return sorted({u for u in urls if not LOCALE_PATH.search(u)})
+
+
+def sitemap_section(label: str, url: str, added: list):
+    """Report only added admin-path URLs; None if there is nothing to say."""
+    hits = [u for u in added if ADMIN_PATH.search(u)]
+    if not hits:
+        return None
+    lines = "\n".join(f"- {u}" for u in hits)
+    return (
+        f"### \U0001f9ed New admin-path pages (candidate NEW control row): {label}\n{url}\n"
+        f"{len(hits)} new URL(s) matching admin|security|settings|iam "
+        f"({len(added)} added in total, the rest filtered as noise).\n\n"
+        "**This is a weaker signal than a content diff:** it says a page now exists, "
+        "not that anything changed for an administrator. Read each page and decide "
+        "whether it documents a capability with no control row. If so, add a row; "
+        "this is an *add*, not a *revise* of an existing row.\n\n"
+        f"{lines}"
+    )
+
+
 def main() -> int:
     sources = json.loads(SOURCES_FILE.read_text())
     STATE_DIR.mkdir(exist_ok=True)
@@ -92,7 +122,10 @@ def main() -> int:
         snapshot_path = STATE_DIR / f"{sid}.txt"
 
         try:
-            new_text = extract_text(fetch(url), source["type"])
+            if source["type"] == "sitemap":
+                new_text = "\n".join(sitemap_urls(fetch(url))) + "\n"
+            else:
+                new_text = extract_text(fetch(url), source["type"])
         except Exception as exc:  # noqa: BLE001 -- surface any fetch failure, don't swallow it
             any_change = True
             sections.append(
@@ -100,6 +133,26 @@ def main() -> int:
                 "This source could not be checked this run -- worth a manual look "
                 "in case Anthropic changed the URL or started blocking automated fetches."
             )
+            continue
+
+        if source["type"] == "sitemap":
+            # Add-only: removals are not reported, and the first run just
+            # records the baseline rather than listing every existing page.
+            new_set = set(new_text.split())
+            if snapshot_path.exists():
+                old_set = set(snapshot_path.read_text().split())
+                section = sitemap_section(label, url, sorted(new_set - old_set))
+                if section:
+                    sections.append(section)
+                if old_set != new_set:
+                    any_change = True  # snapshot advances in the PR
+            else:
+                any_change = True
+                sections.append(
+                    f"### \U0001f195 New source tracked: {label}\n{url}\n"
+                    f"Baseline of {len(new_set)} URLs recorded; nothing reported."
+                )
+            snapshot_path.write_text(new_text)
             continue
 
         if not snapshot_path.exists():
