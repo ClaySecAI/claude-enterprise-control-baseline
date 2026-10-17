@@ -6,6 +6,40 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-17 — model restriction corrected, and a version floor under every managed setting
+
+Both findings came out of triaging the three outstanding watcher issues (#20, #21, #23). Closes #25 and #26.
+
+### 4.30 `availableModels` did not do what the row implied
+
+The row promised a pinned model set. Per [model configuration](https://code.claude.com/docs/en/model-config) it delivered neither half of that:
+
+- **An entry permits later releases.** A version prefix "also matches later model IDs that extend it", and a family alias is looser still. Anthropic's version history records `sonnet` starting to resolve to Sonnet 5.5 at v2.1.284 and `haiku` to Haiku 5.5 at v2.1.293 — and the section 9 reference policy shipped `["sonnet", "haiku"]`. **Any fleet running this document's own reference policy took both new models without a configuration change.** That is the defect, and it was ours, not Anthropic's.
+- **Default escaped the allowlist.** A user could pick Default in `/model` and land outside the list. `enforceAvailableModels` (v2.1.175+) binds Default to it; the baseline never mentioned the key.
+
+Rewritten as a five-key set: 4.30 `availableModels` (version prefixes, not aliases), 4.40 `enforceAvailableModels`, 4.41 `deniedModels`, 4.42 `availableModelsMatch`, 4.43 `requiredMinimumVersion`. The reference policy and `examples/managed-settings.json` now pin `claude-sonnet-5-5` and `claude-haiku-5-5` with `enforceAvailableModels: true`.
+
+Recorded alongside: where the allowlist actually reaches (`/model`, `--model`, `ANTHROPIC_MODEL`, resume, the per-alias `ANTHROPIC_DEFAULT_*_MODEL` variables, `/fast`, subagent and teammate models), that `deniedModels` and `availableModelsMatch` bind Default whether or not `enforceAvailableModels` is set, and that pinning carries a standing review obligation — Sonnet 4.5 retires on the Claude API on 2026-11-30.
+
+### 4.43 `requiredMinimumVersion`, because managed policy keeps failing open
+
+Four instances of the same failure shape, drawn from the three issues: a managed setting silently not applying, with nothing reported.
+
+| Version | Silently not applying below it |
+|---|---|
+| 2.1.277 | one malformed `strictKnownMarketplaces` or `blockedMarketplaces` entry disabled the **whole** marketplace policy |
+| 2.1.283 | managed `sandbox` settings ignored **entirely** when one nested value was invalid |
+| 2.1.283 | `deniedModels` and `availableModelsMatch` ignored outright |
+| 2.1.289 | four permission-rule bypasses, including Bash deny rules missed behind an environment-variable prefix such as `TZ="$HOME" rm -rf build` |
+
+This document asserts `sandbox` behaviour in thirty places and `strictKnownMarketplaces` in three; below those versions the assertions did not hold. The floor is **2.1.289**, the highest version any claim here depends on, and a client below it exits at startup rather than warning.
+
+### Honest limits
+
+`deniedModels` and `availableModelsMatch` are **not yet in the published settings schema** — a `--refresh` on 2026-10-17 returned a byte-identical inventory. `check_settings.py` skips unrecognised top-level keys, so 4.41 and 4.42 pass CI unvalidated; I confirmed that by substituting a nonsense key and watching it pass. They are verified against Anthropic's documentation only, are noted as such in the document, and are deliberately kept out of the section 9 reference policy. Re-run `--refresh` once SchemaStore catches up.
+
+New rows are numbered 4.40 to 4.43 rather than continuing from 4.32, because 4.33 to 4.39 were already taken by the CI/CD rows. Row numbers are stable identifiers here; renumbering would have invalidated existing citations, so the gap stands.
+
 ## 2026-10-17 — Trust Center baseline recorded, drafting-job credentials documented
 
 - Advanced the tracked source snapshots to the 2026-10-12 watcher run, which had opened a PR that was never merged. Main's snapshots had fallen behind the ones the watcher fetched, so the same upstream diff was being re-reported every week.

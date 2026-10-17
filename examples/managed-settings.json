@@ -60,7 +60,9 @@
   "useAutoModeDuringPlan": false,
   "disableDeepLinkRegistration": "disable",
   "cleanupPeriodDays": 7,
-  "availableModels": ["sonnet", "haiku"],
+  "requiredMinimumVersion": "2.1.289",
+  "availableModels": ["claude-sonnet-5-5", "claude-haiku-5-5"],
+  "enforceAvailableModels": true,
   "env": {
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
   },

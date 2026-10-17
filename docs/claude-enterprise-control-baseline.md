@@ -292,11 +292,50 @@ Implementation reference: [Claude Code settings and managed policy](https://code
 | 4.27 | `sandbox.enableWeakerNestedSandbox` | `false` | `false` | `false` | SC-39 | [Sandboxing](https://code.claude.com/docs/en/sandboxing) | 2026-09-11 |
 | 4.28 | `sandbox.excludedCommands` | as needed | minimal | `[]` | SC-39, CM-7 | [Sandboxing](https://code.claude.com/docs/en/sandboxing) | 2026-09-11 |
 | 4.29 | `sandbox.filesystem.denyRead` | credential paths | credential paths | `allowManagedReadPathsOnly: true` | AC-3, AC-6, SC-28 | [Sandboxing](https://code.claude.com/docs/en/sandboxing) | 2026-09-11 |
-| 4.30 | `availableModels` | — | approved set | single model | CM-7, SA-9 | [Settings](https://code.claude.com/docs/en/settings) | 2026-09-11 |
+| 4.30 | `availableModels` | — | approved set, as version prefixes not aliases | single pinned version | CM-7, SA-9 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
 | 4.31 | `env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | `"1"` | `"1"` | `"1"` | CM-7(1), SC-7 | [Settings](https://code.claude.com/docs/en/settings) | 2026-09-11 |
 | 4.32 | `companyAnnouncements` | policy reminder | policy reminder | policy reminder | AT-2, PL-4 | [Settings](https://code.claude.com/docs/en/settings) | 2026-09-11 |
+| 4.40 | `enforceAvailableModels` | — | `true` | `true` | CM-7, AC-3 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
+| 4.41 | `deniedModels` | — | releases held back | releases held back | CM-7, SA-9 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
+| 4.42 | `availableModelsMatch` | — | — | `"exact"` | CM-7, CM-3 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
+| 4.43 | `requiredMinimumVersion` | — | `"2.1.289"` | `"2.1.289"` | SI-2, CM-6 | [Admin setup](https://code.claude.com/docs/en/admin-setup#decide-what-to-enforce) | 2026-10-17 |
 
 Two keys appear in the section 9 reference policy without a row above: `pluginTrustMessage` (the text shown when a plugin is blocked, no security effect on its own) and `allowedChannelPlugins` (`[]` alongside `channelsEnabled: false`, CM-7).
+
+### Model restriction is five keys, not one
+
+These rows are numbered 4.40 to 4.43 rather than continuing from 4.32, because 4.33 to 4.39 are the CI/CD hardening rows below and renumbering them would break every citation already made against them. Row numbers in this document are stable identifiers; gaps are preferred to reuse.
+
+`availableModels` alone does not pin a model, and until 2026-10-17 this document implied it did. Two gaps, both from [model configuration](https://code.claude.com/docs/en/model-config):
+
+**An entry permits later releases.** Entries match a family (`sonnet`), a version prefix (`claude-sonnet-4-5`), or a full ID (`claude-sonnet-4-5-20250929`), and *"a version prefix also matches later model IDs that extend it"* — `claude-fable-5` permits Fable 5 and Fable 5.1, while `claude-fable-5-1` permits 5.1 only. A family alias is looser still, and the resolutions move under you on upgrade. Anthropic's own version history records `sonnet` beginning to resolve to Sonnet 5.5 at v2.1.284 and `haiku` to Haiku 5.5 at v2.1.293. The reference policy in section 9 shipped `["sonnet", "haiku"]`, so any fleet on it took both new models without a configuration change. Prefer version prefixes; treat aliases as a convenience that forfeits pinning.
+
+**Default escapes the allowlist.** A user can open `/model`, pick Default, and resolve to the runtime default even when it is outside `availableModels`. `enforceAvailableModels` binds Default to the list, and when the account-type default is not on it, Default resolves to the first allowed entry instead. It needs v2.1.175+ and a non-empty `availableModels`; it does nothing on its own.
+
+Where the allowlist does reach is wide, and worth knowing before assuming a gap: `/model`, `--model`, `ANTHROPIC_MODEL`, the `model` setting, `ANTHROPIC_DEFAULT_MODEL`, the model restored on resume, the per-alias `ANTHROPIC_DEFAULT_*_MODEL` variables (which cannot redirect an allowed alias outside the list), `/fast`, and subagent, teammate and Agent-tool models.
+
+To hold a specific release back, `deniedModels` blocks a model even when the allowlist permits it and works with no allowlist at all, and `availableModelsMatch: "exact"` makes each entry permit only the version it names. Both reach the Default option whether or not `enforceAvailableModels` is set; a Default that would resolve to a blocked model steps down to the newest permitted version of the same family. Both require v2.1.283, and **earlier versions ignore them silently** — which is why 4.43 is a precondition and not a hygiene item.
+
+Neither key is in the published settings schema yet. `automation/check_settings.py` skips a key whose first segment it does not recognise, so rows 4.41 and 4.42 **pass CI unvalidated**; they are verified against Anthropic's documentation only. Re-run `--refresh` once SchemaStore catches up. They are deliberately kept out of the section 9 reference policy for the same reason, and because `"exact"` commits you to re-listing every permitted version on every upgrade — a real operational obligation, not a default worth shipping to someone who has not chosen it.
+
+Pinning has a standing cost either way: a pinned version eventually retires. Claude Sonnet 4.5 retires on the Claude API on 2026-11-30. Pin deliberately, and review the list against [model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations) on a schedule.
+
+### Why 4.43 exists
+
+`requiredMinimumVersion` (4.43) is the only key here that makes the others trustworthy. It is managed-settings-only, and a client below the floor **exits at startup rather than warning** — the behaviour that distinguishes it from a recommendation.
+
+The floor matters because managed policy has repeatedly failed open and silently:
+
+| Version | What was silently not applying below it |
+|---|---|
+| 2.1.277 | one malformed `strictKnownMarketplaces` or `blockedMarketplaces` entry disabled the **whole** enterprise marketplace policy |
+| 2.1.283 | managed `sandbox` settings were ignored **entirely** when one nested value was invalid |
+| 2.1.283 | `deniedModels` and `availableModelsMatch` are ignored outright |
+| 2.1.289 | four permission-rule bypasses: a deny or ask rule on a nested part of a compound command not holding over a user-installed mod's approval on managed machines; Bash deny and ask rules missing a command behind an environment-variable prefix with an expanded value, such as `TZ="$HOME" rm -rf build`, under sandbox auto-allow; the same skipped when a bare variable assignment preceded the command; and `Read` deny rules not applying to files reached through a symlink |
+
+This document asserts `sandbox` behaviour in thirty places and `strictKnownMarketplaces` in three. Below those versions the assertions did not hold, and nothing reported it. A variable assignment before a command is ordinary shell, not an evasion technique.
+
+The floor is set at **2.1.289** rather than 2.1.283 because that is the highest version any claim in this document depends on. Raise it as new fixes land; it is cheap to raise and expensive to have set too low.
 
 **Weakening keys worth pinning explicitly.** Each key below exists in the published settings schema and loosens the sandbox if a lower layer sets it. Descriptions are quoted or paraphrased from the schema's own `description` field, not inferred from the key name. These are **not** in the section 8 reference policy below; add them deliberately after reading the interaction notes.
 
@@ -524,7 +563,9 @@ Quarterly: formal access review across both the claude.ai org and the Console or
   "useAutoModeDuringPlan": false,
   "disableDeepLinkRegistration": "disable",
   "cleanupPeriodDays": 7,
-  "availableModels": ["sonnet", "haiku"],
+  "requiredMinimumVersion": "2.1.289",
+  "availableModels": ["claude-sonnet-5-5", "claude-haiku-5-5"],
+  "enforceAvailableModels": true,
   "env": {
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
   },
@@ -655,6 +696,8 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 | 4.17 Transcript cleanup | SI-12, AU-11 | PR.DS-01 | MANAGE 1 |
 | 4.19 to 4.29 Sandbox isolation | SC-2, SC-7(4), SC-39, AC-6(10), SC-28 | PR.IR-01, PR.PS-01 | MANAGE 1 |
 | 4.31 Non-essential traffic | CM-7(1) | PR.IR-01 | MANAGE 1 |
+| 4.30, 4.40 to 4.42 Model restriction | CM-7, SA-9, AC-3, CM-3 | GV.SC-06, PR.PS-01 | GOVERN 6 |
+| 4.43 Managed-settings version floor | SI-2, CM-6 | PR.PS-02, ID.RA-01 | MANAGE 1 |
 | 4.33 to 4.39 CI/CD hardening | SA-11, SR-3, SR-4, SR-11, CM-5, SC-7 | GV.SC-06, PR.PS-01 | GOVERN 6 |
 | Rules-file scanning | SI-3, SI-7, SI-10, SR-11 | DE.CM-01, GV.SC-06 | MEASURE 1 |
 | 5.1 to 5.6 Monitoring and audit | AU-2, AU-6, AU-12, SI-4, IR-4, IR-5, IR-6 | DE.CM-01, DE.AE-03, RS.AN-03 | MEASURE 1, MANAGE 2 |
