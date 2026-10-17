@@ -42,15 +42,19 @@ The same restriction has one consequence left over: because the `check` job open
 
 Runs on Claude Haiku 4.5 (`--model claude-haiku-4-5-20251001` in `claude_args`), not Sonnet — this is a triage/drafting task gated by human review either way, so the cheaper model is the right tradeoff. Bump it back to a Sonnet model in the workflow if the PRs it drafts turn out to need better judgment than Haiku gives.
 
-We looked at routing this through Nous Portal instead of the direct Anthropic API to cut cost further, but its `inference-api.nousresearch.com` endpoint speaks an OpenAI-chat-completions-style schema, while Claude Code's `ANTHROPIC_BASE_URL` only speaks Anthropic's native Messages API — incompatible wire formats, not just a config toggle. Bridging that would mean adding an unofficial translation proxy into this repo's own CI, which is more attack surface and trust exposure than it's worth for a hardening reference. Model choice was the actual lever for cost; we used it directly instead.
+**Setup required before the `draft` job can run:** it needs credentials for the Claude API. The workflow currently wires `anthropic_api_key`, but the action takes three forms of credential, and they are not equally good for a repository whose whole subject is hardening:
 
-**Setup required before the `draft` job can run:** it needs an `ANTHROPIC_API_KEY` repo secret. Add it yourself — this is not something to hand to any automation:
+1. **Workload identity federation — no stored secret at all.** The action exchanges the workflow's GitHub OIDC token for Claude API credentials, so nothing long-lived sits in the repository. Set `anthropic_federation_rule_id` (an `fdrl_...` rule) and `anthropic_organization_id`, and give the job `id-token: write`. Narrow it further with `anthropic_service_account_id` (`svac_...`) or `anthropic_workspace_id` (`wrkspc_...`) if the rule spans more than one workspace. This is the control the baseline itself recommends at 1.19; using it here keeps the repository consistent with its own guidance.
+2. **`claude_code_oauth_token`** — a token from `claude setup-token`, billed against a Claude subscription rather than API credit. Still a stored secret, but one you can revoke from your own account.
+3. **`anthropic_api_key`** — a static key. Simplest to set up and the weakest of the three: it does not expire on its own, and it is only as narrowly scoped as the key you minted.
+
+Whichever you pick, add it yourself. This is not something to hand to any automation:
 
 ```bash
 gh secret set ANTHROPIC_API_KEY --repo ClaySecAI/claude-enterprise-control-baseline
 ```
 
-Until that secret exists, the `draft` job fails visibly at the Claude Code Action step. The `check` job is unaffected and still opens its snapshot PR, so an unconfigured repository degrades to "you get told what changed" rather than to silence.
+Until credentials exist, the `draft` job fails visibly at the Claude Code Action step. The `check` job is unaffected and still opens its snapshot PR, so an unconfigured repository degrades to "you get told what changed" rather than to silence.
 
 ## Validators
 

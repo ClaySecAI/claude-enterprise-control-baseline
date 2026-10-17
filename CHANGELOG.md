@@ -6,6 +6,12 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-17 — Trust Center baseline recorded, drafting-job credentials documented
+
+- Advanced the tracked source snapshots to the 2026-10-12 watcher run, which had opened a PR that was never merged. Main's snapshots had fallen behind the ones the watcher fetched, so the same upstream diff was being re-reported every week.
+- Committed [`automation/state/trust-center-resources.txt`](automation/state/trust-center-resources.txt) as a 23-byte snapshot reading only "Anthropic Trust Center". That is the outcome `automation/README.md` predicted for this source: `trust.anthropic.com` is a SafeBase-style portal rendered client-side, so the text extractor recovers almost nothing. The near-empty snapshot is recorded deliberately — it is a finding about the source rather than a fetch to retry, and committing it stops the watcher taking the "New source tracked" path on every run. **Trust Center content still needs a human to read the portal directly; the watcher cannot see it.**
+- Documented all three credential forms the `draft` job accepts, with input names verified against the action's own `action.yml` rather than recalled: workload identity federation (`anthropic_federation_rule_id` + `anthropic_organization_id`, with `id-token: write`), `claude_code_oauth_token`, and the static `anthropic_api_key` the workflow currently wires. Federation is recommended first because it stores no secret at all, which is the control the baseline gives at 1.19 — the repository should meet its own guidance.
+
 ## 2026-09-27 — setting keys validated against the published schema
 
 The companion to the NIST validator, and the half with sharper consequences. A wrong NIST identifier embarrasses the document in an assessment; a wrong setting key silently fails to harden a fleet, because an unrecognised key in managed settings is simply not applied and nothing warns you. The 2026-09-12 pass checked the 32 section 4 keys by hand once and then made no arrangement to keep checking, while Anthropic ships Claude Code changes continuously.
