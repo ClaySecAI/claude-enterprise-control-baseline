@@ -1,6 +1,6 @@
 # Proposal: define L1, L2 and L3 per surface (#18)
 
-Status: proposal for review. Nothing here changes the baseline until it is accepted and folded in.
+Status: accepted 2026-10-21 and folded into the baseline (sections 2 and 3, Profile levels, `check_tables.py`); see `CHANGELOG.md`. Kept as the record of the decision. The counts below are from before the change.
 
 ## Where it stands
 
