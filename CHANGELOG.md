@@ -6,6 +6,14 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-21 — last three panel paths (#7)
+
+The verification note left three console paths unconfirmed. Each is now checked against a current support article. None was checked against a live tenant.
+
+- **1.12 Spend limits:** the panel is Organization settings, Usage, with group and seat-tier limits on the **By group/tier** tab, per [Manage groups and group spend limits](https://support.claude.com/en/articles/13799932-manage-groups-and-group-spend-limits-on-enterprise-plans). The row now states the precedence: an individual limit overrides any group limit, and the org-wide limit is the hard ceiling. It also names the **Member limit from groups** setting that resolves a member in several limited groups, and recommends setting it deliberately.
+- **1.13 Model training:** no current article documents a model-training toggle under Data and Privacy, so the earlier path is withdrawn. Anthropic does not train on Enterprise data by default, and the documented route to training is the opt-in [Development Partner Program](https://support.claude.com/en/articles/11174108-about-the-development-partner-program). That program is joined from the Console on prepaid billing, or through the account executive on invoice billing. The baseline value is now "not enrolled", and the Owner is `Anthropic (contract)`.
+- **1.16 Pending invites:** the path is the Members page's **Pending** tab, not an Invites tab, per [Manage members](https://support.claude.com/en/articles/13133750-manage-members-on-team-and-enterprise-plans). That article states the 21-day expiry. The row now covers the two join paths that skip the invite list: invite links and member-to-member invites. Both are off by default on Enterprise, and the baseline leaves them off.
+
 ## 2026-10-21 — L1, L2 and L3 per surface (#18)
 
 Accepted from `docs/proposals/18-per-surface-levels.md`. Sections 2 and 3 tagged each row with the level it first applied at, so neither surface said what a setting should be at the other levels, and Web had no L3 at all. Both now use the form section 4 already used.
