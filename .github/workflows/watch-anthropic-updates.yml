@@ -136,7 +136,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
             --model anthropic/claude-haiku-4.5
-            --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3:*),Read,Edit,Write,Grep,Glob"
+            --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3 automation/check_tables.py:*),Bash(python3 automation/check_nist.py:*),Bash(python3 automation/check_settings.py:*),Read,Edit,Write,Grep,Glob"
             --max-turns 40
           prompt: |
             The watcher detected a change in one of the Anthropic sources this
