@@ -195,6 +195,11 @@ jobs:
                  rows; if you're not confident in the mapping, still write your best
                  attempt but append " (proposed -- verify)" to that cell rather than
                  presenting a guess as settled fact.
+               - Never renumber an existing control. Other rows, the crosswalk
+                 and outside readers cite controls by ID, so a new control takes
+                 the next free number in its section. Also add a row for it to
+                 the NIST crosswalk table near the end of the document, using the
+                 same mapping as the control's own row, and keep the two consistent.
                - Add one dated entry per relevant change under a new heading (today's
                  date) in `CHANGELOG.md`, naming the section/row touched and linking
                  the source URL from the diff.
