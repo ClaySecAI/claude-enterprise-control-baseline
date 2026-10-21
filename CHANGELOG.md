@@ -6,6 +6,72 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-21 — open-issue content pass
+
+Worked from the open issues, each against its primary source. One section per issue.
+
+### 1.9, 5.1 Compliance API Activity Feed no longer carries names, retroactively (#27)
+
+Per the [platform release notes](https://platform.claude.com/docs/en/release-notes/overview) for 2026-09-24 and [Understand the Activity object](https://platform.claude.com/docs/en/manage-claude/compliance-activity-feed#understand-the-activity-object), `filename` and `title` on file, project document and artifact activities are now always null, empty or omitted, including on activities recorded before that date. Names are recoverable only through the metadata endpoints with a `read:compliance_user_data` key, and not at all once the item is deleted.
+
+- **5.1** now says detections keyed on those fields return nothing silently, to key on the activity's `claude_file_*`, `claude_proj_doc_*` and `claude_artifact_version_*` IDs, and to resolve names at ingest if they matter.
+- **1.9** kept `read:compliance_activities` as the right scope for the feed key and said what it no longer yields. It now recommends a separate, tightly held enrichment key over widening the feed key, since `read:compliance_user_data` reads every chat, file and session transcript.
+
+### 2.10, 2.13 to 2.16, 5.7 New egress surfaces: artifact apps and wider OTel tool content (#28)
+
+**Artifacts.** Read from the [artifacts admin guide](https://support.claude.com/en/articles/16994751-artifacts-admin-guide-for-team-and-enterprise-plans) and [Share artifacts](https://support.claude.com/en/articles/9547008-share-artifacts), not from the release note. The issue described Docs, Slides and Design as off by default on Enterprise until an owner turned them on, as the September release note did. The admin guide now says they "turn on by default on October 15, 2026", so the cheap default-off case no longer holds.
+
+- **2.13** Artifact templates: verify state, since three of them are on by default now.
+- **2.14** External sharing ("Anyone with the link"): off. Turning it off also kills existing public links.
+- **2.15** Email invitations outside the organization: off. It is a separate setting from 2.14, with up to 50 outside invitees per artifact.
+- **2.16** Artifact connectors: off unless needed. The admin guide says you cannot limit which apps artifacts reach.
+- The Enterprise-defaults section now lists the template default as the third default commonly assumed safe.
+- **2.10** Project sharing: per [Control project sharing](https://support.claude.com/en/articles/9927533-control-project-sharing-for-your-organization), the renamed setting is two toggles, Share projects and Public projects. Turning Share projects off does not revoke existing shares.
+
+**OTel.** **5.7** is new: per [Claude Code monitoring](https://code.claude.com/docs/en/monitoring-usage) and the 2.1.283 changelog, `OTEL_LOG_TOOL_CONTENT=1` now also exports MCP tool, WebFetch and WebSearch results, with no new opt-in. The row covers the three content flags, their defaults and the 60 KB content cap. It recommends off unless the collector sits inside the data's trust boundary.
+
+NIST mappings on the new rows are marked proposed.
+
+### 4.44 and auto-mode notes: the starting mode changed, the classifier destination did not (#29)
+
+The issue asked what the server-side classifier transmits before any row was written. Per [permission modes](https://code.claude.com/docs/en/permission-modes#server-side-classifier-review) and [classifier charges](https://code.claude.com/docs/en/auto-mode-classifier-billing), the server-side review runs "as part of the session's model requests". Those are the same requests, to the same provider, the session already makes, so the 2.1.278 default sends nothing to a new destination on Bedrock, Agent Platform or Foundry. That is a note, not a row, and the baseline does not set `CLAUDE_CODE_AUTO_MODE_SERVER`, which Anthropic documents as temporary. Neither page states what the review sees beyond the actions under review, so the note says to confirm with Anthropic before relying on it for a residency claim.
+
+Reading those pages turned up a larger default change the issue did not name. From v2.1.283, interactive terminal and VS Code sessions **start** in auto mode on every plan and provider. A deployment that set neither `disableAutoMode` nor `permissions.defaultMode` moved from Manual to auto on upgrade. New row **4.44** pins `permissions.defaultMode` to `"default"` at every level, matching the value the section 9 reference policy already carried without a row.
+
+### 10.1 NIST draft statuses re-checked; COSAiS renamed COSIS (#14)
+
+Re-checked against NIST's own pages, which answered from a workstation even though `csrc.nist.gov` refuses CI.
+
+- **[IR 8596](https://csrc.nist.gov/pubs/ir/8596/iprd)** is still the initial preliminary draft of 2025-12-16, with no initial public draft. [NIST IR 8607](https://doi.org/10.6028/NIST.IR.8607) (2026-08-03) summarizes the January workshop to inform the next draft.
+- **The [overlay project](https://csrc.nist.gov/projects/cosais)** has published only its concept paper and the January predictive AI annotated outline. The Q3 FY2026 target for full public drafts passed without one, so 8605B has not reached public draft. The re-mapping pass that sections 10.2 and 10.6 commit to is not yet due, and no follow-up issue is needed.
+- **Renamed:** on 2026-10-20 the project became "SP 800-53 Control Overlays for Super Intelligence Systems" (COSIS), following a 2026-09-29 executive order. NIST says previously issued publications are unchanged. Section 10.1 records the rename and says to expect later volumes under the new name.
+
+### The four "not verified, treat as open" items, closed (#6)
+
+Each was settled against Anthropic's own pages and recorded where it applies, so the open list in the verification section is now empty.
+
+1. **Claude Tag in OTel: a stated gap, new 7.8.** The [audit page](https://claude.com/docs/claude-tag/admins/audit) lists four trails and OpenTelemetry is not one, with "no per-action log of every task and who asked". The section 3 Slack paragraph points there.
+2. **Keep Awake: 3.18 (row updated) and 7.3.** It is documented now: it stops idle sleep so scheduled tasks run on an unattended machine. Desktop's `keepAwakeEnabled` turns it off, but it is documented on the [third-party Desktop configuration](https://claude.com/docs/third-party/claude-desktop/configuration) page, so the row says to confirm a Team or Enterprise sign-in honors it. The `caffeinate` claim and behavior on a locked screen remain undocumented, and 7.3 records them as such. 3.4 drops the sentence, since Keep Awake is not Dispatch-specific.
+3. **Outlook Graph consent: section 3, Claude for Microsoft 365.** Confirmed by [Use Claude for Outlook](https://claude.com/docs/office-agents/outlook): a separate, tenant-wide Global Administrator consent to `Mail.ReadWrite`, `Calendars.Read`, `User.Read` and `offline_access`, with no `Mail.Send`. The own-Entra-app alternative is described, and it is required in GCC High, DoD and 21Vianet.
+4. **Server-managed version floor: section 4, Delivery mechanism.** [Server-managed settings](https://code.claude.com/docs/en/server-managed-settings) documents no single floor, and the 4.43 floor clears every per-feature version it names. More consequential, and now stated, are the cases where the fetch is skipped and no server policy applies: `apiKeyHelper` or Workload Identity credentials, Console API keys, a `CLAUDE_CODE_USE_*` or non-default `ANTHROPIC_BASE_URL` export, and Cowork in the desktop app. The MCP sentence is corrected too: `allowedMcpServers`, `deniedMcpServers` and, from v2.1.259, `managedMcpServers` can be delivered; only `managed-mcp.json` and its exclusive control need MDM.
+
+### Console panel paths re-confirmed (#7)
+
+Every panel path in sections 1 to 3 was checked against its cited article, or a better current one. The verification section's caveat now lists only what stayed unconfirmed.
+
+- **2.6** New Enterprise organizations start with Allow network egress **off**, per [Create and edit files](https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude). The row had given package managers only as the default, which is the Team default. The baseline value is now off.
+- **3.7** The panel is Plugins & skills, and the state is "Available to install".
+- **2.11** The setting is **Rate chats** under Data and Privacy.
+- **2.9** The toggle is **Password managers** under Claude in Chrome.
+- **1.18** Exact path and values for Shortened session length.
+- **1.17** Out of beta for Enterprise as of 2026-10-20, so "(beta)" is dropped here and in 6.3.
+- **1.3** Reference now points at the members article (path confirmed, no date bump).
+- **Unconfirmed:** 1.12, 1.13 and 1.16, which no current article states. Nothing was checked against a live tenant.
+
+### Section 5 Cowork OTel default narrowed (found during #7, no issue)
+
+The 2026-09-12 correction said Cowork sends metadata only by default. Per [Cowork monitoring](https://claude.com/docs/cowork/monitoring), that holds for current Claude Desktop versions only: some older first-party versions send prompt text, model responses and tool details when `otlpContentCapture` is unset. The paragraph now says to deploy `otlpContentCapture: []` through MDM to guarantee metadata only, and that `workspace.host_paths` is sent regardless.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
