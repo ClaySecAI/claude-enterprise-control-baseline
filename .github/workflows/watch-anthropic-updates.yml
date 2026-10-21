@@ -194,7 +194,13 @@ jobs:
                  NIST SP 800-53 / CSF 2.0 crosswalk in the same style as neighboring
                  rows; if you're not confident in the mapping, still write your best
                  attempt but append " (proposed -- verify)" to that cell rather than
-                 presenting a guess as settled fact.
+                 presenting a guess as settled fact. Before citing any control or
+                 subcategory, look up what it actually covers with
+                 `python3 automation/check_nist.py --titles <ID> [<ID> ...]` and
+                 confirm the title describes what the row does. A real ID can be
+                 the wrong mapping: `IA-8` is "Identification and Authentication
+                 (Non-organizational Users)" and is wrong for employee SSO. Never
+                 infer a control's meaning from its identifier.
                - Never renumber an existing control. Other rows, the crosswalk
                  and outside readers cite controls by ID, so a new control takes
                  the next free number in its section. Also add a row for it to

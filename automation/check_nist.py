@@ -14,6 +14,14 @@ deterministic. Regenerate that inventory from NIST's OSCAL catalogs with:
 
     python3 automation/check_nist.py --refresh
 
+An identifier that exists can still be the wrong mapping: IA-8 is real but
+covers non-organizational users, not employee SSO. The inventory carries
+each control's title (and each CSF subcategory's statement) so a reviewer or
+Stage 2 can read what a cited ID actually means:
+
+    python3 automation/check_nist.py --titles            # every cited ID
+    python3 automation/check_nist.py --titles IA-8 PR.AA-01   # look up IDs
+
 Exits non-zero with a per-identifier report on failure. No dependencies.
 """
 import argparse
@@ -73,6 +81,14 @@ def flatten(catalog: dict) -> list:
     return out
 
 
+def statement(control: dict) -> str:
+    """CSF subcategories carry their meaning in the statement part, not the title."""
+    for part in control.get("parts", []):
+        if part.get("name") == "statement":
+            return " ".join(part.get("prose", "").split())
+    return control.get("title", "")
+
+
 def refresh() -> int:
     """Rebuild state/nist-ids.json from NIST's published OSCAL catalogs."""
     sp = fetch(SP800_53_URL)["catalog"]
@@ -99,6 +115,7 @@ def refresh() -> int:
             "enhancements": len(enh),
             "total": len(base) + len(enh),
             "ids": sorted(c["id"].upper() for c in sp_controls),
+            "titles": {c["id"].upper(): c.get("title", "") for c in sorted(sp_controls, key=lambda c: c["id"])},
         },
         "csf_2_0": {
             "source": CSF_URL,
@@ -107,6 +124,7 @@ def refresh() -> int:
             "categories": len(cats),
             "subcategories": len(subs),
             "ids": sorted(c["id"].upper() for c in subs),
+            "titles": {c["id"].upper(): statement(c) for c in sorted(subs, key=lambda c: c["id"])},
         },
     }
 
@@ -131,6 +149,61 @@ def oscal_form(family_control: str, enhancement: str | None) -> str:
     if enhancement:
         return f"{family_control}.{enhancement.strip('()')}".upper()
     return family_control.upper()
+
+
+def describe(oscal: str, sp_titles: dict, csf_titles: dict) -> str:
+    """Title for an inventory ID; an enhancement is shown under its base control."""
+    if oscal in csf_titles:
+        return csf_titles[oscal]
+    if "." in oscal:
+        base = oscal.split(".")[0]
+        return f"{sp_titles.get(base, '?')} > {sp_titles.get(oscal, '?')}"
+    return sp_titles.get(oscal, "?")
+
+
+def lookup_form(written: str) -> str:
+    """IA-5(1) -> IA-5.1; AC-2j -> AC-2; PR.AA-01 unchanged."""
+    m = SP_REF.fullmatch(written.upper()) or SP_REF.fullmatch(written)
+    if m and not CSF_REF.fullmatch(written.upper()):
+        return oscal_form(m.group(1).upper(), m.group(2))
+    return written.upper()
+
+
+def titles(wanted: list[str]) -> int:
+    """Print ID -> title, for the IDs given or for every ID the documents cite."""
+    if not INVENTORY.exists():
+        print(f"FAIL inventory missing: {INVENTORY}")
+        return 1
+    inventory = json.loads(INVENTORY.read_text())
+    sp_titles = inventory["sp800_53"].get("titles")
+    csf_titles = inventory["csf_2_0"].get("titles")
+    if not sp_titles or not csf_titles:
+        print("FAIL inventory has no titles. Run: python3 automation/check_nist.py --refresh")
+        return 1
+
+    if wanted:
+        cited = Counter({w: 0 for w in wanted})
+    else:
+        cited = Counter()
+        for doc in sorted(DOCS_DIR.glob("*.md")):
+            for line in doc.read_text().split("\n"):
+                for control, enhancement, _part in SP_REF.findall(line):
+                    if lookup_form(f"{control}{enhancement}") in sp_titles:
+                        cited[f"{control}{enhancement}"] += 1
+                for sub in CSF_REF.findall(line):
+                    cited[sub] += 1
+
+    unknown = 0
+    natural = lambda w: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", w)]
+    for written in sorted(cited, key=natural):
+        oscal = lookup_form(written)
+        if oscal not in sp_titles and oscal not in csf_titles:
+            unknown += 1
+            print(f"{written:<12} NOT IN INVENTORY")
+            continue
+        count = f"  ({cited[written]} citations)" if not wanted else ""
+        print(f"{written:<12} {describe(oscal, sp_titles, csf_titles)}{count}")
+    return 1 if unknown else 0
 
 
 def check() -> int:
@@ -211,8 +284,18 @@ def main() -> int:
         action="store_true",
         help="re-fetch NIST's OSCAL catalogs and rewrite state/nist-ids.json",
     )
+    parser.add_argument(
+        "--titles",
+        nargs="*",
+        metavar="ID",
+        help="print each cited ID with its title, or look up the IDs given",
+    )
     args = parser.parse_args()
-    return refresh() if args.refresh else check()
+    if args.refresh:
+        return refresh()
+    if args.titles is not None:
+        return titles(args.titles)
+    return check()
 
 
 if __name__ == "__main__":
