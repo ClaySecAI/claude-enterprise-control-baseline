@@ -17,6 +17,21 @@ Per the [platform release notes](https://platform.claude.com/docs/en/release-not
 - **5.1** now says detections keyed on those fields return nothing silently, to key on the activity's `claude_file_*`, `claude_proj_doc_*` and `claude_artifact_version_*` IDs, and to resolve names at ingest if they matter.
 - **1.9** kept `read:compliance_activities` as the right scope for the feed key and said what it no longer yields. It now recommends a separate, tightly held enrichment key over widening the feed key, since `read:compliance_user_data` reads every chat, file and session transcript.
 
+### 2.10, 2.13 to 2.16, 5.7 New egress surfaces: artifact apps and wider OTel tool content (#28)
+
+**Artifacts.** Read from the [artifacts admin guide](https://support.claude.com/en/articles/16994751-artifacts-admin-guide-for-team-and-enterprise-plans) and [Share artifacts](https://support.claude.com/en/articles/9547008-share-artifacts), not from the release note. The issue described Docs, Slides and Design as off by default on Enterprise until an owner turned them on, as the September release note did. The admin guide now says they "turn on by default on October 15, 2026", so the cheap default-off case no longer holds.
+
+- **2.13** Artifact templates: verify state, since three of them are on by default now.
+- **2.14** External sharing ("Anyone with the link"): off. Turning it off also kills existing public links.
+- **2.15** Email invitations outside the organization: off. It is a separate setting from 2.14, with up to 50 outside invitees per artifact.
+- **2.16** Artifact connectors: off unless needed. The admin guide says you cannot limit which apps artifacts reach.
+- The Enterprise-defaults section now lists the template default as the third default commonly assumed safe.
+- **2.10** Project sharing: per [Control project sharing](https://support.claude.com/en/articles/9927533-control-project-sharing-for-your-organization), the renamed setting is two toggles, Share projects and Public projects. Turning Share projects off does not revoke existing shares.
+
+**OTel.** **5.7** is new: per [Claude Code monitoring](https://code.claude.com/docs/en/monitoring-usage) and the 2.1.283 changelog, `OTEL_LOG_TOOL_CONTENT=1` now also exports MCP tool, WebFetch and WebSearch results, with no new opt-in. The row covers the three content flags, their defaults and the 60 KB content cap. It recommends off unless the collector sits inside the data's trust boundary.
+
+NIST mappings on the new rows are marked proposed.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
