@@ -302,6 +302,13 @@ https://platform.claude.com/docs/en/api/beta/organization/users/list
 https://platform.claude.com/docs/en/api/beta/organization/users/remove
 https://platform.claude.com/docs/en/api/beta/organization/users/retrieve
 https://platform.claude.com/docs/en/api/beta/organization/users/update
+https://platform.claude.com/docs/en/api/beta/organization/webhooks
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/create
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/delete
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/list
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/regenerate_signing_secret
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/retrieve
+https://platform.claude.com/docs/en/api/beta/organization/webhooks/update
 https://platform.claude.com/docs/en/api/beta/organization/workspaces
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/archive
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/create
@@ -314,6 +321,7 @@ https://platform.claude.com/docs/en/api/beta/organization/workspaces/members/ret
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/members/update
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/rate_limits
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/rate_limits/list
+https://platform.claude.com/docs/en/api/beta/organization/workspaces/rate_limits/update
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/retrieve
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/service_accounts
 https://platform.claude.com/docs/en/api/beta/organization/workspaces/service_accounts/add
@@ -552,6 +560,7 @@ https://platform.claude.com/docs/en/api/organization/workspaces/members/retrieve
 https://platform.claude.com/docs/en/api/organization/workspaces/members/update
 https://platform.claude.com/docs/en/api/organization/workspaces/rate_limits
 https://platform.claude.com/docs/en/api/organization/workspaces/rate_limits/list
+https://platform.claude.com/docs/en/api/organization/workspaces/rate_limits/update
 https://platform.claude.com/docs/en/api/organization/workspaces/retrieve
 https://platform.claude.com/docs/en/api/organization/workspaces/service_accounts
 https://platform.claude.com/docs/en/api/organization/workspaces/service_accounts/add
