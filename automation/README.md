@@ -40,9 +40,11 @@ It runs both validators before committing, and the job re-runs them afterwards a
 
 The same restriction has one consequence left over: because the `check` job opens the PR with `GITHUB_TOKEN`, [`validate.yml`](../.github/workflows/validate.yml) will not auto-run on it. The content is still checked — both validators run inside the `draft` job — but the PR's own check will sit unreported until a human pushes to the branch or closes and reopens the PR. Worth knowing before marking `tables` a required check in a ruleset.
 
-Runs on Claude Haiku 4.5 (`--model claude-haiku-4-5-20251001` in `claude_args`), not Sonnet — this is a triage/drafting task gated by human review either way, so the cheaper model is the right tradeoff. Bump it back to a Sonnet model in the workflow if the PRs it drafts turn out to need better judgment than Haiku gives.
+Runs on Claude Haiku 4.5 (`--model anthropic/claude-haiku-4.5` in `claude_args`), served through Nous Portal rather than the direct Anthropic API, not Sonnet — this is a triage/drafting task gated by human review either way, so the cheaper model is the right tradeoff. Bump it back to a Sonnet model in the workflow if the PRs it drafts turn out to need better judgment than Haiku gives.
 
-**Setup required before the `draft` job can run:** it needs credentials for the Claude API. The workflow currently wires `anthropic_api_key`, but the action takes three forms of credential, and they are not equally good for a repository whose whole subject is hardening:
+**Nous Portal.** The `draft` job points `ANTHROPIC_BASE_URL` at `https://inference-api.nousresearch.com` and authenticates with the `NOUS_API_KEY` secret. Nous exposes Anthropic models over the native Messages API (`/v1/messages`, checked 2026-10-20 with a plain text request), so no translation proxy is involved. Two things to know: diffs and baseline text pass through Nous on the way to the model, and tool use through this path was untested when the switch was made, so the first `draft` run is the real test. To go back to the direct API, remove the `ANTHROPIC_BASE_URL` line, set `anthropic_api_key` to `secrets.ANTHROPIC_API_KEY`, and restore the model ID `claude-haiku-4-5-20251001`.
+
+**Credentials.** The workflow wires `anthropic_api_key` (holding the Nous key), but the action takes three forms of credential, and they are not equally good for a repository whose whole subject is hardening:
 
 1. **Workload identity federation — no stored secret at all.** The action exchanges the workflow's GitHub OIDC token for Claude API credentials, so nothing long-lived sits in the repository. Set `anthropic_federation_rule_id` (an `fdrl_...` rule) and `anthropic_organization_id`, and give the job `id-token: write`. Narrow it further with `anthropic_service_account_id` (`svac_...`) or `anthropic_workspace_id` (`wrkspc_...`) if the rule spans more than one workspace. This is the control the baseline itself recommends at 1.19; using it here keeps the repository consistent with its own guidance.
 2. **`claude_code_oauth_token`** — a token from `claude setup-token`, billed against a Claude subscription rather than API credit. Still a stored secret, but one you can revoke from your own account.
@@ -51,7 +53,7 @@ Runs on Claude Haiku 4.5 (`--model claude-haiku-4-5-20251001` in `claude_args`),
 Whichever you pick, add it yourself. This is not something to hand to any automation:
 
 ```bash
-gh secret set ANTHROPIC_API_KEY --repo ClaySecAI/claude-enterprise-control-baseline
+gh secret set NOUS_API_KEY --repo ClaySecAI/claude-enterprise-control-baseline
 ```
 
 Until credentials exist, the `draft` job fails visibly at the Claude Code Action step. The `check` job is unaffected and still opens its snapshot PR, so an unconfigured repository degrades to "you get told what changed" rather than to silence.
