@@ -6,6 +6,17 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-21 — Claude in Chrome profile (#17)
+
+Accepted from `docs/proposals/17-claude-in-chrome-profile.md`. Every Claude in Chrome control was L2, so L1 said nothing about a surface that is on by default on Enterprise. A new **Claude in Chrome profile** table at the end of section 2 gives L1, L2 and L3 values for 2.7 to 2.9, 3.5, 6.1 and 5.2. No control moved or was renumbered, so the crosswalk is unchanged.
+
+The proposal's three open questions, checked against [Claude in Chrome admin controls](https://support.claude.com/en/articles/13065128-claude-in-chrome-admin-controls) and Google's [Manage extensions in your enterprise](https://support.google.com/chrome/a/answer/7532015):
+
+- **2.8** Allowlist versus blocklist: the blocklist applies "regardless of other settings", and one set of lists governs both Claude in Chrome and the Cowork built-in browser.
+- **2.7** Role gating: two settings control the extension, the org toggle and a per-role capability on Enterprise custom roles. It does not inherit Cowork access.
+- **6.1** Policy names: now named, with `ExtensionSettings` overriding the three `ExtensionInstall*` policies. The "not verifiable" warning is gone. Anthropic also documents a `forceLoginOrgUUID` Chrome policy that limits which organization the extension signs in to, now part of the L2 value.
+- **3.5** The built-in browser is off by default on Enterprise and lives under Organization settings, Cowork.
+
 ## 2026-10-21 — open-issue content pass
 
 Worked from the open issues, each against its primary source. One section per issue.

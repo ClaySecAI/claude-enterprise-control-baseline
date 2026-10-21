@@ -1,6 +1,6 @@
 # Proposal: a Claude in Chrome profile with real L1, L2 and L3 (#17)
 
-Status: proposal for review. Nothing here changes the baseline until it is accepted and folded in.
+Status: accepted 2026-10-21 and folded into the baseline (section 2, "Claude in Chrome profile"). The three questions under "Not verified" were answered there; see `CHANGELOG.md`. Kept as the record of the decision.
 
 ## The problem
 
