@@ -18,6 +18,12 @@ DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
 
+# Sections whose control tables give a value per level (#18). A single
+# Level column there would let an L3 value go missing by omission.
+PER_LEVEL_SECTIONS = {"2", "3", "4"}
+# Subsections inside those that apply at every level instead.
+LEVEL_INDEPENDENT = {"CI/CD"}
+
 
 def cells(line: str) -> list[str]:
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
@@ -27,9 +33,14 @@ def check_doc(doc: Path) -> tuple[int, int, list[str]]:
     lines = doc.read_text().split("\n")
     problems: list[str] = []
     tables = control_rows = 0
+    section = subsection = None
     i = 0
 
     while i < len(lines):
+        if m := re.match(r"^## (\d+)\. ", lines[i]):
+            section, subsection = m.group(1), None
+        elif lines[i].startswith("### "):
+            subsection = lines[i][4:].strip()
         if lines[i].startswith("|") and i + 1 < len(lines) and SEP.match(lines[i + 1]):
             header = cells(lines[i])
             width = len(header)
@@ -40,6 +51,10 @@ def check_doc(doc: Path) -> tuple[int, int, list[str]]:
             is_control_table = header[0] == "#"
             if is_control_table and header[-1] != "Drafted":
                 problems.append(f"{doc.name}:{i+1}: control table's last column is {header[-1]!r}, expected 'Drafted'")
+            if (is_control_table and section in PER_LEVEL_SECTIONS
+                    and subsection not in LEVEL_INDEPENDENT
+                    and not {"L1", "L2", "L3"} <= set(header)):
+                problems.append(f"{doc.name}:{i+1}: section {section} control table needs L1, L2 and L3 columns")
 
             j = i + 2
             while j < len(lines) and lines[j].startswith("|"):

@@ -6,6 +6,17 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-21 — L1, L2 and L3 per surface (#18)
+
+Accepted from `docs/proposals/18-per-surface-levels.md`. Sections 2 and 3 tagged each row with the level it first applied at, so neither surface said what a setting should be at the other levels, and Web had no L3 at all. Both now use the form section 4 already used.
+
+- **Sections 2 and 3:** `Baseline value` and `Level` replaced by `L1`, `L2` and `L3` value columns, on all 34 rows across five tables. Each row's former baseline value is its value from its former level upward, unless L3 is now stricter. `—` means no requirement at that level. Every row's `Drafted` date is bumped, since each gained values it did not have.
+- **New L3 values** are the most restrictive setting that still leaves the surface usable for a regulated workload. They are judgement, not upstream fact. Review them before adopting L3.
+- **Profile levels** now says how each section expresses level.
+- **Section 5 and the section 4 CI/CD rows** now say they apply at every level.
+- **Claude in Chrome profile** keeps only 6.1 and 5.2, since 2.7 to 2.9 and 3.5 carry their own levels now.
+- **`check_tables.py`** fails a control table in sections 2 to 4 that lacks `L1`, `L2` and `L3` columns, except the CI/CD table, so the form cannot regress.
+
 ## 2026-10-21 — Claude in Chrome profile (#17)
 
 Accepted from `docs/proposals/17-claude-in-chrome-profile.md`. Every Claude in Chrome control was L2, so L1 said nothing about a surface that is on by default on Enterprise. A new **Claude in Chrome profile** table at the end of section 2 gives L1, L2 and L3 values for 2.7 to 2.9, 3.5, 6.1 and 5.2. No control moved or was renumbered, so the crosswalk is unchanged.

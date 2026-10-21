@@ -62,7 +62,7 @@ Until credentials exist, the `draft` job fails visibly at the Claude Code Action
 
 Three, all wired to [`validate.yml`](../.github/workflows/validate.yml), all run by the `draft` job before it commits, and all re-run by that job afterwards as a backstop.
 
-[`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date. It reads every `docs/*.md`, the same set `check_nist.py` reads, so a second document cannot land unchecked, and it fails if that set is empty rather than passing vacuously.
+[`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date, and every control table in sections 2 to 4 except CI/CD gives a value per level in `L1`, `L2` and `L3` columns. It reads every `docs/*.md`, the same set `check_nist.py` reads, so a second document cannot land unchecked, and it fails if that set is empty rather than passing vacuously.
 
 [`check_nist.py`](check_nist.py) checks that every SP 800-53 Rev 5 and CSF 2.0 identifier in `docs/` actually exists. This matters because the `draft` job proposes NIST crosswalks unattended on a small model, and structure validation will happily pass a row citing a control that was never written. For a document whose central claim is that its citations were verified, that was the gap worth closing.
 
