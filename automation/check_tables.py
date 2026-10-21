@@ -14,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 
-DOC = Path(__file__).resolve().parent.parent / "docs" / "claude-enterprise-control-baseline.md"
+DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
 
@@ -23,8 +23,8 @@ def cells(line: str) -> list[str]:
     return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
 
 
-def main() -> int:
-    lines = DOC.read_text().split("\n")
+def check_doc(doc: Path) -> tuple[int, int, list[str]]:
+    lines = doc.read_text().split("\n")
     problems: list[str] = []
     tables = control_rows = 0
     i = 0
@@ -35,29 +35,52 @@ def main() -> int:
             width = len(header)
             tables += 1
             if len(cells(lines[i + 1])) != width:
-                problems.append(f"line {i+2}: separator has {len(cells(lines[i+1]))} columns, header has {width}")
+                problems.append(f"{doc.name}:{i+2}: separator has {len(cells(lines[i+1]))} columns, header has {width}")
 
             is_control_table = header[0] == "#"
             if is_control_table and header[-1] != "Drafted":
-                problems.append(f"line {i+1}: control table's last column is {header[-1]!r}, expected 'Drafted'")
+                problems.append(f"{doc.name}:{i+1}: control table's last column is {header[-1]!r}, expected 'Drafted'")
 
             j = i + 2
             while j < len(lines) and lines[j].startswith("|"):
                 row = cells(lines[j])
                 if len(row) != width:
-                    problems.append(f"line {j+1}: {len(row)} columns, header has {width} :: {lines[j][:60]}")
+                    problems.append(f"{doc.name}:{j+1}: {len(row)} columns, header has {width} :: {lines[j][:60]}")
                 elif is_control_table and re.match(r"^\d+\.\d+$", row[0]):
                     control_rows += 1
                     if not DATE.match(row[-1]):
-                        problems.append(f"line {j+1}: control {row[0]} has Drafted={row[-1]!r}, expected YYYY-MM-DD")
+                        problems.append(f"{doc.name}:{j+1}: control {row[0]} has Drafted={row[-1]!r}, expected YYYY-MM-DD")
                 j += 1
             i = j
             continue
         i += 1
 
+    return tables, control_rows, problems
+
+
+def main() -> int:
+    # Every document under docs/, the same set check_nist.py reads. A second
+    # document must not land unchecked, and an empty glob (a moved directory)
+    # must fail loudly rather than pass vacuously.
+    docs = sorted(DOCS_DIR.glob("*.md"))
+    if not docs:
+        print(f"FAIL no documents found under {DOCS_DIR}")
+        return 1
+
+    problems: list[str] = []
+    tables = control_rows = 0
+    for doc in docs:
+        t, c, p = check_doc(doc)
+        tables += t
+        control_rows += c
+        problems += p
+
     for p in problems:
         print(f"FAIL {p}")
-    print(f"\n{tables} tables, {control_rows} control rows checked, {len(problems)} problems")
+    print(
+        f"\n{len(docs)} document(s), {tables} tables, {control_rows} control rows checked, "
+        f"{len(problems)} problems"
+    )
     return 1 if problems else 0
 
 

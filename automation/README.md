@@ -62,7 +62,7 @@ Until credentials exist, the `draft` job fails visibly at the Claude Code Action
 
 Three, all wired to [`validate.yml`](../.github/workflows/validate.yml), all run by the `draft` job before it commits, and all re-run by that job afterwards as a backstop.
 
-[`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date.
+[`check_tables.py`](check_tables.py) checks structure: every control table's column counts line up, and every control row carries a well-formed `Drafted` date. It reads every `docs/*.md`, the same set `check_nist.py` reads, so a second document cannot land unchecked, and it fails if that set is empty rather than passing vacuously.
 
 [`check_nist.py`](check_nist.py) checks that every SP 800-53 Rev 5 and CSF 2.0 identifier in `docs/` actually exists. This matters because the `draft` job proposes NIST crosswalks unattended on a small model, and structure validation will happily pass a row citing a control that was never written. For a document whose central claim is that its citations were verified, that was the gap worth closing.
 
@@ -74,7 +74,7 @@ python3 automation/check_nist.py --refresh
 
 Both catalogs come from [`usnistgov/oscal-content`](https://github.com/usnistgov/oscal-content), which carries CSF 2.0 as well as SP 800-53 — worth knowing, because `csrc.nist.gov` returns 403 to automated clients and cannot be used from CI.
 
-Two limits to be honest about. **A real ID can still be the wrong mapping**, and no catalog check detects that: `IA-8` exists but is non-organizational users and is wrong for employee SSO, `IA-5(1)` exists but is password-based authenticators and is wrong for API key rotation, and `SI-10` exists but does not reach prompt injection. Semantic fit stays a human job, which is why the `draft` job is told to mark uncertain mappings `(proposed — verify)`. Second, an identifier whose *family* letters are not a real 800-53 family is skipped rather than flagged, so `ZZ-1` passes silently; this keeps unrelated identifiers elsewhere in the document from being misread as citations, at the cost of not catching a typo in the family itself.
+Two limits to be honest about. **A real ID can still be the wrong mapping**, and no catalog check detects that: `IA-8` exists but is non-organizational users and is wrong for employee SSO, `IA-5(1)` exists but is password-based authenticators and is wrong for API key rotation, and `SI-10` exists but does not reach prompt injection. Semantic fit stays a human job, which is why the `draft` job is told to mark uncertain mappings `(proposed — verify)`. What the tooling can do is put the meaning in front of whoever judges it: the inventory carries each control's title and each CSF subcategory's statement, `--titles` prints every cited ID with its title for a reviewer to scan, and the `draft` job is told to look up the title of anything it cites before citing it. Reading "Non-organizational Users" next to `IA-8` is how the SSO mistake gets caught. Second, an identifier whose *family* letters are not a real 800-53 family is skipped rather than flagged, so `ZZ-1` passes silently; this keeps unrelated identifiers elsewhere in the document from being misread as citations, at the cost of not catching a typo in the family itself.
 
 [`check_settings.py`](check_settings.py) checks that every Claude Code setting key the baseline cites exists in the published settings schema, **at the nesting the document places it at**, with any pinned value in that key's enum. It also verifies the reference policy in section 9 still matches [`examples/managed-settings.json`](../examples/managed-settings.json), which the document asserts are identical and which nothing previously enforced.
 
@@ -100,6 +100,8 @@ cat automation/last-diff.md                   # only exists if something changed
 python3 automation/check_tables.py            # control tables and Drafted dates
 python3 automation/check_nist.py              # NIST identifiers resolve
 python3 automation/check_nist.py --refresh    # rebuild the NIST ID inventory
+python3 automation/check_nist.py --titles     # each cited ID with its title
+python3 automation/check_nist.py --titles IA-8 PR.AA-01  # look up IDs
 python3 automation/check_settings.py          # setting keys, nesting, values
 python3 automation/check_settings.py --refresh # rebuild the settings inventory
 ```
