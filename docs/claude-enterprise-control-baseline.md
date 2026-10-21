@@ -306,6 +306,7 @@ Implementation reference: [Claude Code settings and managed policy](https://code
 | 4.41 | `deniedModels` | — | releases held back | releases held back | CM-7, SA-9 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
 | 4.42 | `availableModelsMatch` | — | — | `"exact"` | CM-7, CM-3 | [Model config](https://code.claude.com/docs/en/model-config) | 2026-10-17 |
 | 4.43 | `requiredMinimumVersion` | — | `"2.1.289"` | `"2.1.289"` | SI-2, CM-6 | [Admin setup](https://code.claude.com/docs/en/admin-setup#decide-what-to-enforce) | 2026-10-17 |
+| 4.44 | `permissions.defaultMode` | `"default"` | `"default"` | `"default"` | CM-6, CM-7 | [Permission modes](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in) | 2026-10-21 |
 
 Two keys appear in the section 9 reference policy without a row above: `pluginTrustMessage` (the text shown when a plugin is blocked, no security effect on its own) and `allowedChannelPlugins` (`[]` alongside `channelsEnabled: false`, CM-7).
 
@@ -375,6 +376,10 @@ Auto-mode rule lists replace the built-ins unless you say otherwise. Setting any
 Two auto-mode keys this baseline previously omitted and should not have: `autoMode.hard_deny` sets unconditional boundaries that neither user intent nor an `allow` exception can clear, which is the only tier that behaves like a policy boundary; and `autoMode.classifyAllShell: true` routes every Bash and PowerShell command through the classifier, closing the gap where a narrow allow rule like `Bash(npm test)` lets an unanticipated argument through unclassified.
 
 Note also that `autoMode` is additive across scopes and is **not** a hard policy boundary: a developer's personal `allow` entry can override an organization `soft_deny` from managed settings. For anything that must never run, use `permissions.deny` in managed settings, which is evaluated before the classifier. Simpler answer for L2 and above: disable auto mode.
+
+**Auto mode is now the starting mode, not just an option (4.14, 4.44).** Per [Permission modes](https://code.claude.com/docs/en/permission-modes#which-mode-a-session-starts-in), from Claude Code v2.1.283 interactive terminal and VS Code sessions start in auto mode "on every plan and provider", Bedrock, Agent Platform and Foundry included. Before that it was the starting mode only on Pro, Max and Team. A deployment that set neither `disableAutoMode` nor `permissions.defaultMode` therefore moved from Manual to auto on upgrade, with no decision made. `claude -p` and Agent SDK runs still start in Manual. 4.44 pins the starting mode to Manual at every level so the change is a decision rather than an upgrade side effect. It leaves auto mode one `Shift+Tab` away unless 4.14 also removes it. A `defaultMode` of `"auto"` set in a project's `.claude/settings.json` does not take effect, so a repository cannot opt its users into auto mode.
+
+**Where auto mode's classifier runs.** From v2.1.278 the classifier review runs server-side by default on Bedrock, Agent Platform, Foundry and through gateways too, "as part of the session's model requests". That is the same requests to the same provider the session already uses, so this default sends nothing to a new destination, and choosing a cloud provider for its boundary is unaffected. When the server does not review a session, Claude Code falls back to its own classifier requests, which also go to the session's provider (Sonnet 5 by default, or `CLAUDE_CODE_AUTO_MODE_MODEL`). `CLAUDE_CODE_AUTO_MODE_SERVER=0` forces the local classifier, but it is documented as temporary, and the baseline does not set it. This is the reading of the [permission modes](https://code.claude.com/docs/en/permission-modes#server-side-classifier-review) and [classifier charges](https://code.claude.com/docs/en/auto-mode-classifier-billing) pages. Neither page states what the review sees beyond the actions under review, so confirm with Anthropic before relying on it for a residency claim.
 
 Script-executing settings are an injection surface. `apiKeyHelper`, `otelHeadersHelper`, `awsAuthRefresh`, and `awsCredentialExport` all run shell scripts during operation. Either omit them or pin them to vetted scripts at known paths with file integrity monitoring.
 
@@ -711,6 +716,7 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 | 4.31 Non-essential traffic | CM-7(1) | PR.IR-01 | MANAGE 1 |
 | 4.30, 4.40 to 4.42 Model restriction | CM-7, SA-9, AC-3, CM-3 | GV.SC-06, PR.PS-01 | GOVERN 6 |
 | 4.43 Managed-settings version floor | SI-2, CM-6 | PR.PS-02, ID.RA-01 | MANAGE 1 |
+| 4.44 Starting permission mode | CM-6, CM-7 | PR.PS-01 | MANAGE 1 |
 | 4.33 to 4.39 CI/CD hardening | SA-11, SR-3, SR-4, SR-11, CM-5, SC-7 | GV.SC-06, PR.PS-01 | GOVERN 6 |
 | Rules-file scanning | SI-3, SI-7, SI-10, SR-11 | DE.CM-01, GV.SC-06 | MEASURE 1 |
 | 5.1 to 5.6 Monitoring and audit | AU-2, AU-6, AU-12, SI-4, IR-4, IR-5, IR-6 | DE.CM-01, DE.AE-03, RS.AN-03 | MEASURE 1, MANAGE 2 |

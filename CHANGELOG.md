@@ -32,6 +32,12 @@ Per the [platform release notes](https://platform.claude.com/docs/en/release-not
 
 NIST mappings on the new rows are marked proposed.
 
+### 4.44 and auto-mode notes: the starting mode changed, the classifier destination did not (#29)
+
+The issue asked what the server-side classifier transmits before any row was written. Per [permission modes](https://code.claude.com/docs/en/permission-modes#server-side-classifier-review) and [classifier charges](https://code.claude.com/docs/en/auto-mode-classifier-billing), the server-side review runs "as part of the session's model requests". Those are the same requests, to the same provider, the session already makes, so the 2.1.278 default sends nothing to a new destination on Bedrock, Agent Platform or Foundry. That is a note, not a row, and the baseline does not set `CLAUDE_CODE_AUTO_MODE_SERVER`, which Anthropic documents as temporary. Neither page states what the review sees beyond the actions under review, so the note says to confirm with Anthropic before relying on it for a residency claim.
+
+Reading those pages turned up a larger default change the issue did not name. From v2.1.283, interactive terminal and VS Code sessions **start** in auto mode on every plan and provider. A deployment that set neither `disableAutoMode` nor `permissions.defaultMode` moved from Manual to auto on upgrade. New row **4.44** pins `permissions.defaultMode` to `"default"` at every level, matching the value the section 9 reference policy already carried without a row.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
