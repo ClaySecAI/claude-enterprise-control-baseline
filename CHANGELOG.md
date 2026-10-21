@@ -55,6 +55,19 @@ Each was settled against Anthropic's own pages and recorded where it applies, so
 3. **Outlook Graph consent: section 3, Claude for Microsoft 365.** Confirmed by [Use Claude for Outlook](https://claude.com/docs/office-agents/outlook): a separate, tenant-wide Global Administrator consent to `Mail.ReadWrite`, `Calendars.Read`, `User.Read` and `offline_access`, with no `Mail.Send`. The own-Entra-app alternative is described, and it is required in GCC High, DoD and 21Vianet.
 4. **Server-managed version floor: section 4, Delivery mechanism.** [Server-managed settings](https://code.claude.com/docs/en/server-managed-settings) documents no single floor, and the 4.43 floor clears every per-feature version it names. More consequential, and now stated, are the cases where the fetch is skipped and no server policy applies: `apiKeyHelper` or Workload Identity credentials, Console API keys, a `CLAUDE_CODE_USE_*` or non-default `ANTHROPIC_BASE_URL` export, and Cowork in the desktop app. The MCP sentence is corrected too: `allowedMcpServers`, `deniedMcpServers` and, from v2.1.259, `managedMcpServers` can be delivered; only `managed-mcp.json` and its exclusive control need MDM.
 
+### Console panel paths re-confirmed (#7)
+
+Every panel path in sections 1 to 3 was checked against its cited article, or a better current one. The verification section's caveat now lists only what stayed unconfirmed.
+
+- **2.6** New Enterprise organizations start with Allow network egress **off**, per [Create and edit files](https://support.claude.com/en/articles/12111783-create-and-edit-files-with-claude). The row had given package managers only as the default, which is the Team default. The baseline value is now off.
+- **3.7** The panel is Plugins & skills, and the state is "Available to install".
+- **2.11** The setting is **Rate chats** under Data and Privacy.
+- **2.9** The toggle is **Password managers** under Claude in Chrome.
+- **1.18** Exact path and values for Shortened session length.
+- **1.17** Out of beta for Enterprise as of 2026-10-20, so "(beta)" is dropped here and in 6.3.
+- **1.3** Reference now points at the members article (path confirmed, no date bump).
+- **Unconfirmed:** 1.12, 1.13 and 1.16, which no current article states. Nothing was checked against a live tenant.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
