@@ -128,11 +128,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.check.outputs.pr }}
+          # Nous Portal serves Anthropic models over the native Messages API
+          # (POST /v1/messages), so Claude Code needs only a base URL and key.
+          ANTHROPIC_BASE_URL: https://inference-api.nousresearch.com
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.NOUS_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
-            --model claude-haiku-4-5-20251001
+            --model anthropic/claude-haiku-4.5
             --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3:*),Read,Edit,Write,Grep,Glob"
             --max-turns 40
           prompt: |
