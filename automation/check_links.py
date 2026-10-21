@@ -42,13 +42,20 @@ LINK = re.compile(r"https?://[^\s)\]>\"`|]+")
 DEAD = {404, 410}
 # Example values in the document, not links to check.
 PLACEHOLDER_HOSTS = ("your-domain", "example.com", "example.org", "localhost")
+# Persistent identifiers exist to redirect; the identifier is the right link.
+REDIRECTING_HOSTS = ("doi.org",)
 
 
 def links() -> dict:
     """URL (fragment dropped) -> sorted list of 'doc:line' where it appears."""
     found: dict = {}
     for doc in sorted(DOCS_DIR.glob("*.md")):
+        in_code = False
         for lineno, line in enumerate(doc.read_text().split("\n"), 1):
+            if line.lstrip().startswith("```"):
+                in_code = not in_code
+            if in_code:
+                continue  # a URL in a code block is an example value, such as a $schema
             for raw in LINK.findall(line):
                 url = urlunsplit(urlsplit(raw.rstrip(".,;:'"))._replace(fragment=""))
                 host = urlsplit(url).netloc.lower()
@@ -72,7 +79,7 @@ def probe(url: str) -> tuple:
         try:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 final = resp.geturl()
-                if same_place(url, final):
+                if same_place(url, final) or urlsplit(url).netloc.lower() in REDIRECTING_HOSTS:
                     return "ok", str(resp.status)
                 return "redirected", final
         except urllib.error.HTTPError as exc:
