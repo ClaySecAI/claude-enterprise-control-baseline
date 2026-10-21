@@ -1,0 +1,29 @@
+name: Check links
+
+# Sweeps every link in docs/ and classifies it. Only a definite 404 or 410
+# fails the run; redirects and hosts that block CI are listed in the job
+# summary as information. See automation/check_links.py for why a pass/fail
+# checker would cry wolf here.
+#
+# Monthly and on demand, never on pull requests: link rot is not a property
+# of the diff, and a required check that depends on other people's servers
+# would block merges at random. Do not mark this a required check.
+
+on:
+  schedule:
+    - cron: "17 10 3 * *" # 3rd of each month, 10:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Classify every link in docs/
+        run: python3 automation/check_links.py

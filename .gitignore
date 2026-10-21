@@ -5,6 +5,9 @@ Thumbs.db
 .env
 .env.*
 
+# Written by automation/check_links.py; the job summary carries it in CI.
+automation/last-links.md
+
 # Regenerated each run by automation/check_updates.py; the state/ snapshots
 # it's diffed against are committed, this scratch summary is not.
 automation/last-diff.md
