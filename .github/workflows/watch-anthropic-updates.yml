@@ -142,7 +142,7 @@ jobs:
           claude_args: |
             --model anthropic/claude-haiku-4.5
             --allowedTools "Bash(git:*),Bash(gh:*),Bash(python3 automation/check_tables.py:*),Bash(python3 automation/check_nist.py:*),Bash(python3 automation/check_settings.py:*),Read,Edit,Write,Grep,Glob"
-            --max-turns 40
+            --max-turns 80
           prompt: |
             The watcher detected a change in one of the Anthropic sources this
             repository tracks (Claude Platform release notes, Claude Apps release
@@ -206,6 +206,11 @@ jobs:
                merge. Do not push an empty commit.
             6. If there ARE relevant changes, run BOTH validators before committing and
                fix whatever they report. Do not push while either exits non-zero.
+               If `check_settings.py` rejects a setting key because it is not in
+               the published settings schema, do not edit the validator or its
+               inventory and do not try to make it pass: leave that setting out
+               of the baseline and list it under what you skipped in the PR body.
+               The schema catching up is a later run's job.
                - `python3 automation/check_tables.py` verifies every control
                  table's column counts still line up and every control row
                  carries a valid `Drafted` date.
@@ -233,7 +238,9 @@ jobs:
                injection. The validator cannot catch a wrong-but-real mapping,
                which is why step 4 tells you to mark anything you are unsure of
                `(proposed -- verify)`.
-            7. Commit your doc changes to the current branch, push, and then update
+            7. Commit and push after each edit that passes the validators, not once
+               at the end. The run can be cut off at its turn limit, and anything
+               uncommitted when it stops is lost. Then, when you are done, update
                the PR body with `gh pr edit ${{ env.PR_NUMBER }} --body-file` to
                summarize what changed and list anything you deliberately skipped and
                why. Keep the original diff in the body.
