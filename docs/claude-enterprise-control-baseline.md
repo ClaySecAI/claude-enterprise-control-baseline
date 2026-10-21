@@ -672,7 +672,7 @@ Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only 
 | 1.18 Session lifetime | AC-12, IA-11 | PR.AA-03 | GOVERN 2 |
 | 1.19 Workload identity federation | IA-9, IA-5, AC-3 | PR.AA-01, PR.AA-05 | GOVERN 2 |
 | 1.20 RBAC capability gating | AC-2(7), AC-3, AC-6, CM-7 | PR.AA-05, PR.PS-01 | GOVERN 2 |
-| 1.21 Organization webhooks | SI-4, AU-6 (proposed — verify) | DE.CM-01 (proposed — verify) | MANAGE 4 (proposed — verify) |
+| 1.21 Organization webhooks | AU-6, AU-12, SI-4 (proposed — verify) | DE.CM-09 (proposed — verify) | MANAGE 4 (proposed — verify) |
 | 2.1 to 2.3 Connector governance | CM-7, CM-7(1), AC-3, AC-4, SA-9 | PR.PS-01, GV.SC-06 | MANAGE 1 |
 | 2.4 Verified-domain protection | SC-7, AC-4, AC-21 | PR.IR-01 | MANAGE 1 |
 | 2.5 Custom MCP connector review | SA-9, SR-3, SR-5, RA-3 | GV.SC-04, GV.SC-06 | GOVERN 6 |
