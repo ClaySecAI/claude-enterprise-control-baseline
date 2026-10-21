@@ -639,14 +639,16 @@ Four layers, and they are not interchangeable. Picking the wrong one produces a 
 | Publication | Status | What it gives you | Use it for |
 |---|---|---|---|
 | NIST AI RMF 1.0 (Jan 2023) plus AI 600-1 Generative AI Profile (Jul 2024) | Final | Outcome-oriented risk functions: GOVERN, MAP, MEASURE, MANAGE. No control statements. | Program governance, board and audit-committee narrative, risk register structure |
-| NIST CSF 2.0 plus IR 8596 Cyber AI Profile | IR 8596 preliminary draft, published 2025-12-16, comment closed 2026-01-30. Not final. | AI-specific subcategory outcomes mapped onto CSF 2.0 functions | Program architecture if CSF 2.0 is your house framework |
+| NIST CSF 2.0 plus IR 8596 Cyber AI Profile | IR 8596 initial preliminary draft, published 2025-12-16, comment closed 2026-01-30. Not final, and no initial public draft as of 2026-10-21. [NIST IR 8607](https://doi.org/10.6028/NIST.IR.8607) (2026-08-03) summarizes the January workshop to inform the next draft. | AI-specific subcategory outcomes mapped onto CSF 2.0 functions | Program architecture if CSF 2.0 is your house framework |
 | NIST SP 800-53 Rev 5 | Final | 1,196 assessable control statements across 20 families | The spine of this baseline. What goes in an SSP. |
-| COSAiS, the NISTIR 8605 series | In development. Predictive AI annotated outline Jan 2026. Generative AI and agent overlays pending. Full public drafts targeted Q3 FY2026, finalization tracking late 2026 into 2027. | AI-specific tailoring of 800-53 controls | Structural placeholder now. Requirement source later. |
+| COSIS (renamed from COSAiS 2026-10-20), the NISTIR 8605 series | In development. Only the concept paper and the predictive AI annotated outline (Jan 2026, a discussion draft) are published. The target of full public drafts in Q3 FY2026 (April to June 2026) passed without one: no public draft of 8605, 8605A or 8605B as of 2026-10-21. Generative AI and agent overlays pending. | AI-specific tailoring of 800-53 controls | Structural placeholder now. Requirement source later. |
 | NIST AI 100-2e2025 | Final | Adversarial ML attack and mitigation taxonomy | Threat modeling input, not a control source |
 
 Two supporting items worth tracking rather than mapping: CAISI launched the AI Agent Standards Initiative on 2026-02-17, and NCCoE published a concept paper on 2026-02-05 covering AI agent identity and authorization using OAuth 2.0, SPIFFE/SPIRE, and MCP. That second one is the closest thing to forthcoming guidance on the non-human identity problem this baseline cannot currently solve.
 
-Verify current status before relying on any draft state above. This was checked 2026-09-11.
+**COSAiS is now COSIS.** On 2026-10-20 the [project page](https://csrc.nist.gov/projects/cosais) renamed it "SP 800-53 Control Overlays for Super Intelligence Systems", citing the 2026-09-29 Executive Order on Inaugurating the Era of Super Intelligence, which directs agencies to use "Super Intelligence" and "SI" in place of "Artificial Intelligence" and "AI". NIST states that "previously issued documents and publications have not been altered". It is a change of name, not of scope: the five use cases are the same, renamed. This document keeps COSAiS where it cites a document published under that name, and expect later volumes to appear under COSIS and "SI" titles.
+
+Verify current status before relying on any draft state above. This was checked 2026-10-21 against the CSRC pages for [IR 8596](https://csrc.nist.gov/pubs/ir/8596/iprd) and [the overlay project](https://csrc.nist.gov/projects/cosais).
 
 ### 10.2 Where the three surfaces land in COSAiS
 
@@ -659,7 +661,7 @@ The five COSAiS use cases split this baseline across three different forthcoming
 | CLI (Claude Code, subagents via the Agent tool) | Single Agent, with the Agent tool crossing into Multi-Agent | Pending |
 | Any internally built agent consuming the Claude API | Developing AI Systems, informed by SP 800-218A | Pending |
 
-Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only use case with a published draft. That is the practical problem with treating COSAiS as your source today.
+Nothing here falls under Using and Fine-Tuning Predictive AI, which is the only use case with any published material, and that is an annotated outline rather than a public draft. That is the practical problem with treating COSAiS as your source today.
 
 ### 10.3 Control crosswalk
 

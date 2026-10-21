@@ -38,6 +38,14 @@ The issue asked what the server-side classifier transmits before any row was wri
 
 Reading those pages turned up a larger default change the issue did not name. From v2.1.283, interactive terminal and VS Code sessions **start** in auto mode on every plan and provider. A deployment that set neither `disableAutoMode` nor `permissions.defaultMode` moved from Manual to auto on upgrade. New row **4.44** pins `permissions.defaultMode` to `"default"` at every level, matching the value the section 9 reference policy already carried without a row.
 
+### 10.1 NIST draft statuses re-checked; COSAiS renamed COSIS (#14)
+
+Re-checked against NIST's own pages, which answered from a workstation even though `csrc.nist.gov` refuses CI.
+
+- **[IR 8596](https://csrc.nist.gov/pubs/ir/8596/iprd)** is still the initial preliminary draft of 2025-12-16, with no initial public draft. [NIST IR 8607](https://doi.org/10.6028/NIST.IR.8607) (2026-08-03) summarizes the January workshop to inform the next draft.
+- **The [overlay project](https://csrc.nist.gov/projects/cosais)** has published only its concept paper and the January predictive AI annotated outline. The Q3 FY2026 target for full public drafts passed without one, so 8605B has not reached public draft. The re-mapping pass that sections 10.2 and 10.6 commit to is not yet due, and no follow-up issue is needed.
+- **Renamed:** on 2026-10-20 the project became "SP 800-53 Control Overlays for Super Intelligence Systems" (COSIS), following a 2026-09-29 executive order. NIST says previously issued publications are unchanged. Section 10.1 records the rename and says to expect later volumes under the new name.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
