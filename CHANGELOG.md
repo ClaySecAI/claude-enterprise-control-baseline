@@ -6,6 +6,17 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-10-21 — open-issue content pass
+
+Worked from the open issues, each against its primary source. One section per issue.
+
+### 1.9, 5.1 Compliance API Activity Feed no longer carries names, retroactively (#27)
+
+Per the [platform release notes](https://platform.claude.com/docs/en/release-notes/overview) for 2026-09-24 and [Understand the Activity object](https://platform.claude.com/docs/en/manage-claude/compliance-activity-feed#understand-the-activity-object), `filename` and `title` on file, project document and artifact activities are now always null, empty or omitted, including on activities recorded before that date. Names are recoverable only through the metadata endpoints with a `read:compliance_user_data` key, and not at all once the item is deleted.
+
+- **5.1** now says detections keyed on those fields return nothing silently, to key on the activity's `claude_file_*`, `claude_proj_doc_*` and `claude_artifact_version_*` IDs, and to resolve names at ingest if they matter.
+- **1.9** kept `read:compliance_activities` as the right scope for the feed key and said what it no longer yields. It now recommends a separate, tightly held enrichment key over widening the feed key, since `read:compliance_user_data` reads every chat, file and session transcript.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
