@@ -1,0 +1,747 @@
+Claude Enterprise Administrator Guide · Claude Academy
+Deployment, Configuration, and Adoption Playbook
+This guide walks you through the four phases of a successful Claude Enterprise deployment: Technical Setup, Change Management & Launch, Enablement & Training, and Scaling Adoption. It also covers Claude.ai and Claude Code access controls, configuration options, and seat management.
+Phase 1: Technical Setup
+
+Complete these technical configuration steps before launching Claude to your organization.
+Authentication & Access
+
+Follow these steps to configure SSO:
+Claude Enterprise supports SAML 2.0 and OIDC (OpenID Connect) for single sign-on (SSO). See
+Setting Up SSO
+(opens in new tab)
+for detailed configuration steps.
+Test SSO:
+Configure with a small pilot group before broad rollout.
+Enable domain capture:
+Automatically route users from your domain to your workspace. See
+Domain Capture Setup
+(opens in new tab)
+.
+Enforce SSO:
+Require SSO for all access once configuration is validated.
+User Provisioning Options
+
+Choose your provisioning method based on your organization's needs. See
+User Provisioning Overview
+(opens in new tab)
+for setup instructions.
+SCIM (recommended):
+System for Cross-domain Identity Management enables automatic sync from your identity provider (IdP). See
+SCIM Setup Guide
+(opens in new tab)
+.
+Just-in-Time (JIT):
+Users are created upon first SSO login. Simple to set up but offers less control over access.
+Manual:
+Admin-managed invitations via the
+Admin Console
+(opens in new tab)
+. Best for small, controlled pilots.
+
+Example: Phased Rollout with SCIM
+Many organizations use SCIM for a phased rollout approach:
+Start with a pilot group of 50-100 users synced via SCIM
+Monitor adoption and gather feedback for 2–4 weeks
+Gradually expand SCIM groups to include additional departments
+Enable organization-wide access once processes are established
+Security & Compliance
+
+Claude Enterprise includes robust security and compliance features designed for enterprise environments:
+Review security details at the
+Anthropic Trust Center
+(opens in new tab)
+and in the
+Enterprise Plan Overview
+(opens in new tab)
+.
+Data retention:
+Conversations are retained per your policy and exportable via the
+Compliance API
+(opens in new tab)
+and
+Audit Logs
+(opens in new tab)
+, which also provide full activity logging for security monitoring.
+No model training:
+Your organization's data is not used to train Claude models by default.
+Role-based access:
+Primary Owner, Owner, and Member roles provide granular permissions. See
+Member Roles Guide
+(opens in new tab)
+.
+Pre-Launch Checklist
+
+Important considerations before setting up Identity Management —
+Important Considerations
+(opens in new tab)
+SSO configured and tested —
+Setting Up SSO
+(opens in new tab)
+User provisioning configured —
+Provisioning Guide
+(opens in new tab)
+Security review completed with IT and information security teams
+Data retention policies documented
+Compliance API and Audit log access configured —
+Trust Center
+(opens in new tab)
+and
+Audit Logs
+(opens in new tab)
+Set up Connectors —
+Information on Connectors
+(opens in new tab)
+Admin roles assigned —
+Member Roles
+(opens in new tab)
+Claude Code seat configuration completed (see next section)
+Claude Code Access & Seat Configuration
+
+Understanding Claude Enterprise Seat Types for Claude Code
+Claude Enterprise offers different seat types depending on your pricing model. The following table summarizes the options and their Claude Code access implications:
+Pricing Model
+Seat Type
+Claude Code Access
+Seat-Based (Legacy)
+Standard
+No
+Seat-Based (Legacy)
+Premium
+Yes
+Usage-Based
+Chat
+No
+Usage-Based
+Chat + Code
+Yes
+Usage-Based
+Claude Enterprise
+Yes
+Admin Steps to Enable Claude Code
+Follow these steps to enable Claude Code access for your users:
+Navigate to Settings > Organization > Members
+in your Claude Enterprise admin console.
+For legacy seat-based plans:
+Purchase Premium seats and assign them to users who need Claude Code access. Only Primary Owners/Owners can manage seat assignments.
+For usage-based plans:
+Assign seats to users who need Claude Code. Configure spend limits as needed (defaults to $0).
+See information here on setting spend limits.
+(opens in new tab)
+User Authentication for Claude Code
+Share the following steps with end users to connect Claude Code to their enterprise account:
+Install Claude Code:
+Run the command below that corresponds to your operating system to install Claude Code.
+macOS / Linux / WSL:
+curl -fsSL https://claude.ai/install.sh | bash
+Windows (PowerShell):
+irm https://claude.ai/install.ps1 | iex
+Start Claude Code:
+Type "claude" in your terminal.
+Select login method:
+Choose "Claude account with subscription".
+Authenticate via Enterprise SSO
+with your corporate credentials.
+Your seat subscription will be linked to Claude Code
+automatically upon successful authentication.
+
+Troubleshooting
+If already logged in via a different account, run
+/logout
+first, then
+/login
+Run "claude update" if not seeing the enterprise auth option
+Restart terminal after updates
+Console API key users switching to access via Claude Enterprise seats: Run
+/logout
+, then
+/login
+and select "Claude account with subscription"
+Admin Monitoring for Claude Code
+Monitor and manage Claude Code usage across your organization:
+Navigate to Analytics > Claude Code to view usage analytics
+Monitor usage across all surfaces (Claude.ai + Claude Code)
+
+Important
+Claude Code access requires a Premium seat (legacy model), or a Chat + Code or Claude Enterprise seat (usage-based model). Standard and Chat-only seats do NOT include Claude Code access.
+For organizations migrating from Console/API-based Claude Code access, users must re-authenticate via Enterprise SSO to link their subscription.
+Phase 2: Change Management & Launch
+
+A successful Claude deployment requires thoughtful change management to drive adoption and demonstrate value.
+Define Success Metrics
+
+Establish clear metrics to measure the success of your Claude deployment:
+Metric Category
+Metric
+Target
+Measurement Method
+Activity
+Weekly Active Users
+70% of licensed seats
+Admin Dashboard
+Activity
+Messages per User per Week
+25+ messages
+Usage Analytics
+Activity
+Feature Adoption (Projects, Artifacts)
+40% of active users
+Feature Analytics
+Impact
+Time Saved per User per Week
+3+ hours
+User Survey
+Impact
+User Satisfaction Score
+4.0+ / 5.0
+Quarterly Survey
+Impact
+Tasks Augmented by Claude
+5+ per week
+User Self-Report
+Identify & Enable Champions
+
+Champions are enthusiastic early adopters who can help drive adoption across their teams:
+Select 2–3 champions per department or team
+Provide champions with early access and advanced training
+Equip champions with talking points and demo guidance
+Create a champions Slack channel or Teams group for peer support
+Recognize and reward champion contributions to adoption
+Launch Communications
+
+Plan a multi-channel communication strategy for your launch:
+Pre-Launch (2 weeks before):
+Communications highlighting benefits and use cases
+Launch Day:
+Executive announcement, getting started guide, training schedule
+Post-Launch (Week 1):
+Tips and tricks, success stories from pilot users
+Ongoing:
+Weekly tips, monthly newsletters, quarterly business reviews
+Phase 3: Enablement & Training
+
+Provide comprehensive training resources to help users get the most from Claude.
+Structured Training Programs
+
+Deploying Claude is a technical milestone, but adoption depends on whether people know how to use it effectively. A structured training program ensures users move past initial curiosity into productive, habitual use — and reduces the support burden on your IT and champion teams.
+All-Staff 101 Sessions:
+Workshops (30–60 min) covering the basics — navigating the interface, writing effective prompts, and using core features like Projects and Artifacts. Run at launch and repeat for new hire cohorts.
+Department-Level Enablement:
+Targeted sessions built around each team's actual workflows, with an executive sponsor to signal leadership support. Partner with team leads to identify high-value use cases and provide ready-to-use prompt templates. Schedule a follow-up 2–4 weeks later to address questions from real usage.
+Office Hours:
+Weekly or biweekly drop-in sessions where users bring real work and get hands-on help from champions. Especially valuable in the first 30–60 days.
+LMS Integration:
+If your organization uses an LMS, package Claude training into trackable courses to monitor enablement coverage and tie completion to access or feature rollout milestones.
+Self-Service Learning Resources
+
+Direct users to these Anthropic-provided learning resources:
+Claude Academy
+(opens in new tab)
+— Interactive courses covering Claude fundamentals, prompt engineering, and advanced features
+Use Case Library
+(opens in new tab)
+— Curated examples of Claude applications across different business functions
+Help Center
+(opens in new tab)
+— Comprehensive documentation and FAQs on Claude Enterprise
+Docs Site
+(opens in new tab)
+— Comprehensive support for Claude Code and API use
+Feature-Specific Guides
+
+Ensure users understand key enterprise features:
+Projects
+(opens in new tab)
+:
+Organize conversations by topic, client, or workflow. Projects maintain context across conversations and can be shared with team members.
+Artifacts
+(opens in new tab)
+:
+Create and iterate on documents, code, analyses, and visualizations within conversations. Artifacts can be exported and shared.
+Skills
+(opens in new tab)
+:
+Skills are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks.
+Enterprise Search
+(opens in new tab)
+:
+Connect internal knowledge bases and documents to Claude for organization-specific answers. Supports various file formats and integrations.
+Claude Code Training Resources
+
+Provide these resources to help users get started with Claude Code:
+Quick Start Guide
+(opens in new tab)
+Claude Code Walkthrough
+(opens in new tab)
+Mastering Claude Code in 30 minutes
+(opens in new tab)
+Claude Code — DeepLearning.ai Short Course
+(opens in new tab)
+Claude Code Best Practices
+(opens in new tab)
+Building and Prototyping with Claude Code
+(opens in new tab)
+Internal Support Channels
+
+Establish ongoing support infrastructure for your Claude users:
+Dedicated Slack/Teams channel for Claude questions and tips
+Weekly office hours with champions or power users
+IT helpdesk integration for access and technical issues
+Monthly user group meetings to share best practices
+Dedicated Claude Code support channel for developer-specific questions
+Phase 4: Scaling Adoption
+
+After initial deployment, focus on expanding usage, building internal ownership, and demonstrating sustained value across the organization.
+Expanding Across Teams
+
+Prioritize teams with strong use case fit and willing champions. For each new team:
+Conduct a brief needs assessment to identify high-value workflows
+Provision seats (including Claude Code for developer teams) and deliver tailored onboarding
+Appoint a local champion to drive adoption and share early wins across the organization
+Measuring Impact
+
+Shift from tracking activity metrics to demonstrating business value. Focus on outcomes that matter to leadership:
+Track adoption (active users, department penetration, feature usage) via the Admin dashboards and API
+Measure productivity gains (hours saved, tasks augmented) through periodic user surveys
+Pair quantitative data with qualitative examples – short case studies from team leads illustrating real impact
+Establish a regular reporting cadence (e.g., quarterly business reviews) to keep stakeholders informed
+Feature Rollout & Governance
+
+Introduce advanced capabilities gradually so teams can build confidence without feeling overwhelmed. A natural progression might move from core features (Projects, Artifacts, Connectors) to intelligence features (Enterprise Search, Research) to integrations (Claude Code, Skills) and finally to automation (Cowork, custom connectors).
+As usage grows, revisit your governance posture:
+Review data retention policies, audit log cadences, and project visibility defaults
+Maintain an allowlist of approved connectors and extensions, routing new requests through your standard IT governance process
+Configure usage guardrails to manage consumption as the user base expands
+Sustaining Momentum
+
+Long-term success depends on building internal ownership and feedback loops:
+Designate a program owner and consider forming a lightweight Center of Excellence to curate prompts, Skills, and playbooks
+Run periodic user surveys, champion roundtables, and usage analytics reviews to surface what's working and what needs attention
+Refresh training materials quarterly to reflect new features and lessons learned
+Incorporate Claude onboarding into your standard new hire orientation
+At each phase of rollout, consider a brief retrospective:
+What use cases emerged?
+What barriers remain?
+What should change for the next phase?
+Appendix: Resource Directory
+
+A comprehensive directory of support, training, and enablement resources for Claude Enterprise administrators and end users.
+Getting Started
+
+Essential resources for new deployments and first-time users:
+Getting started with Claude
+(opens in new tab)
+— First steps, basic navigation, and starting your first conversation
+What are some things I can use Claude for?
+(opens in new tab)
+— Common use cases including writing, analysis, coding, research, and creative tasks
+What is the Enterprise plan?
+(opens in new tab)
+— Enterprise features including SSO, SCIM, audit logs, custom retention, and dedicated support
+Release Notes
+(opens in new tab)
+— Chronological log of new features, improvements, and changes across all Claude products
+How to get support
+(opens in new tab)
+— Contacting Anthropic support, submitting tickets, and self-service resources
+Training & Enablement
+
+Resources to upskill your organization on Claude:
+Claude Academy
+(opens in new tab)
+— Self-paced courses on prompt engineering, Claude features, and best practices
+Prompt Engineering Guide
+(opens in new tab)
+— Comprehensive documentation on advanced prompt engineering techniques
+Introduction to Prompt Design
+(opens in new tab)
+— Foundational prompt engineering principles
+Claude Enterprise Help Center
+(opens in new tab)
+— Central hub for all Claude help articles and documentation
+Use Case Library
+(opens in new tab)
+— Real-world examples of how organizations use Claude
+Identity & Access Management
+
+Identity Management
+(opens in new tab)
+— SSO setup (SAML 2.0 / OIDC), JIT and SCIM provisioning, and IdP migration
+Restrict access with IP allowlisting
+(opens in new tab)
+— Network-level access control by restricting Claude to approved IP ranges
+Enforce Tenant Restrictions
+(opens in new tab)
+— Prevent users from accessing unauthorized Claude organizations from your network
+Configuring session security settings
+(opens in new tab)
+— Session timeout, re-authentication, and session management policies
+User & Seat Management
+
+Managing members on Team and Enterprise plans
+(opens in new tab)
+— Inviting, removing, and managing user roles from the admin console
+Roles and Permissions
+(opens in new tab)
+— Owner, Admin, and Member permission levels
+Purchasing and managing seats
+(opens in new tab)
+— Seat allocation, scaling, and license management
+Find and join your organization
+(opens in new tab)
+— How end users discover and join their company's Claude organization
+Migrating individual accounts to Enterprise
+(opens in new tab)
+— Migration paths and data handling when transitioning plan types
+What happens to a user's data when removed?
+(opens in new tab)
+— Data retention and cleanup policies when removing users
+Governance & Compliance
+
+Exporting organization data
+(opens in new tab)
+— Bulk data export for compliance, migration, or backup
+Usage analytics
+(opens in new tab)
+— Dashboard for tracking adoption, usage patterns, and seat utilization
+Audit logs
+(opens in new tab)
+— Track user activity, conversations, and admin changes
+Custom Data Retention Controls
+(opens in new tab)
+— Configure retention windows from 1 day to indefinite
+Compliance API
+(opens in new tab)
+— Programmatic access for DLP, eDiscovery, and regulatory needs
+HIPAA-ready Enterprise plans
+(opens in new tab)
+— HIPAA compliance capabilities, BAA availability, and healthcare configuration
+Business Associate Agreements (BAA)
+(opens in new tab)
+— How to request and execute a BAA with Anthropic
+Security & Compliance Overview (Trust Center)
+(opens in new tab)
+— Certifications (SOC 2 Type II, CSA STAR), pen test reports, and compliance documentation
+Billing & Usage
+
+Enterprise billing
+(opens in new tab)
+— Billing structure, invoicing, and payment options
+Extra usage controls
+(opens in new tab)
+— Overage pricing and usage guardrails for organizational plans
+Usage limits and best practices
+(opens in new tab)
+— Tips for staying within limits and optimizing conversation efficiency
+Admin Controls
+
+Project visibility and sharing
+(opens in new tab)
+— Admin controls for project sharing policies
+Disabling public projects
+(opens in new tab)
+— Restrict project sharing to internal-only
+Managing user feedback settings
+(opens in new tab)
+— Configure whether user feedback is shared with Anthropic
+Cowork for Enterprise
+(opens in new tab)
+— Enabling and configuring Cowork mode for your organization
+Visual and interactive content controls
+(opens in new tab)
+— Admin controls for visual content generation features
+Projects & Knowledge Management
+
+What are projects?
+(opens in new tab)
+— Persistent workspaces for grouping conversations, uploading reference files, and setting custom instructions
+How can I create and manage projects?
+(opens in new tab)
+— Creating projects and organizing them across different roles and workflows
+RAG for projects
+(opens in new tab)
+— How Claude searches uploaded project files for grounded, accurate responses
+Chat search and memory
+(opens in new tab)
+— Search past conversations and let Claude remember key details across sessions
+Content Creation & Artifacts
+
+What are artifacts?
+(opens in new tab)
+— What artifacts are, the kinds Claude makes, and how to edit and share them
+Artifacts admin guide for Team and Enterprise plans
+(opens in new tab)
+— Which templates members can use, who can share outside the organization, and where to change each setting
+Create and edit files with Claude
+(opens in new tab)
+— Generate Word docs, spreadsheets, presentations, and other file types
+Visual and interactive content
+(opens in new tab)
+— Charts, diagrams, interactive web apps, and visual outputs
+Uploading files to Claude
+(opens in new tab)
+— Supported file types, size limits, and best practices
+Research & Reasoning
+
+Using Research
+(opens in new tab)
+— Deep research mode that searches the web and synthesizes findings into comprehensive reports
+Web search
+(opens in new tab)
+— Real-time web search to supplement Claude's knowledge with current information
+Extended thinking
+(opens in new tab)
+— Step-by-step reasoning for complex problems
+When to use search vs. thinking vs. Research
+(opens in new tab)
+— Decision guide for choosing the right tool
+Skills & Customization
+
+What are Skills?
+(opens in new tab)
+— Reusable instruction sets that teach Claude specialized workflows and domain expertise
+How to create custom Skills
+(opens in new tab)
+— Build skills through natural conversation or manual configuration
+Provisioning Skills for your organization
+(opens in new tab)
+— Deploy skills across teams and manage the organizational skills catalog
+Cowork & Desktop Agent
+
+Getting started with Cowork
+(opens in new tab)
+— Desktop agent mode where Claude creates files, runs code, and automates workflows
+Using Cowork safely
+(opens in new tab)
+— Safety guidelines and sandboxing details
+Personalization
+
+Personalization features
+(opens in new tab)
+— Memory, preferred name, and options that shape Claude's responses
+Custom styles
+(opens in new tab)
+— Create and apply response styles (concise, detailed, formal, casual, etc.)
+Language preferences
+(opens in new tab)
+— Multilingual support and language settings
+Enterprise Search & Data
+
+Using Enterprise Search
+(opens in new tab)
+— Search across connected organizational data sources within Claude
+Integration Overview
+
+When to use desktop vs. web connectors
+(opens in new tab)
+— Comparison of web-based (Remote MCP) and desktop connector architectures
+Interactive Connectors
+(opens in new tab)
+— Connectors that let Claude take actions (not just read data) in external tools
+Pre-Built Connectors
+
+Ready-to-use integrations with popular enterprise tools:
+Google Drive
+(opens in new tab)
+— Access, search, and reference Google Drive files in conversations
+GitHub
+(opens in new tab)
+— Browse repos, review PRs, search code, and manage issues
+Slack
+(opens in new tab)
+— Install and use the Claude Slack app in your workspace
+Microsoft 365
+(opens in new tab)
+— Connect Outlook, OneDrive, Teams, and other M365 services
+Microsoft 365 Security Guide
+(opens in new tab)
+— Data handling, permissions, and security architecture for the M365 connector
+All pre-built web connectors
+(opens in new tab)
+— Full list of available pre-built connectors using Remote MCP
+Custom Connectors
+
+Build your own connectors for proprietary or specialized tools:
+Building custom connectors
+(opens in new tab)
+— Technical guide for developing and deploying Remote MCP server connectors
+Building desktop extensions with MCPB
+(opens in new tab)
+— MCPB tooling for installable desktop extensions
+Desktop & Browser
+
+Claude Desktop
+(opens in new tab)
+— Installation, enterprise deployment (Windows/macOS via MDM), managed configuration, and extension allowlists
+Claude in Chrome
+(opens in new tab)
+— Browser extension setup, permissions, admin controls, safety best practices, and troubleshooting
+Mobile
+
+Claude Mobile Apps
+(opens in new tab)
+— iOS and Android installation, voice mode, dictation, widgets, and shortcuts
+Productivity Suites
+
+Claude in Excel
+(opens in new tab)
+— AI-powered formulas, data analysis, and chart creation within Excel
+Claude in PowerPoint
+(opens in new tab)
+— Generate and edit slide decks directly inside PowerPoint
+Developer Tools
+
+Claude in Xcode
+(opens in new tab)
+— Code completion, debugging, and refactoring in Apple's Xcode IDE
+Claude in Microsoft Foundry
+(opens in new tab)
+— Access Claude models through Microsoft's AI Foundry platform
+Claude Code Setup & Configuration
+
+Claude Code
+(opens in new tab)
+— Team/Enterprise setup, model configuration, security reviews, and usage analytics
+Using Claude Code with Team or Enterprise Plan
+(opens in new tab)
+— Configuration and deployment for organizational plans
+Claude Code Usage Analytics
+(opens in new tab)
+— Track adoption and usage across your organization
+Claude Code Troubleshooting
+(opens in new tab)
+— Common issues, fixes, and debugging steps
+Claude Code Training
+
+Claude Academy — Claude Code in Action
+(opens in new tab)
+— Self-paced course on Claude Code workflows
+Function-Specific Guides
+
+Share these guides with team leads to accelerate adoption in their departments:
+Claude for Engineering Teams
+(opens in new tab)
+— Code review, debugging, architecture, and technical workflows
+Claude for Marketing Teams
+(opens in new tab)
+— Content creation, campaign analysis, and brand voice
+Claude for Sales Teams
+(opens in new tab)
+— Outreach drafting, research, and pipeline management
+Claude for Product Management
+(opens in new tab)
+— PRDs, competitive analysis, and user research synthesis
+Claude for Human Resources
+(opens in new tab)
+— Policy drafting, interview prep, and employee communications
+Industry Solutions
+
+Specialized resources and connectors for regulated and vertical industries:
+Claude for Financial Services
+(opens in new tab)
+— Getting started, workflows, prompting strategies, skills, and market data connectors (FactSet, S&P Global, Moody's, Morningstar, PitchBook, LSEG, Aiera, Daloopa)
+Claude for Life Sciences
+(opens in new tab)
+— Getting started plus connectors for BioRender, PubMed, Benchling, Synapse.org, 10x Genomics, and Scholar Gateway
+Claude for Education
+(opens in new tab)
+— Admin deployment guide, Canvas LTI integration, FERPA-compliant data controls, and end-user FAQs
+Claude for Nonprofits
+(opens in new tab)
+— Getting started plus connectors for Benevity, Blackbaud, and Candid
+Privacy & Data Handling
+
+Privacy practices
+(opens in new tab)
+— How Anthropic handles user data, model training, and privacy controls
+Who can view my conversations?
+(opens in new tab)
+— Data visibility, access controls, and conversation privacy by plan type
+Data ownership for teams
+(opens in new tab)
+— Data ownership policies for organizational plans
+Data Processor vs. Controller
+(opens in new tab)
+— GDPR role clarification for Anthropic's data handling
+Data deletion for Enterprise
+(opens in new tab)
+— Data deletion requests and processes for organizational plans
+Data Processing Addendum (DPA)
+(opens in new tab)
+— Self-service DPA signing for GDPR compliance
+Safeguards
+(opens in new tab)
+— Usage policy, safeguard appeals, agent guidelines, content reporting, and vulnerability reporting
+Troubleshooting
+
+Common issues and resolution guides:
+Understanding error messages
+(opens in new tab)
+— Decode common error messages and their solutions
+Incorrect or misleading responses
+(opens in new tab)
+— Understanding hallucinations and how to get more accurate answers
+Content filtering errors
+(opens in new tab)
+— Why outputs may be blocked and how to adjust your approach
+Video Tutorials
+
+Share these video walkthroughs with your team for visual, hands-on learning.
+Getting Started Videos
+Getting started with Claude.ai
+(opens in new tab)
+— Interface walkthrough, first conversation, and key features
+Intro to Artifacts
+(opens in new tab)
+— Creating and using artifacts in conversations
+Intro to Projects
+(opens in new tab)
+— Setting up and managing projects
+Intro to Connectors
+(opens in new tab)
+— Connecting external tools and data sources
+Using Research
+(opens in new tab)
+— Demo of deep research capabilities
+Feature Deep Dives
+Connect your tools for a smarter AI companion
+(opens in new tab)
+— Setting up integrations for enhanced capabilities
+Create and edit files to eliminate busy work
+(opens in new tab)
+— Document automation with Claude's file creation features
+Prototype AI apps with artifacts
+(opens in new tab)
+— Building functional app prototypes using artifacts
+Teach Claude your way of working using skills
+(opens in new tab)
+— Creating and applying skills for consistent outputs
+Create a skill through conversation
+(opens in new tab)
+— Building skills via natural conversation
+Claude in Chrome
+(opens in new tab)
+— Walkthrough of the Claude in Chrome extension
+Integration Tutorials
+Using the GitHub integration
+(opens in new tab)
+— GitHub connector setup and usage
+Using the Google Docs integration
+(opens in new tab)
+— Working with Google Docs in Claude
+Function & Industry Videos
+Claude for Engineering
+(opens in new tab)
+— Code review, debugging, architecture, and technical workflows
+Claude for Marketing
+(opens in new tab)
+— Content creation, campaign analysis, and brand voice
+Claude for Sales
+(opens in new tab)
+— Outreach drafting, research, and pipeline management
+Claude for Product Management
+(opens in new tab)
+— PRDs, competitive analysis, and user research synthesis
+Claude for Human Resources
+(opens in new tab)
+— Policy drafting, interview prep, and employee communications

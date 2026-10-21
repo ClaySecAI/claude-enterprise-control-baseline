@@ -5,7 +5,7 @@ Two stages, both in [`watch-anthropic-updates.yml`](../.github/workflows/watch-a
 **Stage 1, the `check` job. Automated, no judgment involved.** Runs weekly, or on demand via `workflow_dispatch`. It calls [`check_updates.py`](check_updates.py), which fetches the sources in [`sources.json`](sources.json), diffs each against the snapshot committed under `state/`, and:
 
 - if nothing changed: does nothing.
-- if something changed: pushes the new snapshots to a `watch/upstream-<date>-<run>` branch and opens a pull request labeled `anthropic-update` carrying the diff in its body.
+- if something changed: pushes the new snapshots to a `watch/upstream-<date>-<run>` branch and opens a pull request labeled `anthropic-update` carrying the diff in its body. The diff is cut at a section boundary to stay under GitHub's 65,536-character limit on a pull request body, with a note saying how many sections were left out; the snapshots in the pull request carry everything.
 
 The snapshot advances in that PR rather than in the drafting job on purpose. It has to advance even when nothing turns out to be baseline-relevant, or the same diff re-reports every week forever — and doing it here means it still happens if the drafting job fails or `ANTHROPIC_API_KEY` is unset. The failure mode is a one-line snapshot PR to merge, not silence.
 
@@ -20,9 +20,9 @@ Sources tracked, and why these three: they're the only sources Anthropic actuall
 
 **On the Trust Center source.** It is a SafeBase-style portal rather than a dated changelog, so expect two things. Its first run takes the "New source tracked" path and lands a content preview in the issue body rather than a diff, which is the point — that preview is how the content first becomes readable to a reviewer who cannot reach the host. And because portals of this kind render client-side, the text extractor may recover little; an empty or near-empty snapshot is itself a finding worth recording rather than a failure to retry.
 
-**Known gap:** this only catches what Anthropic changelogs. It won't catch a console setting that changed silently, or a genuinely new admin page nobody's written release notes for yet. Two ways to close that, not yet built:
+**Known gap:** this only catches what Anthropic changelogs. It won't catch a console setting that changed silently, or a genuinely new admin page nobody's written release notes for yet. Two ways to close that, both now built:
 
-1. Add the ~40 pages already cited as sources throughout [`docs/claude-enterprise-control-baseline.md`](../docs/claude-enterprise-control-baseline.md) to `sources.json` on a slower cadence (monthly), so a silently-edited settings page still shows up as a diff.
+1. ~~Track the cited pages~~ **Built.** [`watch-cited-pages.yml`](../.github/workflows/watch-cited-pages.yml) runs `check_updates.py --cited` monthly. It reads every `claude.com` and `anthropic.com` link from `docs/*.md`, about 50 pages, so the tracked set follows the cited set; it is not a parallel list in `sources.json`. It diffs each page against `state/cited/` and opens a pull request labeled `cited-page-update`. A newly cited page is baselined silently rather than reported, and a page the documents stop citing has its snapshot removed. It is report only, with no drafting job: a cited page changes for many reasons that are not about administrators, and a person reads the diff. Before it was built, two back-to-back fetches of all 50 pages extracted identically, so it starts without known false positives. `support.claude.com` may refuse the runner, and a refused fetch is reported, not swallowed.
 2. ~~Diff sitemaps~~ **Built.** `type: sitemap` sources (`platform.claude.com/sitemap.xml`, its `/cookbook/sitemap.xml`, `code.claude.com/docs/sitemap.xml`; all plain urlsets, confirmed via each host's `robots.txt`) are stored as sorted English-only URL lists under `state/`. Only *added* URLs matching `admin|security|settings|iam` are reported, in a section headed "candidate NEW control row" so Stage 2 can tell an *add* from a *revise*. A new URL says a page exists, not that anything changed for an administrator, and the section says so. The first run records the baseline silently. Non-English locale paths are dropped, or each page would appear ~12 times.
 
 **Also known:** the Claude Apps release-notes page is a Zendesk Help Center article with the full site sidebar nav on it, so a new unrelated help article elsewhere on the site can trigger a false-positive diff. Cheaper to tolerate a false positive you dismiss than to write brittle selector-scraping that silently breaks when the site's markup changes.
@@ -96,6 +96,7 @@ One parsing detail worth preserving if this is ever rewritten: a naive `[A-Z]{2}
 
 ```bash
 python3 automation/check_updates.py           # diff the tracked sources
+python3 automation/check_updates.py --cited   # diff every page docs/ cites
 cat automation/last-diff.md                   # only exists if something changed
 python3 automation/check_tables.py            # control tables and Drafted dates
 python3 automation/check_nist.py              # NIST identifiers resolve
