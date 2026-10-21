@@ -68,6 +68,10 @@ Every panel path in sections 1 to 3 was checked against its cited article, or a 
 - **1.3** Reference now points at the members article (path confirmed, no date bump).
 - **Unconfirmed:** 1.12, 1.13 and 1.16, which no current article states. Nothing was checked against a live tenant.
 
+### Section 5 Cowork OTel default narrowed (found during #7, no issue)
+
+The 2026-09-12 correction said Cowork sends metadata only by default. Per [Cowork monitoring](https://claude.com/docs/cowork/monitoring), that holds for current Claude Desktop versions only: some older first-party versions send prompt text, model responses and tool details when `otlpContentCapture` is unset. The paragraph now says to deploy `otlpContentCapture: []` through MDM to guarantee metadata only, and that `workspace.host_paths` is sent regardless.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
