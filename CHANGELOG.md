@@ -46,6 +46,15 @@ Re-checked against NIST's own pages, which answered from a workstation even thou
 - **The [overlay project](https://csrc.nist.gov/projects/cosais)** has published only its concept paper and the January predictive AI annotated outline. The Q3 FY2026 target for full public drafts passed without one, so 8605B has not reached public draft. The re-mapping pass that sections 10.2 and 10.6 commit to is not yet due, and no follow-up issue is needed.
 - **Renamed:** on 2026-10-20 the project became "SP 800-53 Control Overlays for Super Intelligence Systems" (COSIS), following a 2026-09-29 executive order. NIST says previously issued publications are unchanged. Section 10.1 records the rename and says to expect later volumes under the new name.
 
+### The four "not verified, treat as open" items, closed (#6)
+
+Each was settled against Anthropic's own pages and recorded where it applies, so the open list in the verification section is now empty.
+
+1. **Claude Tag in OTel: a stated gap, new 7.8.** The [audit page](https://claude.com/docs/claude-tag/admins/audit) lists four trails and OpenTelemetry is not one, with "no per-action log of every task and who asked". The section 3 Slack paragraph points there.
+2. **Keep Awake: 3.18 (row updated) and 7.3.** It is documented now: it stops idle sleep so scheduled tasks run on an unattended machine. Desktop's `keepAwakeEnabled` turns it off, but it is documented on the [third-party Desktop configuration](https://claude.com/docs/third-party/claude-desktop/configuration) page, so the row says to confirm a Team or Enterprise sign-in honors it. The `caffeinate` claim and behavior on a locked screen remain undocumented, and 7.3 records them as such. 3.4 drops the sentence, since Keep Awake is not Dispatch-specific.
+3. **Outlook Graph consent: section 3, Claude for Microsoft 365.** Confirmed by [Use Claude for Outlook](https://claude.com/docs/office-agents/outlook): a separate, tenant-wide Global Administrator consent to `Mail.ReadWrite`, `Calendars.Read`, `User.Read` and `offline_access`, with no `Mail.Send`. The own-Entra-app alternative is described, and it is required in GCC High, DoD and 21Vianet.
+4. **Server-managed version floor: section 4, Delivery mechanism.** [Server-managed settings](https://code.claude.com/docs/en/server-managed-settings) documents no single floor, and the 4.43 floor clears every per-feature version it names. More consequential, and now stated, are the cases where the fetch is skipped and no server policy applies: `apiKeyHelper` or Workload Identity credentials, Console API keys, a `CLAUDE_CODE_USE_*` or non-default `ANTHROPIC_BASE_URL` export, and Cowork in the desktop app. The MCP sentence is corrected too: `allowedMcpServers`, `deniedMcpServers` and, from v2.1.259, `managedMcpServers` can be delivered; only `managed-mcp.json` and its exclusive control need MDM.
+
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
 Four changes detected from Anthropic's October 2026 releases.
