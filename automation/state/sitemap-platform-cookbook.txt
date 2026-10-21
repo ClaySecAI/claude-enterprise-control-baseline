@@ -23,6 +23,7 @@ https://platform.claude.com/cookbook/extended-thinking-extended-thinking
 https://platform.claude.com/cookbook/extended-thinking-extended-thinking-with-tool-use
 https://platform.claude.com/cookbook/fable-5-fallback-billing-guide
 https://platform.claude.com/cookbook/finetuning-finetuning-on-bedrock
+https://platform.claude.com/cookbook/managed-agents-cma-agent-security-review
 https://platform.claude.com/cookbook/managed-agents-cma-cap-session-spend
 https://platform.claude.com/cookbook/managed-agents-cma-consult-an-advisor
 https://platform.claude.com/cookbook/managed-agents-cma-coordinate-specialist-team
@@ -60,6 +61,7 @@ https://platform.claude.com/cookbook/multimodal-getting-started-with-vision
 https://platform.claude.com/cookbook/multimodal-how-to-transcribe-text
 https://platform.claude.com/cookbook/multimodal-reading-charts-graphs-powerpoints
 https://platform.claude.com/cookbook/multimodal-using-sub-agents
+https://platform.claude.com/cookbook/observability-opentelemetry-tracing
 https://platform.claude.com/cookbook/observability-usage-cost-api
 https://platform.claude.com/cookbook/patterns-agents-async-multi-agent-orchestration
 https://platform.claude.com/cookbook/patterns-agents-basic-workflows
