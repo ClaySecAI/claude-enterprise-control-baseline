@@ -1,0 +1,82 @@
+name: Watch cited pages
+
+# The weekly watcher reads the three sources Anthropic changelogs. It cannot
+# see what the 2026-09-12 verification pass found by hand: renamed console
+# panels, a default that flipped, a setting that moved surfaces. None of those
+# were changelogged. This workflow diffs every Anthropic page the baseline
+# cites, read from docs/*.md so the tracked set follows the cited set.
+#
+# Monthly and on its own label, so forty pages of documentation churn do not
+# land in the weekly queue. Report only: there is deliberately no drafting job.
+# A cited page changes for many reasons that are not about administrators, and
+# running the drafting model on each would spend money on site chrome. A
+# person reads the diff and decides; if a change matters, edit the baseline in
+# that pull request or open an issue.
+#
+# Like the weekly watcher, the pull request is opened with GITHUB_TOKEN, so
+# validate.yml does not auto-run on it. Snapshots only change automation/,
+# which none of the validators read.
+
+on:
+  schedule:
+    - cron: "41 9 2 * *" # 2nd of each month, 09:41 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write # to create the label on first use
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Diff cited pages against their snapshots
+        id: check
+        run: python3 automation/check_updates.py --cited
+
+      - name: Open a pull request carrying the snapshots
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          branch="watch/cited-$(date -u +%Y-%m-%d)-${GITHUB_RUN_NUMBER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add automation/state/cited
+          git commit -m "chore(automation): update cited-page snapshots
+
+          Detected by the monthly cited-page watcher. The diff is in the pull
+          request body."
+          git push -u origin "$branch"
+
+          gh label create cited-page-update --color "c5def5" \
+            --description "A page the baseline cites changed" 2>/dev/null || true
+
+          {
+            echo "A page the baseline cites has changed since last month."
+            echo
+            echo "Read each diff and decide whether the baseline still says what"
+            echo "the page says. Most changes will be wording or layout. If one"
+            echo "matters, edit the affected rows on this branch (bump only those"
+            echo "rows' Drafted dates) or open an issue. Merge to advance the"
+            echo "snapshots either way, or the same diff returns next month."
+            echo
+            if [ -f automation/last-cited-diff.md ]; then cat automation/last-cited-diff.md; fi
+          } > /tmp/pr-body.md
+
+          url=$(gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Cited page change detected: $(date -u +%Y-%m-%d)" \
+            --label cited-page-update \
+            --body-file /tmp/pr-body.md)
+          echo "Opened $url"

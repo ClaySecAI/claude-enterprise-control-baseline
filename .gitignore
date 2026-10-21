@@ -8,3 +8,5 @@ Thumbs.db
 # Regenerated each run by automation/check_updates.py; the state/ snapshots
 # it's diffed against are committed, this scratch summary is not.
 automation/last-diff.md
+automation/last-cited-diff.md
+__pycache__/
