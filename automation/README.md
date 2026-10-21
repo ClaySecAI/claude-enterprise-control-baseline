@@ -92,6 +92,10 @@ Two limits, the same shape as the NIST validator's. **It does not know whether a
 
 One parsing detail worth preserving if this is ever rewritten: a naive `[A-Z]{2}-\d+` pattern matches the tail of every CSF subcategory — `PR.PS-01` yields `PS-01`, `DE.CM-09` yields `CM-09` — and because `PS`, `CM`, `IR`, `RA` and `SC` are all real 800-53 families, those phantoms survive the family filter and report as eleven failures that are not real. The negative lookbehind in `SP_REF` is what prevents that.
 
+## Link checker
+
+[`check_links.py`](check_links.py) sweeps every link in `docs/` monthly through [`check-links.yml`](../.github/workflows/check-links.yml), and on demand. It classifies rather than passing or failing. Only a definite 404 or 410 fails the run. A redirect is listed with its target, so a slug change surfaces as something to update rather than resolving silently until the redirect is retired. A 403, 405, 429, 5xx, timeout or refused connection is listed as unverifiable from that network, never as a failure: `github.com` answers bots with 403, and `csrc.nist.gov` blocks CI. Any status other than success on a HEAD request is re-checked with GET before it counts, because some hosts 404 a HEAD for a live page; `nvlpubs.nist.gov` does. It runs on a schedule, not on pull requests, because link rot is not a property of the diff, and it should never be a required check. The report goes to the job summary and to `last-links.md` locally.
+
 ## Running it locally
 
 ```bash
@@ -102,6 +106,7 @@ python3 automation/check_nist.py              # NIST identifiers resolve
 python3 automation/check_nist.py --refresh    # rebuild the NIST ID inventory
 python3 automation/check_settings.py          # setting keys, nesting, values
 python3 automation/check_settings.py --refresh # rebuild the settings inventory
+python3 automation/check_links.py             # classify every link in docs/
 ```
 
 No dependencies beyond the standard library.
