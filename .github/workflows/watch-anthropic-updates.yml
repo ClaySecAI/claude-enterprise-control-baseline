@@ -123,7 +123,12 @@ jobs:
           git config user.name "claude[bot]"
           git config user.email "claude-baseline-bot@users.noreply.github.com"
 
+      - name: Record where the branch starts
+        id: start
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Draft the baseline update
+        id: draft
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -236,6 +241,51 @@ jobs:
             Hard constraints: never merge the PR yourself, never push to `main`,
             never touch a section of the baseline the diff doesn't justify touching,
             and never present a guessed NIST mapping as verified.
+
+      # The job log shows only the start and end of the drafting step. This is
+      # the full transcript, every command and tool result, so a run whose
+      # summary does not match what it did can be diagnosed. It is saved on the
+      # runner by the action; kept briefly because it can quote tool output.
+      - name: Preserve the drafting transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: draft-transcript
+          path: ${{ runner.temp }}/claude-execution-output.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      # The model's comment can describe edits that never reached the branch
+      # (run 39534058132 did exactly this and still passed). Fail the job when
+      # the branch is unchanged or the work tree is dirty while the latest PR
+      # comment claims changes were made.
+      - name: Check the model's claims against the branch
+        if: steps.draft.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ needs.check.outputs.branch }}
+          PR_NUMBER: ${{ needs.check.outputs.pr }}
+          START_SHA: ${{ steps.start.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git fetch -q origin "$BRANCH"
+          end_sha=$(git rev-parse "origin/$BRANCH")
+          dirty=$(git status --porcelain)
+          comment=$(gh pr view "$PR_NUMBER" --json comments -q '.comments[-1].body // ""')
+          claims=false
+          if printf '%s' "$comment" | grep -qiE '(added|updated|committed|renumbered)[^.]*(control|row|changelog)|net changes'; then
+            claims=true
+          fi
+          if [ -n "$dirty" ]; then
+            echo "::error::The work tree has uncommitted changes, so the drafted edits never reached the branch."
+            git status --short
+            exit 1
+          fi
+          if [ "$end_sha" = "$START_SHA" ] && [ "$claims" = true ]; then
+            echo "::error::The latest PR comment claims baseline changes, but the branch has no new commit."
+            exit 1
+          fi
+          echo "Branch moved: $([ "$end_sha" != "$START_SHA" ] && echo yes || echo no). Claims changes: $claims."
 
       # Backstop. Step 6 tells the model to run these; this makes the job fail
       # loudly if it pushed anything that does not pass, rather than trusting
