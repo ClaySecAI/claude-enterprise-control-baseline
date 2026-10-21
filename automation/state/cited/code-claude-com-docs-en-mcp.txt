@@ -1482,6 +1482,8 @@ runs,
 Agent SDK
 sessions, and
 cloud sessions
+outside a
+project
 , Claude Code can’t show that prompt: it loads project-scoped servers without asking. Claude Code also skips the prompt in a session you start in
 bypassPermissions
 mode with
@@ -3210,7 +3212,9 @@ earlier Agent Platform models
 true
 MCP tools deferred, with the same fallbacks as (unset)
 auto
-Threshold mode: Claude Code loads the tools it would otherwise defer upfront while their definitions total less than 10% of the context window, and defers all of them once the definitions reach 10%
+Threshold mode. Tools that would otherwise be deferred load upfront while their definitions total under 10% of the context window. At 10% or more, tool search turns on, and those tools can
+stay deferred
+even if the total falls under 10%
 auto:N
 Threshold mode with a custom percentage, where
 N
@@ -3299,6 +3303,19 @@ or
 whose cause it doesn’t recognize. When the retry works, nothing shows on screen and you don’t need to do anything: MCP tools load upfront instead. Claude Code tries tool search again later, at the cost of another rejected request. To skip those requests, set
 ENABLE_TOOL_SEARCH=false
 .
+​
+Tools that stay deferred below the
+ENABLE_TOOL_SEARCH=auto
+threshold
+If
+/context
+labels tools
+(deferred)
+or
+(loaded on-demand)
+though their definitions total under the
+auto
+threshold, tool search was already on in this conversation and stayed on. The total can drop later, for example while MCP servers reconnect after you resume a session. You don’t need to do anything: Claude loads each of those tools when a task needs it.
 ​
 Exempt a server from deferral
 If a server’s tools should always be visible to Claude without a search step, set

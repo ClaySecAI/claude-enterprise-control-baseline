@@ -1,0 +1,36 @@
+Manage user feedback settings on Team and Enterprise plans | Claude Help Center
+Skip to main content
+Claude
+Pro and Max plans
+Team and Enterprise plans
+Identity management (SSO, JIT, SCIM)
+Claude Cowork
+Claude Code
+Claude Desktop
+Claude Mobile apps
+Claude API and Console
+Connectors
+Claude in Chrome
+Claude for Education
+Privacy and legal
+Safeguards
+Amazon Bedrock
+As a Primary Owner or Owner of a Team or Enterprise plan, you can manage the ability for members of your organization to submit feedback to Anthropic via thumbs up / thumbs down.
+Navigate to
+Organization settings > Data and Privacy
+.
+Use the toggle to change the
+Rate chats
+setting for your organization:
+More information on how Anthropic collects, uses, and stores feedback data can be found in our Privacy Center:
+How long do you store my organization’s data?
+Did this answer your question?
+Disappointed Reaction
+Neutral Reaction
+Smiley Reaction
+Related Articles
+Who owns and manages the data of my team?
+Manage user feedback settings on Claude Console
+Who owns and manages the data of my Claude for Education account?
+Manage members on Team and Enterprise plans
+HIPAA-ready Enterprise plans

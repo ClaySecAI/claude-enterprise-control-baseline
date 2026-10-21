@@ -2488,14 +2488,35 @@ EPERM
 EROFS
 , start Claude Code in a project folder you can write to, then run
 /sandbox
-again in that session.
-If the reason begins with
+again in that session. If the reason begins with
 Invalid JSON syntax in settings file
 , correct the JSON in your project’s
 .claude/settings.local.json
 , then run
 /sandbox
 again.
+If no writable project folder is available to you, turn the sandbox on from your user settings instead. Add this to
+~/.claude/settings.json
+:
+{
+"sandbox"
+: {
+"enabled"
+:
+true
+}
+}
+This turns on
+auto-allow mode
+. For regular permissions mode, also set
+sandbox.autoAllowBashIfSandboxed
+to
+false
+. The change takes effect in your running session at the next shell command Claude runs, and the
+Mode
+tab of
+/sandbox
+then marks the mode in effect.
 ​
 Limitations
 Sandboxing reduces risk but is not a complete isolation boundary. Review the limitations below before relying on it as a hard security control.
