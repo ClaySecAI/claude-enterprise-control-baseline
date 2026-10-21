@@ -8,9 +8,9 @@ Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
 ## 2026-10-21 — organization webhooks, MCP filtering behavior, sandbox namespace settings
 
-Three changes detected from Anthropic's October 2026 releases.
+Four changes detected from Anthropic's October 2026 releases.
 
-### 1.20 Organization webhooks (Admin API, new control)
+### 1.21 Organization webhooks (Admin API, new control)
 
 Anthropic added `/v1/organizations/webhooks` endpoints (beta) to the Admin API. Organizations can now register webhooks to receive POST notifications when Anthropic restricts or bans a user profile, and when restrictions or bans end. This provides a real-time monitoring path alongside the scheduled compliance API. Added as L2 control with `Anthropic + SIEM` ownership. Reference: [Admin API reference](https://platform.claude.com/docs/en/api/beta/organization).
 
@@ -22,7 +22,7 @@ As of Claude Code 2.1.305, stdio MCP servers with `${VAR}` only in the `env` fie
 
 As of Claude Code 2.1.305, when `allowManagedPermissionRulesOnly` is set to `true`, plugins mounted by path from Claude Desktop no longer retain their own `allowed-tools` settings. Row Drafted date updated to reflect this behavior clarification.
 
-### 4.344 `sandbox.allowNestedUserNamespaces` documented as a weakening key
+### `sandbox.allowNestedUserNamespaces` documented as a weakening key
 
 Claude Code 2.1.305 added `sandbox.allowNestedUserNamespaces` (Linux only, default `false`), which allows sandboxed commands to create user namespaces for isolation-bypass techniques used by Chromium and rootless podman. Documented in the weakening keys reference section with recommendation to pin to `false` for all baseline levels to maintain filesystem protection.
 
