@@ -21,7 +21,7 @@ This fills the gap in the meantime: an assessable control layer built on SP 800-
 | [`docs/claude-enterprise-control-baseline.md`](docs/claude-enterprise-control-baseline.md) | The baseline. Control tables per surface, NIST crosswalk, threat mapping, known gaps, operating cadence. |
 | [`examples/managed-settings.json`](examples/managed-settings.json) | L2 Claude Code managed settings policy, ready for MDM deployment |
 | [`CHANGELOG.md`](CHANGELOG.md) | What's changed in the baseline itself, and when |
-| [`automation/`](automation/README.md) | Weekly watcher that flags upstream Anthropic changes worth reviewing against this baseline, plus the two validators CI runs on every change |
+| [`automation/`](automation/README.md) | Scheduled watchers that flag upstream Anthropic changes (release notes weekly, every cited page monthly) and a monthly link checker, plus the two validators CI runs on every change |
 
 ## Profile levels
 
@@ -67,7 +67,7 @@ Neither half of that now depends on anyone remembering to re-check it. [`automat
 
 Validate every setting against your own tenant before adopting. Issues and PRs welcome, particularly corrections where a setting has moved or a value is wrong.
 
-A [weekly watcher](automation/README.md) checks Anthropic's own release notes and changelogs and opens an issue when something changed. It flags candidates for review — it does not decide relevance and does not edit the baseline itself.
+Three scheduled jobs in [`automation/`](automation/README.md) watch for drift. A weekly watcher checks Anthropic's own release notes and changelogs and opens an issue when something changed. A monthly watcher diffs every page the baseline cites and opens a pull request when one changes. A monthly link checker reports dead links and redirects. They flag candidates for review. They do not decide relevance and do not edit the baseline itself.
 
 ## Disclaimer
 
