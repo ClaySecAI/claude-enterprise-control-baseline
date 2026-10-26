@@ -2,6 +2,20 @@
 
 Content changes to the baseline itself. Not to be confused with `automation/last-diff.md`, which is a raw diff of an upstream Anthropic source and gets cleared every run — entries land here only once a diff has actually been reviewed and turned into a doc change.
 
+## 2026-10-26 — web fetch and web search organization controls
+
+Anthropic released two new organization-level controls for restricting data exfiltration and limiting capability reach:
+
+### 2.17 Web fetch organization control (new)
+
+Organization admins can now turn off web fetch org-wide on the Capabilities page of the Claude Console, or set allowed/blocked domains. With web fetch off, Messages API requests that include the web fetch tool fail with a 400 error; in Claude Managed Agents, `web_fetch` tool calls return an error result. Domain restrictions apply to both the Messages API and Managed Agents sessions. Added as L1/L2/L3 control mapping web fetch disable (L1 and L3) to L2 allowlist of tested domains only. NIST SP 800-53: SC-7, SC-7(4), AC-4, CM-7. References: [Platform release notes October 20, 2026](https://platform.claude.com/docs/en/release-notes/overview).
+
+### 2.18 Web search organization domain restrictions (new)
+
+Organization admins set allowed/blocked domains for web search via the same Capabilities page. Domain restrictions apply to Claude Managed Agents sessions, filtering the search results they receive from both the organization's list and any agent-level configuration. The underlying **Allow web search** capability (on by default) is separately gated via custom role RBAC (1.20). Added as L1/L2 with tested domain allowlist, L3 off. NIST SP 800-53: SC-7, SC-7(4), AC-4, CM-7. References: [Platform release notes October 20, 2026](https://platform.claude.com/docs/en/release-notes/overview).
+
+Both rows map to the same NIST controls because both are boundary-protection and least-functionality controls restricting outbound data access and capability reach. CSF 2.0: PR.IR-01, PR.PS-01.
+
 ## [Unreleased]
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
