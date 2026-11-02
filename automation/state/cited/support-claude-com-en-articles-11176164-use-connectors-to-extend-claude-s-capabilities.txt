@@ -1,7 +1,7 @@
 Use connectors to extend Claude's capabilities | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -147,7 +147,7 @@ Connectors
 section.
 For each service, you can disconnect it, modify connection settings, or review permissions and access levels.
 Custom connectors
-Custom connectors using remote MCP are available on Claude, Cowork, and Claude Desktop for users on free, Pro, Max, Team, and Enterprise plans. Free users are limited to one custom connector.
+Custom connectors using remote MCP are available on Claude, Cowork, and Claude Desktop for users on Free, Pro, Max, Ultra, Team, and Enterprise plans. Free users are limited to one custom connector.
 In addition to directory connectors, you can add custom connectors:
 Navigate to
 Customize > Connectors

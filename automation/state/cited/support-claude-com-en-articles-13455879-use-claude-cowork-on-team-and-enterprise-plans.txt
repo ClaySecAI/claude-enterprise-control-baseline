@@ -1,7 +1,7 @@
 Use Claude Cowork on Team and Enterprise plans | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -15,38 +15,27 @@ Claude for Education
 Privacy and legal
 Safeguards
 Amazon Bedrock
-Note:
-Claude Cowork and chat are now one Claude. Ask for what you need, and Claude decides whether that’s a quick answer or a task. This is rolling out gradually to Pro and Max plans, and it’s in beta for Enterprise plans, where an admin turns it on as
-Chat and Cowork unified (beta)
-. Team organizations, and Enterprise organizations that haven’t turned it on, keep chat and Claude Cowork as they are today, so everything in this article still applies. If you’re an Enterprise admin, learn more in
-Set up and manage the new unified Claude experience for your Enterprise organization
-, or read our
-blog post
-.
 This article explains important limitations and considerations for Team and Enterprise organizations using Claude Cowork.
 Availability
-Claude Cowork is available on paid plans (Pro, Max, Team, Enterprise). Availability varies by surface:
-Claude Desktop for macOS
-— Available on all paid plans.
-Click here
-to download.
-Claude Desktop for Windows
-— Available on all paid plans. Cowork requires the latest version of Claude for Windows. Download or update at
+Claude Cowork is available on paid plans (Pro, Max, Ultra, Team, and Enterprise):
+Claude Desktop for macOS, Windows, and Linux (beta):
+All paid plans. Download or update at
 claude.com/download
 .
-Web (beta)
-, at claude.ai — Available on Pro, Max, and Team plans. On Enterprise plans, available where an admin has enabled it.
-Claude Mobile
-(beta)
-— Available on Pro, Max, and Team plans, in the latest version of Claude for iOS and Claude for Android. On Enterprise plans, available where an admin has enabled it.
-Claude in Chrome side panel
-— Available on Max and Team plans, and rolling out to Pro plans. On Enterprise plans, available where an admin has enabled it. For more information, see
+Web and Claude Mobile:
+Pro, Max, Ultra, and Team plans (in beta on Team), and Enterprise plans when an owner enables it.
+Claude in Chrome side panel:
+All paid plans. On Enterprise plans, an owner needs to enable Claude in Chrome and Cowork in the cloud. See
 Get started with Claude in Chrome
 .
-On web and mobile, Claude Cowork sessions run in Anthropic's cloud.
+The new Claude experience, which combines chat and Cowork, is rolling out to Pro, Max, and Ultra plans. On Team plans (in beta) and Enterprise plans, it's available where
+Chat and Cowork unified
+is turned on. Organizations that haven't turned it on keep chat and Cowork as separate options, so this article still applies. Enterprise owners can learn more in
+Set up and manage the new unified Claude experience for your Enterprise organization
+.
 Where Cowork runs
-During the beta, Cowork sessions can run in two places:
-Sessions in the cloud (beta):
+On Team and Enterprise plans, Cowork sessions can run in two places:
+Sessions in the cloud:
 Running Cowork in the cloud lets members run tasks on Anthropic's infrastructure instead of their own machines. This means work continues across desktop, web, and mobile and scheduled tasks run when the laptop closes and no device is online.
 Local sessions:
 Claude's work runs on the user’s computer, with code in an isolated virtual machine.
@@ -85,7 +74,7 @@ Claude can use the web in Cowork in two ways: a browser built into the Claude De
 Built-in browser:
 Controlled from
 Organization settings > Cowork
-. On Team plans, it's on by default as it rolls out this week. Team owners can turn it off anytime. On Enterprise plans, it's off by default at launch and turns on by default starting September 10, 2026, unless you've turned it off. In organizations that have enabled HIPAA, the built-in browser stays off until an Owner turns it on in
+. On Team plans, it's on by default. Team owners can turn it off anytime. On Enterprise plans, it's on by default unless you've turned it off. In organizations that have enabled HIPAA, the built-in browser stays off until an Owner turns it on in
 Organization settings > Cowork
 . With the
 HIPAA configuration applied to Claude Code (local mode) and Cowork (local mode)
@@ -101,12 +90,14 @@ Learn more in
 Use the built-in browser in Claude Cowork
 .
 Auto mode availability
-The organization setting
-Allow “Automatically approve” mode
-in
-Organization settings > Cowork
-(under Permissions) controls whether members can use "Automatically approve" mode in Cowork. This setting is on by default, so the mode is available to your members unless you turn it off.
-When the setting is off, "Automatically approve" doesn't appear in your members' mode selector.
+Two organization settings in
+Organization settings > Capabilities
+control "Automatically approve" mode in Cowork:
+Allow "Automatically approve" mode
+controls whether members can use the mode. This setting is on by default, so the mode is available to your members unless you turn it off. When it's off, "Automatically approve" doesn't appear in your members' mode selector.
+Start new tasks in "Automatically approve" mode
+controls whether new Cowork tasks start in that mode. It’s on by default on Pro, Max, Ultra, and Team plans, and off by default on Enterprise plans. Turn it off to keep "Manually approve" as the default.
+Members can switch modes within any session.
 Learn more about how the modes differ in
 Get started with Claude Cowork
 .
@@ -180,6 +171,10 @@ Monitor Cowork activity with OpenTelemetry
 . You can also refer to
 Monitoring
 in our Claude Docs.
+Endpoint detection and response (EDR)
+For local sessions, admins can run their organization's EDR sensor inside the VM on the user's computer, so activity in the VM reports to the console your security team already uses. This is in beta on macOS and Windows, and it doesn't cover sessions in the cloud. Learn more about
+running your EDR sensor in Claude Cowork
+.
 Prompt injection risks
 Cowork has unique risks due to its agentic nature and internet access. We've implemented safety measures including model training and content classifiers, but the risk of prompt injection attacks is non-zero.
 Users should:
@@ -206,8 +201,8 @@ Disappointed Reaction
 Neutral Reaction
 Smiley Reaction
 Related Articles
-Use Claude Code with your Team or Enterprise plan
-HIPAA-ready Enterprise plans
+Get started with Claude Cowork
+Use Claude Cowork safely
 Claude Cowork architecture overview
 Set up browser use in Claude Cowork for Team and Enterprise plans
 Use Claude Code (local mode) and Claude Cowork (local mode) on a HIPAA-ready Enterprise plan

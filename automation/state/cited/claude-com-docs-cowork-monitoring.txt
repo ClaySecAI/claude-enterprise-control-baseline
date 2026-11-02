@@ -8,6 +8,9 @@ Track Cowork usage and activity across your organization by exporting events thr
 OpenTelemetry
 (OTel). Cowork exports events via the OTel logs/events protocol, giving you visibility into user prompts, model responses, API requests, tool usage, and errors.
 Monitoring is available for Team and Enterprise plans. OTel monitoring requires Claude desktop app version 1.1.4173 or later.
+See
+Retrieve session transcripts
+in the Compliance API documentation to retrieve the transcripts of Cowork sessions on request. Requires an Enterprise plan.
 ​
 Setup
 Configure monitoring from the Cowork admin settings:
@@ -287,10 +290,33 @@ cache_read_tokens
 Number of tokens read from cache
 cache_creation_tokens
 Number of tokens used for cache creation
+cache_creation_5m_tokens
+Portion of
+cache_creation_tokens
+written with a 5-minute cache lifetime
+cache_creation_1h_tokens
+Portion of
+cache_creation_tokens
+written with a 1-hour cache lifetime
 speed
 "fast"
 or
 "normal"
+Claude Desktop 3.1623.0 and later send
+cache_creation_5m_tokens
+and
+cache_creation_1h_tokens
+. Both are
+0
+when the API response doesn’t report the split, even when
+cache_creation_tokens
+is above zero. If your deployment uses an
+LLM gateway
+, confirm that the gateway returns the
+cache_creation
+object in each response’s
+usage
+.
 ​
 API error event
 Logged when an API request to Claude fails.

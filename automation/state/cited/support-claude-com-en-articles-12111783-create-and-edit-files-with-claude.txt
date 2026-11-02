@@ -1,7 +1,7 @@
 Create and edit files with Claude | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -16,10 +16,10 @@ Privacy and legal
 Safeguards
 Amazon Bedrock
 Claude can execute code to create and work with files directly in your conversations. Prompt Claude using natural language to generate Excel spreadsheets, PowerPoint presentations, Word documents, and PDF files that you can download and use immediately.
-Code execution and file creation is available to all Claude users (Free, Pro, Max, Team, and Enterprise) on the web, Claude Desktop, and Claude Mobile.
+Code execution and file creation is available to all Claude users (Free, Pro, Max, Ultra, Team, and Enterprise) on the web, Claude Desktop, and Claude Mobile.
 These capabilities make it easy to produce professional documents by simply chatting with Claude. You can create financial models in Excel with working formulas, perform advanced analyses on uploaded data, produce reports with charts and visualizations, and generate presentations from your documents—all without specialized software skills.
 Availability
-Free, Pro, and Max plans:
+Free, Pro, Max, and Ultra plans:
 Code execution and file creation is enabled by default
 Network access is enabled, allowing Claude to install packages from approved sources
 Team plan:
@@ -47,12 +47,14 @@ Allow network egress
 toggled on with access to package managers only. An organization owner can manually disable this for the organization in
 Organization settings > Capabilities
 if needed.
-Free, Pro, and Max plans:
+Free, Pro, Max, and Ultra plans:
 Enable file creation from
 Settings > Capabilities
 by toggling
 Code execution and file creation
-on.
+(called
+Create and edit files
+in the updated Settings layout) on.
 To give Claude access to external data sources, toggle
 Allow network egress
 on:
@@ -130,7 +132,7 @@ safe and trustworthy agents framework
 Given you full control of the feature. You can turn it on or off at any time.
 Designed Claude to give you user-friendly summaries of its actions so you can see what it is doing. You can stop Claude's actions at any time and we recommend monitoring Claude's work while using the feature.
 Given you the ability to review and audit actions taken by Claude within the sandbox environment.
-Disabled public sharing of conversations that include any file artifacts from the code execution and file creation feature for free, Pro, and Max users.
+Disabled public sharing of conversations that include any file artifacts from the code execution and file creation feature for Free, Pro, Max, and Ultra users.
 Limited the duration of tasks that can be completed by Claude and the length of time you can use a single sandbox container to avoid loops of malicious activity.
 Implemented sandbox isolation such that no sandbox environments are ever shared between users.
 Intentionally limited the network, container, and storage resources.

@@ -7,6 +7,7 @@ Organization
 Admin API
 User management
 Plugins API
+Claude Tag API
 Workspaces
 Organization webhooks (beta)
 User profiles
@@ -16,12 +17,13 @@ Overview
 Create an Admin API key
 App Attest
 Workload Identity Federation
-Manage WIF via API
+Manage WIF with the Admin API
 WIF reference
 Identity providers
-
+
 Monitoring
-Usage and Cost API
+Usage and Cost Analytics API
+Usage and Cost API (legacy)
 Rate Limits API
 Analytics APIs
 Claude Code Analytics API
@@ -63,7 +65,10 @@ sk-ant-admin01-...
 ) can call the Activity Feed. See
 Set up the Compliance API
 for the conditions under which each key type carries the scope.
-The Activity Feed records authentication, chat, file, project, administrative, and platform activity across your organization and returns it in reverse chronological order. Activities are queryable within 1 minute of occurring and are retained for 6 years. Recording is not retroactive: it begins when the Compliance API is first enabled for your organization, and activity from before enablement is not backfilled.
+The Activity Feed records authentication, chat, file, project, administrative, and platform activity across your organization and returns it in reverse chronological order. Activities are queryable within 1 minute of occurring and are retained for 6 years.
+Recording is not retroactive: it begins when the Compliance API is first enabled for your organization, and activity from before enablement is not backfilled. Access Transparency events are an exception. If your organization is enrolled in
+Access Transparency
+, these events are recorded even while the Compliance API is off. The feed can therefore include some from before the Compliance API was first enabled.
 cURL
 
 curl
@@ -72,14 +77,14 @@ curl
 \
 "https://api.anthropic.com/v1/compliance/activities?limit=1"
 \
---header
+-H
 "
 x-api-key
 :
 $ANTHROPIC_COMPLIANCE_ACCESS_KEY
 "
 \
---header
+-H
 "
 anthropic-version
 :
@@ -93,7 +98,7 @@ Response
 {
 "id"
 :
-"activity_01XyDMpzjS89pFZXqSFUBDr6"
+"activity_01DeFgHjKmNpQrStUvWxYzAb"
 ,
 "created_at"
 :
@@ -135,7 +140,7 @@ Response
 ,
 "claude_chat_id"
 :
-"claude_chat_01XyDMpzjS89pFZXqSFUBDr6"
+"claude_chat_01CdEfGhJkMnPqRsTuVwXyZa"
 ,
 "claude_project_id"
 :
@@ -148,11 +153,11 @@ true
 ,
 "first_id"
 :
-"activity_01XyDMpzjS89pFZXqSFUBDr6"
+"activity_01DeFgHjKmNpQrStUvWxYzAb"
 ,
 "last_id"
 :
-"activity_01XyDMpzjS89pFZXqSFUBDr6"
+"activity_01DeFgHjKmNpQrStUvWxYzAb"
 }
 Filter activities
 
@@ -168,7 +173,7 @@ created_at.gte
 .lt
 . See the
 API reference
-for each parameter's type and accepted values.
+for each parameter’s type and accepted values.
 Repeatable parameters use array-bracket query syntax: pass
 activity_types[]=...
 ,
@@ -194,14 +199,14 @@ curl
 --data-urlencode
 "created_at.gte=2026-04-01T00:00:00Z"
 \
---header
+-H
 "
 x-api-key
 :
 $ANTHROPIC_COMPLIANCE_ACCESS_KEY
 "
 \
---header
+-H
 "
 anthropic-version
 :
@@ -279,7 +284,7 @@ is
 null
 .
 To page through activities:
-Pass the response's
+Pass the response’s
 last_id
 as
 after_id
@@ -294,7 +299,7 @@ has_more
 is
 false
 .
-The cursor parameter sets the page direction; the endpoint's sort order sets the time direction. The same
+The cursor parameter sets the page direction; the endpoint’s sort order sets the time direction. The same
 after_id
 parameter reaches older activities here. Chats sort oldest first; see
 Retrieve and delete chats, files, and projects
@@ -308,7 +313,7 @@ same cursor. Only move to the next cursor after you have stored the page it
 points past.
 Page tokens on the local session endpoints are the exception over longer pauses. On the
 local session messages endpoint
-, a walk's
+, a walk’s
 page
 tokens expire 24 hours after its first page (a walk is one pass through the pages), so finish or resume within that window, or restart without the
 page
@@ -326,14 +331,14 @@ curl
 \
 "https://api.anthropic.com/v1/compliance/activities?limit=2"
 \
---header
+-H
 "
 x-api-key
 :
 $ANTHROPIC_COMPLIANCE_ACCESS_KEY
 "
 \
---header
+-H
 "
 anthropic-version
 :
@@ -347,14 +352,14 @@ curl
 \
 "https://api.anthropic.com/v1/compliance/activities"
 \
---header
+-H
 "
 x-api-key
 :
 $ANTHROPIC_COMPLIANCE_ACCESS_KEY
 "
 \
---header
+-H
 "
 anthropic-version
 :
@@ -387,7 +392,7 @@ false
 .
 Persist the final
 last_id
-only after you've stored every page it covers.
+only after you’ve stored every page it covers.
 cursor = stored_cursor
 loop:
  if cursor is not null:
@@ -418,7 +423,7 @@ organization_id
 string or null
 Organization where the activity occurred, or
 null
-for events not tied to an organization (sign-in, sign-out, Compliance API calls).
+for events not tied to an organization.
 organization_uuid
 string or null
 Same scoping as
@@ -450,7 +455,7 @@ actor.type
 When it appears
 Key fields
 user_actor
-A signed-in claude.ai or Claude Console user took the action, or a process Anthropic runs on that user's behalf did (see the paragraph after this table).
+A signed-in claude.ai or Claude Console user took the action. Processes Anthropic runs on the user’s behalf can also appear as this type; see the paragraph after this table.
 email_address
 ,
 user_id
@@ -507,7 +512,7 @@ AzureSCIMV2
 )
 A
 user_actor
-activity does not always mean the user took the action. Processes that Anthropic runs on a user's behalf can currently appear as
+activity does not always mean the user took the action. Processes that Anthropic runs on a user’s behalf can currently appear as
 user_actor
 for the affected user rather than as
 system_actor
@@ -517,11 +522,19 @@ platform_memory_store_created
 platform_memory_created
 , and
 platform_memory_deleted
-, are attributed this way. Memory activities can show an
+, are attributed this way. The memory activities
+platform_memory_store_created
+,
+platform_memory_created
+,
+platform_memory_updated
+, and
+platform_memory_deleted
+currently show an
 ip_address
 of
 0.0.0.0
-whoever performed them, so this value does not on its own identify activity from a platform process.
+whoever performed them. As a result, this value does not on its own identify a process that Anthropic runs on the user’s behalf.
 A
 claude_*_viewed
 activity means a Claude app loaded content, not that a person viewed it. Types such as
@@ -530,14 +543,27 @@ claude_chat_viewed
 claude_file_viewed
 , and
 claude_project_viewed
-are recorded each time a Claude app loads the chat, file, or project from Anthropic's servers. Repeated loads are not deduplicated. The web, desktop, and mobile apps load content at different moments, sometimes in the background, and can display a cached copy without loading it. Counts of these activities vary by platform as a result, and they do not correspond to messages sent or screens viewed.
+are recorded each time a Claude app loads the chat, file, or project from Anthropic’s servers. Repeated loads are not deduplicated. The web, desktop, and mobile apps load content at different moments, sometimes in the background, and can display a cached copy without loading it. Counts of these activities vary by platform as a result, and they do not correspond to messages sent or screens viewed.
+A missing
+*_deleted
+activity does not mean the content still exists. When your organization’s retention policy deletes a chat, project, or published artifact, the Activity Feed records no
+claude_chat_deleted
+,
+claude_project_deleted
+, or
+claude_published_artifact_deleted
+activity. An admin’s change to the policy is recorded as a
+data_retention_periods
+update in
+claude_organization_settings_updated
+.
 Activities about a file, project document, or artifact do not include its name or title. As of September 24, 2026, the
 filename
 and
 title
 fields on these activities are always
 null
-, an empty string, or omitted, including on activities recorded before that date. To look up a name or title, pass the activity's
+, an empty string, or omitted, including on activities recorded before that date. To look up a name or title, pass the activity’s
 claude_file_*
 ,
 claude_proj_doc_*

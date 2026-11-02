@@ -1,7 +1,7 @@
 Claude in Chrome permissions guide | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -16,7 +16,8 @@ Privacy and legal
 Safeguards
 Amazon Bedrock
 This guide explains how to control what Claude can access and do when using Claude in Chrome. Understanding permissions helps you balance productivity with security.
-Claude in Chrome is available for all paid plans (Pro, Max, Team, and Enterprise). It's available in Claude Cowork and Claude Code, and in beta in the Chrome browser. On Max and Team plans, the side panel runs as a Claude Cowork session, and this is rolling out to Pro plans in the coming weeks. On Enterprise plans, the side panel runs as a Cowork session once your admin has enabled Cowork in the cloud; until then, it uses the classic experience.
+Availability
+Claude in Chrome is available on paid plans (Pro, Max, Ultra, Team, and Enterprise), in the Chrome side panel, Claude Cowork, and Claude Code. The side panel runs as a Claude Cowork session. On Enterprise plans, this requires an owner to enable Claude in Chrome and Cowork in the cloud; until then, the side panel uses the classic experience.
 Important:
 Before using Claude in Chrome, review
 Use Claude in Chrome Safely
@@ -52,9 +53,7 @@ Automatically approve
 When you choose "Automatically approve," Claude keeps working without stopping to ask about every step. Instead, Claude reviews each action for safety (such as checking for data exfiltration or prompt injection) and automatically blocks anything it determines to be unsafe. When an action is blocked, Claude looks for a safer way to finish the task or pauses and asks you directly. If Claude keeps running into blocks, it switches back to asking for your permission for each step. "Automatically approve" is the default mode in the Cowork side panel. If you switch to a different mode, the side panel keeps your choice for future sessions.
 We tested Claude's safety check extensively before releasing it, including working with outside security experts who tried to sneak dangerous actions past it. It gives you the speed of letting Claude work without interruptions, with a layer of protection that "Skip all approvals" doesn't have: every action still gets reviewed before it happens.
 Of course, no defense is perfect and no mode replaces your judgment. For work with real consequences—money, messages sent as you, important files—stay close and review what Claude does or consider switching back to "Manually approve."
-You'll see fewer prompts than in "Manually approve," but the safety checks still run in the background. Because Claude does this extra checking for you,
-auto mode consumes more of your usage limit than the other modes
-.
+You'll see fewer prompts than in "Manually approve," but the safety checks still run in the background.
 Skip all approvals
 When you choose "Skip all approvals," Claude doesn't pause to ask, and nothing checks its actions automatically. Only use this when you completely trust every action, connector, file, app, etc. involved in the task.
 When does Claude need to request additional permissions?
@@ -115,4 +114,4 @@ Get started with Claude in Chrome
 Claude in Chrome troubleshooting
 Use Claude in Chrome safely
 Claude in Chrome admin controls
-Get started with Claude Cowork
+Use the built-in browser in Claude Cowork
