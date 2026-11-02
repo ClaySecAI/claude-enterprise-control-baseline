@@ -1,7 +1,7 @@
 Set up JIT or SCIM provisioning | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -289,8 +289,8 @@ Disappointed Reaction
 Neutral Reaction
 Smiley Reaction
 Related Articles
+Set up single sign-on (SSO)
 Switching to a different Identity Provider (IdP)
 Okta SSO/SCIM email mismatch
 Ping Identity SSO/SCIM email mismatch
-Okta SSO setup
 How SCIM sync works for Enterprise organizations

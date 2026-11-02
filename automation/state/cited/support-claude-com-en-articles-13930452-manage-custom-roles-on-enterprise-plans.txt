@@ -1,7 +1,7 @@
 Manage custom roles on Enterprise plans | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -101,10 +101,14 @@ Artifacts
 ).
 Cowork
 Access to Claude Cowork.
-Cowork in the cloud (beta)
+Cowork in the cloud
 Lets members run Cowork tasks on Anthropic's infrastructure instead of their own computer, so tasks can keep running across desktop, web, and mobile.
-Claude for Chrome
-Access to Claude for Chrome, the browser extension that lets Claude browse and act on web pages on the user's behalf.
+Claude in Chrome
+Access to Claude in Chrome, the browser extension that lets Claude browse and act on web pages on the user's behalf.
+Computer access
+Ability to access their computer’s files, apps, and browser from scheduled tasks, Claude on the web, or Claude Mobile. This also applies to chats in the new unified Claude experience that connect to a user’s computer. Sessions run from Claude Desktop on that computer aren’t affected. Claude Code remote control is a separate capability and isn’t affected.
+Scheduled tasks (Was Routines)
+Ability to create scheduled and webhook-triggered routines that run Claude Code autonomously in the cloud. Turning this off also turns off scheduled tasks for Cowork in the cloud and scheduled routines in the new unified Claude experience.
 *Claude Code dynamic workflows are on for your whole organization by default. Because a single run can last for hours and use more tokens than a typical session, decide which roles should have access. For members on custom roles, this capability follows the additive model like any other—a role must grant it for those members to use it. To restrict a specific group, leave this capability off in their role.
 This can be disabled organization-wide via
 managed-settings.json
@@ -134,6 +138,15 @@ Chat is enabled by default for all custom roles, including ones created before t
 Custom roles that already granted Claude Code have Cloud sessions and Claude Code remote control turned on, so users' access doesn't change. To restrict either one, turn it off under
 Claude Code
 on the role's
+Capabilities
+tab.
+If
+Computer access
+or
+Routines
+is on for your organization, custom roles that include Chat, Claude Code, Cowork, Chat and Cowork unified, or Claude in Chrome have that capability turned on, so users’ access doesn’t change. Roles set to “All capabilities” or “All generally available” include both automatically. To restrict either one, turn it off under
+Remote sessions
+on the role’s
 Capabilities
 tab.
 Grant all capabilities at once

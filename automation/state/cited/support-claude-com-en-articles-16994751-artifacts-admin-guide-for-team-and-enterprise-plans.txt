@@ -1,7 +1,7 @@
 Artifacts admin guide for Team and Enterprise plans | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -73,12 +73,13 @@ template. Users' existing projects stay at
 claude.ai/design
 until it closes, and up to 60 of them also appear in the
 Artifacts
-tab. To let users migrate their design systems, keep
+tab.
+Moving projects to Claude is rolling out gradually to paid plans, and a project or design system that moves to Claude becomes an artifact. To let users move their projects and move their design systems, keep
 Artifacts
 and
 Design systems
-on. Learn more in
-Migrate from standalone Claude Design to Claude
+on for your organization. On Enterprise plans with custom roles, each user's role needs them too. Learn more in
+Move from standalone Claude Design to Claude
 .
 Manage sharing outside your organization
 Two separate settings control what users can share outside your organization. Turning on one doesn't turn on the other. For what users see and which artifacts can't leave your organization, see
@@ -215,7 +216,7 @@ Artifacts
 in a role’s
 Capabilities
 tab.
-Design systems migrated from standalone Claude Design can arrive already shared with everyone. Published design systems that weren’t private there are shared with everyone in your organization, and if your organization’s default design system migrates, it becomes the default in Artifacts too, unless you’ve already set one.
+Design systems moved from standalone Claude Design can arrive already shared with everyone. Published design systems that weren’t private there are shared with everyone in your organization, and if your organization’s default design system moves, it becomes the default in Artifacts too, unless you’ve already set one.
 In standalone Claude Design
 The
 Claude Design Admin
@@ -268,6 +269,9 @@ When users create designs and docs, they may upload design assets, brand guideli
 Uploaded assets are stored persistently, and fall under the same
 data retention and deletion policies
 as other Anthropic products for organizations.
+A custom retention period set on an Enterprise plan can cover artifacts, including projects and design systems moved from standalone Claude Design. An artifact can be permanently deleted if nobody opens it for that period. For a moved project or design system, the period starts on the day of the move and restarts when someone opens or edits the artifact. Learn more in
+Configure custom data retention controls for Enterprise plans
+.
 Claude Design doesn't currently support data residency requirements.
 When someone leaves your organization
 Removing someone from your organization, including through your identity provider, removes their access to artifacts at the same time.
@@ -310,7 +314,7 @@ Neutral Reaction
 Smiley Reaction
 Related Articles
 Share artifacts
-View usage analytics for Team and Enterprise plans
+Configure custom data retention controls for Enterprise plans
 Manage custom roles on Enterprise plans
 Claude Design admin guide for Team and Enterprise plans
-Migrate from standalone Claude Design to Claude
+Move from standalone Claude Design to Claude

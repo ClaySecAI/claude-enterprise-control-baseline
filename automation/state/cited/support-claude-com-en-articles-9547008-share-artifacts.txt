@@ -1,7 +1,7 @@
 Share artifacts | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -21,9 +21,11 @@ Sharing option
 Free
 Pro
 Max
+Ultra
 Team
 Enterprise
 Share with anyone who has the link
+✅
 ✅
 ✅
 ✅
@@ -38,7 +40,9 @@ Invite specific people by email (beta)
 ✅
 ✅
 ✅
+✅
 Publish a legacy artifact (made in a chat)
+✅
 ✅
 ✅
 ✅
@@ -66,7 +70,7 @@ Copy the link and send it.
 Note:
 You can't change sharing settings in Claude for iOS or Claude for Android. Use Claude on the web or Claude Desktop.
 Choose who has access
-Pro and Max plans:
+Pro, Max, and Ultra plans:
 "Only you" or "Anyone with the link." To give specific people access, invite them by email.
 Team and Enterprise plans:
 "Only people invited," "Anyone at [your organization's name]," or "Anyone with the link." "Only you" shows when you haven't added anyone. "Anyone with the link" is available only when an Owner has turned on
@@ -91,7 +95,7 @@ or
 Can edit
 . Every other type of artifact offers all three levels.
 Invite people by email
-Available in beta on Pro, Max, Team, and Enterprise plans.
+Available in beta on Pro, Max, Ultra, Team, and Enterprise plans.
 You can invite specific people by email to access an artifact. They sign in to Claude with the email address you used and open the artifact with the access you give them. Unlike "Anyone with the link," an invitation works only for the person you invite.
 Before you invite someone
 Who can invite:
@@ -116,7 +120,7 @@ menu (
 Add people
 , or
 Invite people by email
-on Pro and Max plans), type the person's email address.
+on Pro, Max, and Ultra plans), type the person's email address.
 Select the
 Invite
 option that shows their address.
@@ -140,7 +144,7 @@ When access changes
 Pending invitations expire after 30 days.
 Accepted invitations don't expire.
 If you change who can open the artifact to "Only you":
-On Team and Enterprise plans, everyone you invited from outside your organization loses access, and their invitations are removed. On Pro and Max plans, people you invited keep their access.
+On Team and Enterprise plans, everyone you invited from outside your organization loses access, and their invitations are removed. On Pro, Max, and Ultra plans, people you invited keep their access.
 If you delete the artifact:
 Everyone you invited loses access.
 If the person who sent an invitation leaves your organization or loses edit access:
@@ -180,7 +184,7 @@ Only open shared artifacts from people you trust. Treat someone else's artifact 
 Stop sharing an artifact
 To stop sharing an artifact, open it, click "Share," and under
 Who has access
-, choose "Only you" (Pro and Max) or "Only people invited" (Team and Enterprise). To remove someone you added, open their access level and select "Remove."
+, choose "Only you" (Pro, Max, and Ultra) or "Only people invited" (Team and Enterprise). To remove someone you added, open their access level and select "Remove."
 On Team and Enterprise plans, owners can also remove outside access to individual artifacts. Learn more in the
 Artifacts admin guide for Team and Enterprise plans
 .
@@ -194,8 +198,8 @@ To come back to the artifact later, open the link in the invitation email again 
 Report an invitation you didn't expect
 Click "Report this invitation" in the email, or "Didn't expect this? Report this invitation" on the invitation page. Reporting declines the invitation, and the person who sent it isn't notified. After you report an invitation, that person can't invite you by email again.
 Publish or share a legacy artifact
-Legacy artifacts show "Publish" (Free, Pro, and Max plans) or "Share & copy link" (Team and Enterprise plans) instead of "Share." Use the steps in this section for those artifacts.
-Publish a legacy artifact on Free, Pro, and Max plans
+Legacy artifacts show "Publish" (Free, Pro, Max, and Ultra plans) or "Share & copy link" (Team and Enterprise plans) instead of "Share." Use the steps in this section for those artifacts.
+Publish a legacy artifact on Free, Pro, Max, and Ultra plans
 Open the artifact you want to publish.
 Click "Publish."
 Copy the public link and send it.
@@ -204,7 +208,7 @@ Artifacts
 in your sidebar, so you can find it again outside the original chat.
 Who can open a published chat artifact:
 Anyone with the link can view and use it without a Claude account. They're asked to sign up only for features that use Claude.
-People signed in on Free, Pro, or Max plans can also copy and save it. Features that use Claude count toward their own usage limits.
+People signed in on Free, Pro, Max, or Ultra plans can also copy and save it. Features that use Claude count toward their own usage limits.
 Embed a published chat artifact
 After you publish, click "Get embed code" to get code you can paste into another website. In the
 Allowed domains
@@ -244,7 +248,7 @@ Neutral Reaction
 Smiley Reaction
 Related Articles
 Use live artifacts in Claude Cowork
+Use Claude Cowork on web, desktop, and mobile
 Share a chat with specific people
-Get started with Claude Docs
 Artifacts admin guide for Team and Enterprise plans
 What are artifacts and how do I use them?

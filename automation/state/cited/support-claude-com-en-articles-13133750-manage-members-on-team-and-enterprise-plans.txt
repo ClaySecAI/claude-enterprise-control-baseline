@@ -1,7 +1,7 @@
 Manage members on Team and Enterprise plans | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -184,4 +184,4 @@ Roles and permissions
 Manage usage credits for Team and seat-based Enterprise plans
 Set up JIT or SCIM provisioning
 Purchase and manage seats on Enterprise plans
-Migrate your organization from Team to Enterprise
+Find and join a Team or Enterprise organization

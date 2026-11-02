@@ -11,13 +11,10 @@ Claude Enterprise supports SAML 2.0 and OIDC (OpenID Connect) for single sign-on
 Setting Up SSO
 (opens in new tab)
 for detailed configuration steps.
+Verify your domain:
+Single sign-on can't be configured until the domain is verified.
 Test SSO:
 Configure with a small pilot group before broad rollout.
-Enable domain capture:
-Automatically route users from your domain to your workspace. See
-Domain Capture Setup
-(opens in new tab)
-.
 Enforce SSO:
 Require SSO for all access once configuration is validated.
 User Provisioning Options
@@ -38,6 +35,12 @@ Admin-managed invitations via the
 Admin Console
 (opens in new tab)
 . Best for small, controlled pilots.
+Claiming is separate from verifying, and optional.
+Decide whether to claim your domain:
+Turning claiming on moves the personal accounts on your verified domain into your organization. Without it, those accounts stay outside your organization; restricted organization creation still stops new ones, so turn that setting on either way. Claiming needs restricted organization creation, enforced SSO, and SCIM or JIT provisioning, and it cannot be reversed. See
+Claim and migrate accounts on your domain
+(opens in new tab)
+.
 
 Example: Phased Rollout with SCIM
 Many organizations use SCIM for a phased rollout approach:
@@ -59,14 +62,14 @@ Data retention:
 Conversations are retained per your policy and exportable via the
 Compliance API
 (opens in new tab)
-and
+, which also provides activity logging for security monitoring alongside
 Audit Logs
 (opens in new tab)
-, which also provide full activity logging for security monitoring.
+.
 No model training:
 Your organization's data is not used to train Claude models by default.
 Role-based access:
-Primary Owner, Owner, and Member roles provide granular permissions. See
+Primary Owner, Owner, Admin, and User roles set each member's baseline permissions, and on Enterprise plans custom roles assigned to groups control feature access group by group. See
 Member Roles Guide
 (opens in new tab)
 .
@@ -75,7 +78,7 @@ Pre-Launch Checklist
 Important considerations before setting up Identity Management —
 Important Considerations
 (opens in new tab)
-SSO configured and tested —
+Domain verified, then SSO configured and tested —
 Setting Up SSO
 (opens in new tab)
 User provisioning configured —
@@ -84,7 +87,7 @@ Provisioning Guide
 Security review completed with IT and information security teams
 Data retention policies documented
 Compliance API and Audit log access configured —
-Trust Center
+Compliance API
 (opens in new tab)
 and
 Audit Logs
@@ -120,13 +123,16 @@ Claude Enterprise
 Yes
 Admin Steps to Enable Claude Code
 Follow these steps to enable Claude Code access for your users:
-Navigate to Settings > Organization > Members
+Go to Organization settings > Members
 in your Claude Enterprise admin console.
 For legacy seat-based plans:
-Purchase Premium seats and assign them to users who need Claude Code access. Only Primary Owners/Owners can manage seat assignments.
+Assign Premium seats to users who need Claude Code access. Only Owners and Primary Owners can purchase more seats; Admins and above can change a member's seat type.
 For usage-based plans:
-Assign seats to users who need Claude Code. Configure spend limits as needed (defaults to $0).
-See information here on setting spend limits.
+Make sure each user who needs Claude Code has a seat type that includes it;
+Use Claude Code with your Team or Enterprise plan
+(opens in new tab)
+lists which seats do. Then set spend limits for the organization, for groups, or for individual members; with none set, spend isn't capped.
+See how spend limits work.
 (opens in new tab)
 User Authentication for Claude Code
 Share the following steps with end users to connect Claude Code to their enterprise account:
@@ -307,7 +313,7 @@ Pair quantitative data with qualitative examples – short case studies from tea
 Establish a regular reporting cadence (e.g., quarterly business reviews) to keep stakeholders informed
 Feature Rollout & Governance
 
-Introduce advanced capabilities gradually so teams can build confidence without feeling overwhelmed. A natural progression might move from core features (Projects, Artifacts, Connectors) to intelligence features (Enterprise Search, Research) to integrations (Claude Code, Skills) and finally to automation (Cowork, custom connectors).
+Introduce advanced capabilities gradually so teams can build confidence without feeling overwhelmed. A natural progression might move from core features (Projects, Artifacts, Connectors) to intelligence features (Enterprise Search, Research) to integrations (Claude Code, Skills) and finally to automation (scheduled tasks, custom connectors).
 As usage grows, revisit your governance posture:
 Review data retention policies, audit log cadences, and project visibility defaults
 Maintain an allowlist of approved connectors and extensions, routing new requests through your standard IT governance process
@@ -383,7 +389,7 @@ Managing members on Team and Enterprise plans
 — Inviting, removing, and managing user roles from the admin console
 Roles and Permissions
 (opens in new tab)
-— Owner, Admin, and Member permission levels
+— Primary Owner, Owner, Admin, and User permission levels
 Purchasing and managing seats
 (opens in new tab)
 — Seat allocation, scaling, and license management
@@ -406,10 +412,10 @@ Usage analytics
 — Dashboard for tracking adoption, usage patterns, and seat utilization
 Audit logs
 (opens in new tab)
-— Track user activity, conversations, and admin changes
+— Track user activity, conversation events, and admin changes
 Custom Data Retention Controls
 (opens in new tab)
-— Configure retention windows from 1 day to indefinite
+— Configure retention windows from 30 days to indefinite
 Compliance API
 (opens in new tab)
 — Programmatic access for DLP, eDiscovery, and regulatory needs
@@ -427,9 +433,9 @@ Billing & Usage
 Enterprise billing
 (opens in new tab)
 — Billing structure, invoicing, and payment options
-Extra usage controls
+Usage credits
 (opens in new tab)
-— Overage pricing and usage guardrails for organizational plans
+— Buying and tracking usage credits, and reviewing members' requests for more
 Usage limits and best practices
 (opens in new tab)
 — Tips for staying within limits and optimizing conversation efficiency
@@ -438,9 +444,9 @@ Admin Controls
 Project visibility and sharing
 (opens in new tab)
 — Admin controls for project sharing policies
-Disabling public projects
+Control project sharing for your organization
 (opens in new tab)
-— Restrict project sharing to internal-only
+— Turn off project sharing or public projects, for the whole organization or by role
 Managing user feedback settings
 (opens in new tab)
 — Configure whether user feedback is shared with Anthropic
@@ -538,6 +544,9 @@ When to use desktop vs. web connectors
 Interactive Connectors
 (opens in new tab)
 — Connectors that let Claude take actions (not just read data) in external tools
+Claude Tag
+(opens in new tab)
+— Use Claude Tag to bring Claude into Slack
 Pre-Built Connectors
 
 Ready-to-use integrations with popular enterprise tools:
@@ -547,9 +556,6 @@ Google Drive
 GitHub
 (opens in new tab)
 — Browse repos, review PRs, search code, and manage issues
-Slack
-(opens in new tab)
-— Install and use the Claude Slack app in your workspace
 Microsoft 365
 (opens in new tab)
 — Connect Outlook, OneDrive, Teams, and other M365 services
@@ -596,7 +602,7 @@ Claude in Xcode
 — Code completion, debugging, and refactoring in Apple's Xcode IDE
 Claude in Microsoft Foundry
 (opens in new tab)
-— Access Claude models through Microsoft's AI Foundry platform
+— Access Claude models through Microsoft Foundry
 Claude Code Setup & Configuration
 
 Claude Code
@@ -668,7 +674,7 @@ Data deletion for Enterprise
 — Data deletion requests and processes for organizational plans
 Data Processing Addendum (DPA)
 (opens in new tab)
-— Self-service DPA signing for GDPR compliance
+— Where to view the DPA, which is automatically incorporated into the Commercial Terms of Service
 Safeguards
 (opens in new tab)
 — Usage policy, safeguard appeals, agent guidelines, content reporting, and vulnerability reporting
