@@ -6,6 +6,13 @@ Content changes to the baseline itself. Not to be confused with `automation/last
 
 Nothing yet. See `automation/README.md` for how upstream changes get surfaced.
 
+## 2026-11-09 — IP allowlisting and Admin API session termination
+
+Upstream changes from Claude Platform release notes (November 5, 2026):
+
+- **1.22 (new):** IP allowlist. Organizations can now restrict API and web requests to a configured allowlist of IPv4, IPv6, and CIDR ranges (up to 1,000 per organization). This is a new administrative control in Organization settings that limits where a leaked API key can be used. Source: [Platform release notes](https://platform.claude.com/docs/en/release-notes/overview).
+- **1.18 (updated):** Session lifetime now documents the Admin API sign-out endpoint (beta as of 2026-11-05) that allows admins to sign a member out everywhere without removing them from the organization. This complements the existing session termination via SCIM deprovisioning or admin removal. Drafted date bumped to reflect substance change. Source: [Platform release notes](https://platform.claude.com/docs/en/release-notes/overview).
+
 ## 2026-10-21 — last three panel paths (#7)
 
 The verification note left three console paths unconfirmed. Each is now checked against a current support article. None was checked against a live tenant.
