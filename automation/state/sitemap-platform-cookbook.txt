@@ -23,10 +23,12 @@ https://platform.claude.com/cookbook/extended-thinking-extended-thinking
 https://platform.claude.com/cookbook/extended-thinking-extended-thinking-with-tool-use
 https://platform.claude.com/cookbook/fable-5-fallback-billing-guide
 https://platform.claude.com/cookbook/finetuning-finetuning-on-bedrock
+https://platform.claude.com/cookbook/latency-optimization-latency-optimization
 https://platform.claude.com/cookbook/managed-agents-cma-agent-security-review
 https://platform.claude.com/cookbook/managed-agents-cma-cap-session-spend
 https://platform.claude.com/cookbook/managed-agents-cma-consult-an-advisor
 https://platform.claude.com/cookbook/managed-agents-cma-coordinate-specialist-team
+https://platform.claude.com/cookbook/managed-agents-cma-dreaming-with-a-dynamic-workflow
 https://platform.claude.com/cookbook/managed-agents-cma-iterate-fix-failing-tests
 https://platform.claude.com/cookbook/managed-agents-cma-operate-in-production
 https://platform.claude.com/cookbook/managed-agents-cma-pin-inference-geo
@@ -82,7 +84,6 @@ https://platform.claude.com/cookbook/third-party-llamaindex-subquestion-query-en
 https://platform.claude.com/cookbook/third-party-mongodb-rag-using-mongodb
 https://platform.claude.com/cookbook/third-party-pinecone-claude-3-rag-agent
 https://platform.claude.com/cookbook/third-party-pinecone-rag-using-pinecone
-https://platform.claude.com/cookbook/third-party-wikipedia-wikipedia-search-cookbook
 https://platform.claude.com/cookbook/third-party-wolframalpha-using-llm-api
 https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation
 https://platform.claude.com/cookbook/tool-use-automatic-context-compaction
