@@ -1,7 +1,7 @@
 Release notes | Claude Help Center
 Skip to main content
 Claude
-Pro and Max plans
+Pro, Max, and Ultra plans
 Team and Enterprise plans
 Identity management (SSO, JIT, SCIM)
 Claude Cowork
@@ -15,7 +15,50 @@ Claude for Education
 Privacy and legal
 Safeguards
 Amazon Bedrock
+November 2026
+November 20, 2026
+A refreshed look for Claude Mobile
+A refreshed look for Claude Mobile is rolling out gradually, starting with Claude for iOS. Your chats, projects, and plan stay the same. There's nothing to turn on. Keep your app updated, and note that the new look needs iOS 26 or later.
+Computer use (beta) for Team and Enterprise plans
+Computer use lets Claude see a user's screen and work in the desktop apps they allow. It works in the new Claude experience in Claude Desktop, and from Claude on the web and Claude Mobile where
+Computer access
+is on. It's now available in beta on Team and Enterprise plans, and is rolling out to organizations gradually. For more information, see
+Set up computer use for Team and Enterprise plans
+.
+November 17, 2026
+Choose a release channel in Claude Desktop
+You can now use a release channel to set which version of Claude Desktop you get when the app updates.
+Stable
+stays the default and gets new versions less often, after more testing.
+Latest
+gets a new version about once a day, so fixes and new features reach you sooner. For more information, see
+Choose a release channel
+.
+November 12, 2026
+Add Claude to your meetings
+Claude Meetings is rolling out in beta on Team and Enterprise plans in Claude and Claude Desktop. You can add Claude to a Google Meet call as a visible participant that takes notes, answers questions, and builds artifacts, such as docs, whiteboards, and slides, during the call. For more information, see
+Use Claude Meetings
+.
+November 6, 2026
+Track spend by cost code with project tags (beta)
+Eligible Enterprise organizations can now tag projects with the codes they already use, like a charge code or client-matter number, and see most spend in those projects by tag. This feature is available in beta. For more information, see
+Track spend by cost code with project tags
+.
+November 5, 2026
+New security and admin controls for Enterprise plans
+Claude Enterprise has new security and admin features, including a security center, inference hooks, centralized management, and additional access controls, several in beta. For more information, see our blog post:
+More visibility and control over Claude Enterprise for security teams
+.
+Personal Finance in Claude
+We’re rolling out Personal Finance, a beta that lets you link your bank, credit card, loan, and investment accounts to Claude, so you can see your balances and spending on one page and ask Claude questions about your own money. It's available on Pro, Max, and Ultra plans, and is available in the US only. For more information, see our blog post:
+Introducing Personal Finance in Claude
+.
 October 2026
+October 21, 2026
+Claude Duet research preview for Pro and Max plans
+We just opened a research preview for users on Pro and Max plans: Claude Duet, a new app where Claude works as a proactive agent. For more information, see our blog post:
+Introducing Claude Duet
+.
 October 7, 2026
 Claude Haiku 5.5 launch
 We just launched Claude Haiku 5.5, the cheapest, fastest, and most capable small model we’ve released, designed for high-volume, cost-sensitive tasks. For more information, see our blog post:
@@ -53,7 +96,7 @@ Claude Cowork and chat are one Claude
 Create designs, decks, and docs in any conversation
 You can now ask for a design, deck, or document in any conversation with Claude, including in Claude Code and the
 Artifacts
-tab, and edit it with Claude or directly as you work. Claude Design works inside your conversations with all of its features, including on-canvas editing and importing your design system. Claude Slides gives presentations their own starting point, and Claude Docs is a new way to write living documents with Claude and your team. Artifacts, including Claude Design, Claude Slides, and Claude Docs, are available on every plan, including Free. On Enterprise plans, Claude Design, Claude Slides, and Claude Docs are in beta and off by default until an owner turns them on. Learn more in
+tab, and edit it with Claude or directly as you work. Claude Design works inside your conversations with all of its features, including on-canvas editing and importing your design system. Claude Slides gives presentations their own starting point, and Claude Docs is a new way to write living documents with Claude and your team. Artifacts, including Claude Design, Claude Slides, and Claude Docs, are available on every plan, including Free. On Enterprise plans, Claude Design, Claude Slides, and Claude Docs are in beta. Learn more in
 What are artifacts and how do I use them?
 and
 Get started with Claude Docs
@@ -82,7 +125,7 @@ in
 Settings > Memory
 , where you can edit or delete any item. Topics such as health or beliefs stay out of memory unless you turn on
 Include sensitive topics in memory
-. Memory is on by default for Free, Pro, and Max plans and off by default for Team and Enterprise organizations. See
+. See
 Use Claude's chat search and memory to build on previous context
 .
 August 6, 2026
@@ -517,6 +560,6 @@ Smiley Reaction
 Related Articles
 How up-to-date is Claude's training data?
 How large is the context window on paid Claude plans?
-Claude Code model configuration
-Why Claude switched models in your conversation with Fable 5 or Fable 5.1
+Organize your tasks with projects in Claude Cowork
+Enable US-only inference for your organization
 How Claude marks AI-generated content
